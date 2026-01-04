@@ -1,0 +1,40 @@
+[TYPE][SCOPE]: [SHORT_DESCRIPTION]
+
+[LONG_DESCRIPTION]
+
+[ISSUES]
+
+[REFERENCE_SPECIFICATION]
+
+---
+
+TYPE: Type of change. Common values:
+- feat: a new feature
+- fix: patches a bug
+- docs: documentation-only changes
+- refactor: code changes that neither fix a bug nor add a feature
+- perf: improves performance
+- test: adds or correct tests
+- chore: changes to the build process or auxiliary tools
+
+---
+
+SCOPE [OPTIONAL]: Specific affected project area
+
+---
+
+SHORT_DESCRIPTION: Introduction commit description that must not exceed 50 characters
+
+---
+
+LONG_DESCRIPTION: Explanation (why) of changes. Use multiple lines. Each one of them must not exceed 70 characters
+
+---
+
+ISSUES [OPTIONAL]: Specific must-to-fix issues for next changes
+
+---
+
+REFERENCE_SPECIFICATION: Keep this style:
+
+USERNAME: DATE
