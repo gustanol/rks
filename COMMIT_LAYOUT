@@ -9,13 +9,13 @@
 ---
 
 TYPE: Type of change. Common values:
-- feat: a new feature
-- fix: patches a bug
-- docs: documentation-only changes
-- refactor: code changes that neither fix a bug nor add a feature
-- perf: improves performance
-- test: adds or correct tests
-- chore: changes to the build process or auxiliary tools
+- FEAT: a new feature
+- FIX: patches a bug
+- DOCS: documentation-only changes
+- REFACTOR: code changes that neither fix a bug nor add a feature
+- PERF: improves performance
+- TEST: adds or correct tests
+- CHORE: changes to the build process or auxiliary tools
 
 ---
 
