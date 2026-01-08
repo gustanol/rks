@@ -1,19 +1,15 @@
+# Includes
+include Makefile.flags
 include arch/x64/Makefile
-
-ALL_OBJECTS += $(OBJECTS)
-
-LD ?= ld
-LINKER_SCRIPT := kernel.ld
-LDFLAGS := -T $(LINKER_SCRIPT)
 
 TARGET := rks.elf
 
-all: $(TARGET)
+all: $(ROOT_BUILD_DIR)/$(TARGET)
 
-$(TARGET): $(ALL_OBJECTS)
+$(ROOT_BUILD_DIR)/$(TARGET): $(ALL_OBJECTS)
 	$(LD) $(LDFLAGS) $^ -o $@
 
 clean:
-	rm -rf build
+	rm -rf $(ROOT_BUILD_DIR)
 
 .PHONY: all clean

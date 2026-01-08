@@ -1,22 +1,13 @@
-# Tools (overridable)
-AS ?= as
-ASFLAGS ?= -g
+ARCH_DIR := arch/x64
+ARCH_BUILD_DIR := $(ROOT_BUILD_DIR)/$(ARCH_DIR)
 
-SRC_DIR := .
-BUILD_DIR := build
+ARCH_ASM_SOURCES := $(shell find $(ARCH_DIR) -name '*.S')
+ARCH_ASM_OBJECTS := $(patsubst $(ARCH_DIR)/%.S,$(ARCH_BUILD_DIR)/%.o,$(ARCH_ASM_SOURCES))
+ARCH_OBJECTS := $(ARCH_ASM_OBJECTS) $(ARCH_C_OBJECTS)
+ALL_OBJECTS += $(ARCH_OBJECTS)
 
-SOURCES := $(wildcard $(SRC_DIR)/*.S)
-OBJECTS := $(patsubst $(SRC_DIR)/%.S,$(BUILD_DIR)/%.o,$(SOURCES))
-
-# Default target: build all objects
-all: $(OBJECTS)
-
-# Assemble
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.S
+# Build rules for assembly (with subdirectory support)
+$(ARCH_BUILD_DIR)/%.o: $(ARCH_DIR)/%.S
 	@mkdir -p $(dir $@)
-	$(AS) $(ASFLAGS) $< -o $@
-
-clean:
-	rm -rf $(BUILD_DIR)
-
-.PHONY: all clean
+	@echo "AS  $<"
+	@$(AS) $(ASFLAGS) $< -o $@

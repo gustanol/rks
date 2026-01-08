@@ -1,21 +1,9 @@
-# Build artifacts
 build/
 *.o
-*.out
-*.exe
-
-# Debug files
-*.dwarf
-*.dSYM/
-
-# Editor files
-.vscode/
-.idea/
+*.elf
 *.swp
 *.swo
 *~
 
-# OS files
-.DS_Store
-Thumbs.db
-
+# Local-project config
+.nvim-project.json
