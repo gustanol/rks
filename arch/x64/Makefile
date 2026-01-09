@@ -6,7 +6,7 @@ ARCH_ASM_OBJECTS := $(patsubst $(ARCH_DIR)/%.S,$(ARCH_BUILD_DIR)/%.o,$(ARCH_ASM_
 ARCH_OBJECTS := $(ARCH_ASM_OBJECTS) $(ARCH_C_OBJECTS)
 ALL_OBJECTS += $(ARCH_OBJECTS)
 
-# Build rules for assembly (with subdirectory support)
+# Build rules for assembly
 $(ARCH_BUILD_DIR)/%.o: $(ARCH_DIR)/%.S
 	@mkdir -p $(dir $@)
 	@echo "AS  $<"

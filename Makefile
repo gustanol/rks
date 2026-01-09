@@ -1,6 +1,7 @@
 # Includes
 include Makefile.flags
 include arch/x64/Makefile
+include kernel/Makefile
 
 TARGET := rks.elf
 

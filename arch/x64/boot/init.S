@@ -10,13 +10,13 @@
 .equ MULTIBOOT2_ARCH_I386, 0x00000000
 
 multiboot_header_start:
-    .long MULTIBOOT2_MAGIC # Magic
-    .long MULTIBOOT2_ARCH_I386 # Architecture i386
-    .long multiboot_header_end - multiboot_header_start # Header length
-    .long -(MULTIBOOT2_MAGIC + 0x00 + (multiboot_header_end - multiboot_header_start))
-    .short 0 # Tag type = 0 (terminator)
-    .short 0 # Flags = 0
-    .long 8 # Size = 8 (terminator size)
+	.long MULTIBOOT2_MAGIC # Magic
+	.long MULTIBOOT2_ARCH_I386 # Architecture i386
+	.long multiboot_header_end - multiboot_header_start # Header length
+	.long -(MULTIBOOT2_MAGIC + 0x00 + (multiboot_header_end - multiboot_header_start))
+	.short 0 # Tag type = 0 (terminator)
+	.short 0 # Flags = 0
+	.long 8 # Size = 8 (terminator size)
 multiboot_header_end:
 
 .section .data

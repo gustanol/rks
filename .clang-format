@@ -1,0 +1,68 @@
+BasedOnStyle: LLVM
+IndentWidth: 8
+UseTab: ForIndentation
+TabWidth: 8
+ColumnLimit: 100
+
+BreakBeforeBraces: Allman
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+
+AllowAllArgumentsOnNextLine: false
+AlignAfterOpenBracket: AlwaysBreak
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackParameters: false
+BinPackArguments: false
+BraceWrapping:
+  AfterStruct: true
+
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignCompound: true
+  PadOperators: true
+
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: true
+  AlignFunctionDeclarations: true
+  AlignFunctionPointers: true
+
+AlignConsecutiveBitFields:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignCaseColons: true
+  AlignCaseArrows: true
+
+AlignConsecutiveTableGenBreakingDAGArgColons:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+
+AlignConsecutiveTableGenCondOperatorColons:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+
+AlignConsecutiveTableGenDefinitionColons:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+
+ReflowComments: true

@@ -180,6 +180,7 @@ gdt_descriptor:
 	.long _gdt64_start
 
 finish64:
+.extern rks_main
 	lgdt (gdt_descriptor)
 
 	movw $0x10, %ax # Data segment descriptor within GDT
@@ -189,7 +190,7 @@ finish64:
 	movw %ax, %es
 	movw %ax, %ss
 
-	#jmp rks_main
+	call rks_main
 
 .halt:
 	cli
