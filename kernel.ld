@@ -33,4 +33,7 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
+
+    /* Where the kernel ends in memory */
+    kernel_end = .;
 }

@@ -1,5 +1,6 @@
 .section .text.boot
 .globl check_a20
+.extern checkCPUID
 .code32
 
 /*
@@ -53,8 +54,5 @@ _enable_a20:
 	sti
 
 .continue:
-
-	# temporary
-	cli
-	hlt
-	jmp .continue
+	/* Jumps to long mode setup */
+	jmp checkCPUID
