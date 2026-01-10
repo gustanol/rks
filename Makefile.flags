@@ -7,7 +7,7 @@ LD ?= ld
 CFLAGS := -nostdinc -ffreestanding -fno-builtin -fno-stack-protector
 CFLAGS += -Wall -Wextra -Werror -fno-pic -fno-pie
 CFLAGS += -mno-red-zone -mcmodel=kernel
-CFLAGS += -mno-mmx -mno-sse -mno-sse2
+CFLAGS += -mno-mmx -mno-sse -mno-sse2 -m64
 
 # Defines
 CFLAGS += -D__KERNEL__ -DARCH_X64
@@ -16,12 +16,11 @@ ROOT_BUILD_DIR := build
 
 # Include paths
 CFLAGS += -I./include
-#CFLAGS += -I$(CURDIR)/arch/x64/include
 
 # Assembly flags
-ASFLAGS := -g
+ASFLAGS := -g --64
 
 # Linker flags
-LDFLAGS := -T kernel.ld -nostdlib -z max-page-size=0x1000 -no-pie
+LDFLAGS := -T kernel.ld -nostdlib -z max-page-size=0x1000 -no-pie -m elf_x86_64
 
-export CC AS LD CFLAGS ASFLAGS LDFLAGS ALL_OBJECTS ROOT_BUILD_DIR
+export CC AS LD CFLAGS ASFLAGS ASFLAGS32 LDFLAGS ALL_OBJECTS ROOT_BUILD_DIR

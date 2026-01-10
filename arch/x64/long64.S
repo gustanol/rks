@@ -31,7 +31,7 @@ checkCPUID:
 
 	/* Save current EFLAGS in %ecx */
 	movl %eax, %ecx
-	xorl EFLAGS_ID, %eax
+	xorl $EFLAGS_ID, %eax
 
 	/* Save EFLAGS by pushing it again to stack */
 	pushl %eax
@@ -54,20 +54,29 @@ check_long_mode:
 	 *
 	 * In call, CPUID will put in %eax this highest function number it supports
 	 */
-	movl CPUID_EXTENSIONS, %eax
+	movl $CPUID_EXTENSIONS, %eax
 	cpuid
 
 	/* If the highest function number is less than the extended features, CPU doesn't support extended functions */
-	cmpl CPUID_EXTENDED_FEATURES, %eax
+	cmpl $CPUID_EXTENDED_FEATURES, %eax
 	jb .halt
 
 	/* CPUID will return feature flags */
-	movl CPUID_EXTENDED_FEATURES, %eax
+	movl $CPUID_EXTENDED_FEATURES, %eax
 	cpuid
 
 	/* If bit 29 is set, CPU supports long mode */
-	testl CPUID_EDX_LONG_MODE, %edx
+	testl $CPUID_EDX_LONG_MODE, %edx
 	jz .halt
+
+/* From now, CPU will interpret CR3 as long-mode paging */
+enable_pae:
+.equ CR4_PAE, 1 << 5
+
+	/* Sets the Physical Address Extension */
+	movl %cr4, %eax
+	orl $CR4_PAE, %eax
+	movl %eax, %cr4
 
 set_cr3:
 	movl $pml4, %edi
@@ -106,26 +115,23 @@ set_entries:
 	movl %eax, (%edi)
 	movl $0, 4(%edi)
 
-	/* Add the first free physical frame (page) to PT */
 	movl $pt, %edi
+	movl $0, %ecx
 
-	/* Align it to 4Kb (the linker should already do this) */
-	movl $kernel_end, %eax
-	addl $0xFFF, %eax # Make equal (only if 1) or bigger than 4Kb
-	andl $0xFFFFF000, %eax # For the cases not aligned to 4Kb, we zero the first 12 bits and get the nearest align
+# Fill all 512 entries of the first PT
+.fill_pt_loop:
+	movl %ecx, %eax # Page index
+	shll $12, %eax # Multiply by 4Kb to get the physical address of the current page
 
-	/* Now we can set flags at the first 12 bits */
-	orl $0x3, %eax
-	movl %eax, (%edi)
-	movl $0, 4(%edi)
+	orl $0x3, %eax # Present + Writable + Ring 0
+	movl %eax, (%edi) # Low 32 bits
+	movl $0, 4(%edi) # High 32 bits
 
-enable_pae:
-.equ CR4_PAE, 1 << 5
+	addl $8, %edi # Next PT entry
+	incl %ecx # Next page index
 
-	/* Sets the Physical Address Extension */
-	movl %cr4, %eax
-	orl CR4_PAE, %eax
-	movl %eax, %cr4
+	cmpl $512, %ecx # Repeat until fill all 512 entries of this PT
+	jl .fill_pt_loop
 
 enable_long_mode:
 /*
@@ -133,57 +139,28 @@ enable_long_mode:
  *
  * It's a Model-Specific Register (MSR) that controls specific features in long mode
  */
-.equ EFER_MSR, 0xC0000000 # EFER MSR number
-.equ EFER_LM_ENABLE, 1 << 8
+.equ EFER_MSR, 0xC0000080 # EFER MSR number
 
 	/* Read this specific internal register (EFER) */
-	movl EFER_MSR, %ecx
+	movl $EFER_MSR, %ecx
 	rdmsr
 
 	/* Set bit 8 of EFER (LME - Long Mode Enable) */
-	orl EFER_LM_ENABLE, %eax
+	orl $(1 << 8), %eax
 	wrmsr # Write EFER back
 
 enable_paging:
 	/* Enable paging by setting the bit 31 of CR0 */
 	movl %cr0, %eax
-	orl 1 << 31, %eax
+	orl $(1 << 31), %eax
 	movl %eax, %cr0
 
-	jmp _gdt64_start
-
-.code64
-_gdt64_start:
-	# Null descriptor
-	.quad 0x0000000000000000
-
-	# Code segment descriptor
-	.word 0xFFFF
-	.word 0x0000
-	.byte 0x00
-	.byte 0b10011010
-	.byte 0b10101111 # Long mode
-	.byte 0x00
-
-	# Data segment descriptor
-	.word 0xFFFF
-	.word 0x0000
-	.byte 0x00
-	.byte 0b10010010 # Data segment
-	.byte 0b11001111
-	.byte 0x00
-_gdt64_end:
-
-gdt_descriptor:
-	/* GDT limit address */
-	.word _gdt64_end - _gdt64_start - 1
-	.long _gdt64_start
+	ljmp $0x18, $finish64
 
 finish64:
+.code64
 .extern rks_main
-	lgdt (gdt_descriptor)
-
-	movw $0x10, %ax # Data segment descriptor within GDT
+	movw $0x20, %ax # 64-bit data segment descriptor
 
 	/* Set data descriptor as default */
 	movw %ax, %ds

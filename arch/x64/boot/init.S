@@ -3,17 +3,18 @@
  *
  * It specify the kernel compatibility with it
  */
-.section .multiboot
+.section .multiboot, "ax"
 .align 8
 
-.equ MULTIBOOT2_MAGIC, 0xE85250D6
+.equ MULTIBOOT2_HEADER_MAGIC, 0xE85250D6
+.equ MULTIBOOT2_BOOTLOADER_MAGIC, 0x36D76289
 .equ MULTIBOOT2_ARCH_I386, 0x00000000
 
 multiboot_header_start:
-	.long MULTIBOOT2_MAGIC # Magic
+	.long MULTIBOOT2_HEADER_MAGIC # Magic
 	.long MULTIBOOT2_ARCH_I386 # Architecture i386
 	.long multiboot_header_end - multiboot_header_start # Header length
-	.long -(MULTIBOOT2_MAGIC + 0x00 + (multiboot_header_end - multiboot_header_start))
+	.long -(MULTIBOOT2_HEADER_MAGIC + 0x00 + (multiboot_header_end - multiboot_header_start))
 	.short 0 # Tag type = 0 (terminator)
 	.short 0 # Flags = 0
 	.long 8 # Size = 8 (terminator size)
@@ -31,7 +32,7 @@ multiboot_info_ptr:
  * Paranoid consistency:
  *
  * "ax" mark this section with flags `SHF_ALLOC` and `SHF_EXECINSTR`
- * Which means it's allocable and exacutable
+ * Which means it's allocable and executable
  *
  * GAS uses to mark these standard flags for `.text` class sections
  * But this snippet defines it explicit
@@ -42,11 +43,11 @@ multiboot_info_ptr:
 .code32
 
 __rks_start:
-	# %eax = MULTIBOOT2_MAGIC
+	# %eax = Multiboot2 Bootloader Magic
 	# %ebx = Physical address of Multiboot info struct
 
 	/* Not jumped in by a multiboot bootloader */
-	cmpl MULTIBOOT2_MAGIC, %eax
+	cmpl $MULTIBOOT2_BOOTLOADER_MAGIC, %eax
 	jne _halt
 
 	movl %ebx, multiboot_info_ptr # Stores the pointer to Multiboot2 header

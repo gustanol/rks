@@ -4,7 +4,7 @@ SECTIONS
 {
     . = 0x100000;  /* 1MB */
     
-    /* Multiboot header must be early */
+    /* Multiboot header must at the start */
     .multiboot : ALIGN(4096)
     {
         *(.multiboot)
@@ -15,6 +15,7 @@ SECTIONS
         *(.text.init)
         *(.text.gdt)
         *(.text.boot)
+        *(.text.long)
         *(.text)
     }
     
@@ -25,7 +26,8 @@ SECTIONS
     
     .data : ALIGN(4096)
     {
-        *(.data)
+        PROVIDE(gdt_start = .);
+        *(.data*)
     }
     
     .bss : ALIGN(4096)
