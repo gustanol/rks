@@ -1,7 +1,11 @@
+#include <rks/screen/__terminal.h>
+
 extern void rks_main(void);
 
 void rks_main(void)
 {
+	__terminal_init();
+
 	char       *video = (char *)0xB8000;
 	const char *msg   = "RKS! From 64-bit!\n";
 
