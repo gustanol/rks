@@ -1,19 +1,12 @@
+#include <rks/print.h>
 #include <rks/screen/__terminal.h>
 
 extern void rks_main(void);
 
 void rks_main(void)
 {
-	__terminal_init();
-
-	char       *video = (char *)0xB8000;
-	const char *msg   = "RKS! From 64-bit!\n";
-
-	for (int i = 0; msg[i] != '\0'; i++)
-	{
-		video[i * 2]     = msg[i];
-		video[i * 2 + 1] = 0x0F;
-	}
+	_terminal_init();
+	kprintf("Testing printing, %s! RKS!", "Gustavo");
 
 	while (1)
 	{
