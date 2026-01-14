@@ -6,4 +6,8 @@ typedef unsigned short __u16;
 typedef unsigned int   __u32;
 typedef unsigned long  __u64;
 
+typedef _Bool bool;
+#define true  1;
+#define false 0;
+
 #endif /* TYPES_H */

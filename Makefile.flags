@@ -5,8 +5,8 @@ LD ?= ld
 
 # Common C flags
 CFLAGS := -nostdinc -ffreestanding -fno-builtin -fno-stack-protector
-CFLAGS += -Wall -Wextra -Werror -fno-pic -fno-pie
-CFLAGS += -mno-red-zone -mcmodel=kernel
+CFLAGS += -Wall -Wextra -Werror -Wpedantic -Wstrict-prototypes -Wold-style-definition -fno-pic -fno-pie
+CFLAGS += -mno-red-zone -mcmodel=kernel -std=gnu11
 CFLAGS += -mno-mmx -mno-sse -mno-sse2 -m64
 
 # Defines
