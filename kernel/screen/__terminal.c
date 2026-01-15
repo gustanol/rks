@@ -1,19 +1,20 @@
+#include <rks/math.h>
 #include <rks/screen/__terminal.h>
+#include <rks/string.h>
 #include <rks/types.h>
 
+/* Zero-initialized screen buffer */
+static char        screen_buffer[VGA_BUF_SIZE];
 struct terminal_t *terminal_p;
-static bool        _terminal_symbol(char c);
+static inline bool _terminal_symbol(char c);
 
 /*
- * Low-level function to Initialize the virtual terminal
+ * Initialize the virtual terminal
  *
  * -> `void`
  */
 void _terminal_init(void)
 {
-	/* Zero-initialized screen buffer */
-	static char screen_buffer[VGA_BUF_SIZE];
-
 	/* Populate the global-state terminal pointer */
 	terminal_p->buffer = (__u16 *)screen_buffer;
 	terminal_p->x = terminal_p->y = 0;
@@ -21,7 +22,7 @@ void _terminal_init(void)
 }
 
 /*
- * Low-level function to put a character at the current terminal coordinate
+ * Write a character at the current terminal coordinate
  *
  * -> `void`
  * @c: The character
@@ -47,7 +48,10 @@ void _terminal_putchar(char c)
 }
 
 /*
- * Low-level function to write a string into the framebuffer
+ * Write a string into the framebuffer
+ *
+ * -> `void`
+ * @c: Pointer to the string
  */
 void _terminal_write(const char *c)
 {
@@ -55,6 +59,29 @@ void _terminal_write(const char *c)
 		_terminal_putchar(*c);
 }
 
+/*
+ * Write a number into frambuffer
+ *
+ * -> `void`
+ * @n: The number
+ * @base: Its base
+ */
+void _terminal_putnumber(__u64 n, __u32 base)
+{
+	nlength_t nlen = nlength(n, base);
+	buf_t     buf[nlen + 1];
+	buf[nlen] = '\0';
+
+	/* Convert number to ASCII text */
+	itoa(n, base, (buf_t *)&buf, nlen);
+	_terminal_write((const char *)&buf);
+}
+
+/*
+ * Scroll terminal to the next line
+ *
+ * -> `void`
+ */
 void _terminal_scroll(void)
 {
 	/* Copy each row to its previous one */
@@ -73,7 +100,13 @@ void _terminal_scroll(void)
 	terminal_p->x = 0;
 }
 
-bool _terminal_symbol(char c)
+/*
+ * Identify and treat symbols
+ *
+ * -> `bool`: Is symbol
+ * @c: The symbol
+ */
+static inline bool _terminal_symbol(char c)
 {
 	switch (c)
 	{
@@ -88,6 +121,11 @@ bool _terminal_symbol(char c)
 	return false;
 }
 
+/*
+ * Write the framebuffer to VGA text buffer address
+ *
+ * -> `void`
+ */
 void __terminal_flush(void)
 {
 	char       *video = (char *)VGA_ADD;

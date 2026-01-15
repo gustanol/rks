@@ -6,30 +6,14 @@ extern void rks_main(void);
 void rks_main(void)
 {
 	_terminal_init();
-	kprintf("Testing printing, %s!\n", "1");
-	kprintf("Testing printing, %s!\n", "2");
-	kprintf("Testing printing, %s!\n", "3");
-	kprintf("Testing printing, %s!\n", "4");
-	kprintf("Testing printing, %s!\n", "5");
-	kprintf("Testing printing, %s!\n", "6");
-	kprintf("Testing printing, %s!\n", "7");
-	kprintf("Testing printing, %s!\n", "8");
-	kprintf("Testing printing, %s!\n", "9");
-	kprintf("Testing printing, %s!\n", "10");
-	kprintf("Testing printing, %s!\n", "11");
-	kprintf("Testing printing, %s!\n", "12");
-	kprintf("Testing printing, %s!\n", "13");
-	kprintf("Testing printing, %s!\n", "14");
-	kprintf("Testing printing, %s!\n", "15");
-	kprintf("Testing printing, %s!\n", "16");
+	kprintf("Testing printing, %d!\n", 1);
+	kprintf("Testing printing, %d, %s!\n", 20, "RKS");
+	kprintf("Testing printing, %d, %s!\n", 343, "Test");
+	kprintf("Testing printing, %d!\n", 43034);
 
-	kprintf("%s\n", "1");
-	kprintf("%s\n", "1");
-	kprintf("%s\n", "1");
-	kprintf("%s\n", "1");
-	kprintf("%s\n", "1");
-	kprintf("%s\n", "1");
-	kprintf("%s\n", "1");
+	kprintf("%x\n", 12);
+	kprintf("%x\n", 0xAB);
+	kprintf("%x\n", 0xFFFF);
 
 	while (1)
 	{

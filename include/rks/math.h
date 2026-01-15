@@ -1,0 +1,21 @@
+#ifndef MATH_H
+#define MATH_H
+
+#include <rks/types.h>
+
+typedef __u32 nlength_t;
+
+size_t ilog(__u64 num, __u32 base);
+size_t ilog2(__u64 num);
+
+static inline __u32 ilog10(__u32 num)
+{
+	return ilog(num, 10);
+}
+
+static inline nlength_t nlength(__u32 num, __u32 base)
+{
+	return ilog(num, base) + 1;
+}
+
+#endif /* MATH_H */

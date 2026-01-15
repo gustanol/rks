@@ -19,7 +19,10 @@ int kprintf(const char *fmt, ...)
 				_terminal_putchar((char)va_arg(args, int));
 				break;
 			case 'd':
-				_terminal_putchar((char)va_arg(args, int));
+				_terminal_putnumber(va_arg(args, int), 10);
+				break;
+			case 'x':
+				_terminal_putnumber(va_arg(args, int), 16);
 				break;
 			case 's':
 				_terminal_write((const char *)va_arg(args, long));

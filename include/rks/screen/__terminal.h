@@ -17,6 +17,7 @@ struct terminal_t
 
 void _terminal_init(void);
 void _terminal_putchar(char c);
+void _terminal_putnumber(__u64 n, __u32 base);
 void _terminal_write(const char *c);
 void _terminal_scroll(void);
 void __terminal_flush(void);

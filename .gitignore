@@ -5,5 +5,6 @@ build/
 *.swo
 *~
 
-# Local-project config
+# Local-project config files
 .nvim-project.json
+.ccls
