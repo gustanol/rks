@@ -4,9 +4,9 @@
 #include <rks/types.h>
 
 /* Zero-initialized screen buffer */
-static char        screen_buffer[VGA_BUF_SIZE];
-struct terminal_t *terminal_p;
-static inline bool _terminal_symbol(char c);
+static char               screen_buffer[VGA_BUF_SIZE];
+static struct terminal_t *terminal_p;
+static inline bool        _terminal_symbol(char c);
 
 /*
  * Initialize the virtual terminal
@@ -18,7 +18,7 @@ void _terminal_init(void)
 	/* Populate the global-state terminal pointer */
 	terminal_p->buffer = (__u16 *)screen_buffer;
 	terminal_p->x = terminal_p->y = 0;
-	terminal_p->color             = 0x0F;
+	terminal_p->color             = DEFAULT_VGA_COLOR;
 }
 
 /*
@@ -34,7 +34,7 @@ void _terminal_putchar(char c)
 
 	/* Write the character at the current position within framebuffer */
 	terminal_p->buffer[terminal_p->y * VGA_WIDTH + terminal_p->x] =
-	    ((__u16)terminal_p->color << 8) | (__u8)c;
+	    ((__u16)terminal_p->color << 8) | c;
 
 	terminal_p->x++;
 	if (terminal_p->x >= VGA_WIDTH)
@@ -53,28 +53,10 @@ void _terminal_putchar(char c)
  * -> `void`
  * @c: Pointer to the string
  */
-void _terminal_write(const char *c)
+void _terminal_write(char *c)
 {
 	for (; *c != '\0'; c++)
 		_terminal_putchar(*c);
-}
-
-/*
- * Write a number into frambuffer
- *
- * -> `void`
- * @n: The number
- * @base: Its base
- */
-void _terminal_putnumber(__u64 n, __u32 base)
-{
-	nlength_t nlen = nlength(n, base);
-	buf_t     buf[nlen + 1];
-	buf[nlen] = '\0';
-
-	/* Convert number to ASCII text */
-	itoa(n, base, (buf_t *)&buf, nlen);
-	_terminal_write((const char *)&buf);
 }
 
 /*
@@ -110,13 +92,15 @@ static inline bool _terminal_symbol(char c)
 {
 	switch (c)
 	{
-	case '\n':
-		terminal_p->x = 0;
-		terminal_p->y++;
+		case '\n':
+		{
+			terminal_p->x = 0;
+			terminal_p->y++;
 
-		if (terminal_p->y >= VGA_HEIGHT)
-			_terminal_scroll();
-		return true;
+			if (terminal_p->y >= VGA_HEIGHT)
+				_terminal_scroll();
+			return true;
+		}
 	}
 	return false;
 }

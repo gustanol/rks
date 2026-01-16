@@ -3,6 +3,11 @@
 
 #include <rks/types.h>
 
+#define BIN_BASE 2
+#define OCT_BASE 8
+#define DEC_BASE 10
+#define HEX_BASE 16
+
 typedef __u32 nlength_t;
 
 size_t ilog(__u64 num, __u32 base);
