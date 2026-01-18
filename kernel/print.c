@@ -23,7 +23,12 @@ void kprintf(const char *fmt, ...)
 	_fmt(buf, FMT_BUF_SZ, fmt, args);
 	va_end(args);
 
+	__k_print_write(buf);
+}
+
+void __k_print_write(char *fmt)
+{
 	/* Write to screen */
-	_terminal_write(buf);
+	_terminal_write(fmt);
 	__terminal_flush();
 }
