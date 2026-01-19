@@ -9,13 +9,6 @@
 #define VGA_BUF_SIZE      (2 * VGA_HEIGHT * VGA_WIDTH)
 #define DEFAULT_VGA_COLOR 0x0F
 
-struct terminal_t
-{
-	volatile __u16 *buffer; /* Framebuffer */
-	__u32           x, y;
-	__u8            color;
-};
-
 void _terminal_init(void);
 void _terminal_putchar(char **c);
 void _terminal_write(char *c);

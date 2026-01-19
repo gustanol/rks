@@ -9,16 +9,16 @@ void rks_main(void)
 	_terminal_init();
 	_log_init();
 
-	kprintf("%[0xAF]{Testing} %% printing, %d!\n", 1);
+	kprintf(">[0xCE]{Testing} %% printing, %d!\n", 1);
 	kprintf("Testing %p printing, %d, %s!\n", 20, "RKS");
 	kprintf("Testing printing, %o, %s!\n", 343, "Test");
-	kprintf("Testing printing, %o!\n", 43034);
+	kprintf("Testing printing, >[0xE9]{%o}!\n", 43034);
 
 	kprintf("%b\n", 5);
 	kprintf("%b\n", 0xAB);
 	kprintf("%b\n", 0xFFFF);
 
-	pr_log(LOG_ERR, "x=%d\n", 7);
+	pr_log(LOG_ERR, "\nx=%d\n", 7);
 
 	INF("mm: initialized\n", 1);
 	DBG("something happened\n", 2);

@@ -28,6 +28,30 @@ size_t itoa(__u64 value, __u32 base, buf_t *buf, size_t buf_s)
 }
 
 /*
+ * Convert an ASCII text to number
+ *
+ * -> `__u64`: The number
+ * @buf: Buffer text
+ * @buf_s: Buffer size (number length)
+ */
+__u64 atoi(buf_t *buf, size_t buf_s)
+{
+	__u64 res = 0;
+	for (size_t i = 0; i < buf_s; i++)
+	{
+		if (buf[buf_s - i - 1] == 'x')
+			break;
+
+		for (size_t j = 0; j < sizeof(nmap); j++)
+		{
+			if (buf[buf_s - i - 1] == nmap[j])
+				res += j * POW16(i);
+		}
+	}
+	return res;
+}
+
+/*
  * Format a string with arguments and put it into a buffer
  *
  * -> `void`
@@ -47,14 +71,13 @@ void _fmt(buf_t *buf, size_t size, const char *fmt, va_list args)
 
 	do
 	{
-
 		/* Parse and handle arguments */
 		if (*fmt == '%')
 		{
 			fmt++;
 			switch (*fmt)
 			{
-				case 'c': /* Char */
+				case 'c': /* Character */
 				{
 					char c = (char)va_arg(args, int);
 					*buf++ = c;
@@ -85,7 +108,7 @@ void _fmt(buf_t *buf, size_t size, const char *fmt, va_list args)
 					break;
 				}
 
-				case 'x': /* Hexdecimal */
+				case 'x': /* Hexadecimal */
 				{
 					value = (int)va_arg(args, int);
 					nlen  = nlength(value, HEX_BASE);

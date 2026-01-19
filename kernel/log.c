@@ -11,13 +11,16 @@ struct log_t
 	enum log_levels log_level;
 };
 
+static const char lvl_prefixes[4][16] =
+    {"[>[0x07]{DBG}] ", "[>[0x07]{INF}] ", "[>[0x07]{WRN}] ", "[>[0x07]{ERR}] "};
+
 static char         buf[DEFAULT_LOG_BUF_SZ];
 static struct log_t log_p;
 
 static void __k_log_append(const char *fmt);
 
 /*
- * Initializes log global state system
+ * Initialize log global state system
  *
  * -> `void`
  */
@@ -46,27 +49,23 @@ void _log(enum log_levels level, enum log_flags flags, const char *fmt, ...)
 
 	/* Format message */
 	_fmt(buf, FMT_BUF_SZ, fmt, args);
-
 	va_end(args);
-	if (flags & LOG_KEEP)
+
+	/* Save log message */
+	if (flags & LOG_APPEND)
 		__k_log_append(buf);
 
-	if (flags & LOG_PRINT)
+	if (flags & LOG_VGA_PRT)
 	{
-		if (level == LOG_DEBUG)
-			__k_print_write("[DBG] ");
-		else if (level == LOG_INFO)
-			__k_print_write("[INF] ");
-		else if (level == LOG_WARN)
-			__k_print_write("[WRN] ");
-		else if (level == LOG_ERR)
-			__k_print_write("[ERR] ");
+		/* Treat new line characters at the start before print prefix */
+		size_t i = 0;
+		for (; buf[i] == '\n'; i++)
+			__k_print_write("\n");
 
-		__k_print_write(buf);
+		/* Put prefix before buffer */
+		__k_print_write((char *)lvl_prefixes[level]);
+		__k_print_write(buf + i);
 	}
-
-	if (level)
-		return;
 }
 
 static void __k_log_append(const char *fmt)

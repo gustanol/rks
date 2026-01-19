@@ -3,10 +3,16 @@
 #include <rks/string.h>
 #include <rks/types.h>
 
+struct terminal_t
+{
+	volatile __u16 *buffer; /* Framebuffer */
+	__u32           x, y;
+	__u8            color;
+};
+
+static struct terminal_t terminal_p;
 /* Zero-initialized screen buffer */
 static char              screen_buffer[VGA_BUF_SIZE];
-static struct terminal_t terminal_p;
-static inline bool       _terminal_symbol(char c);
 
 /*
  * Initialize the virtual terminal
@@ -29,9 +35,6 @@ void _terminal_init(void)
  */
 void _terminal_putchar(char **c)
 {
-	if (_terminal_symbol(**c))
-		return;
-
 	switch (**c)
 	{
 		case '\n':
@@ -41,13 +44,52 @@ void _terminal_putchar(char **c)
 
 			if (terminal_p.y >= VGA_HEIGHT)
 				_terminal_scroll();
+			return;
+		}
+
+		case '\\':
+		{
+			(*c)++;
 			break;
+		}
+
+		case '>':
+		{
+			/* Treat colors modifiers (>[]) */
+			if ((*c)[1] == '[')
+			{
+				/* Number character array length-only (within []) */
+				size_t i = 0;
+				while ((*c)[i + 2] != ']')
+				{
+					if ((*c)[i + 2] == '\0')
+						return;
+					i++;
+				}
+
+				if (!i)
+					break;
+
+				/* Covert this character array to number */
+				terminal_p.color  = atoi(&(*c)[2], i);
+				(*c)             += i + 2;
+			}
+			return;
+		}
+
+		case '{':
+			return;
+
+		case '}':
+		{
+			terminal_p.color = DEFAULT_VGA_COLOR;
+			return;
 		}
 	}
 
 	/* Write the character at the current position within framebuffer */
 	terminal_p.buffer[terminal_p.y * VGA_WIDTH + terminal_p.x] =
-	    ((__u16)terminal_p.color << 8) | (__u8) * *c;
+	    ((__u16)terminal_p.color << 8) | (__u8)(**c);
 
 	terminal_p.x++;
 	if (terminal_p.x >= VGA_WIDTH)
@@ -70,6 +112,7 @@ void _terminal_write(char *c)
 {
 	for (; *c != '\0'; c++)
 		_terminal_putchar(&c);
+	terminal_p.color = DEFAULT_VGA_COLOR;
 }
 
 /*
@@ -93,29 +136,6 @@ void _terminal_scroll(void)
 	/* Keep cursor on the last line */
 	terminal_p.y = VGA_HEIGHT - 1;
 	terminal_p.x = 0;
-}
-
-/*
- * Identify and treat symbols
- *
- * -> `bool`: Is symbol
- * @c: The symbol
- */
-static inline bool _terminal_symbol(char c)
-{
-	switch (c)
-	{
-		case '\n':
-		{
-			terminal_p.x = 0;
-			terminal_p.y++;
-
-			if (terminal_p.y >= VGA_HEIGHT)
-				_terminal_scroll();
-			return true;
-		}
-	}
-	return false;
 }
 
 /*
