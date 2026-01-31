@@ -16,11 +16,11 @@ enum log_levels
 enum log_flags
 {
 	LOG_VGA_PRT = 1 << 0,
-	LOG_APPEND  = 1 << 1,
+	LOG_APPEND = 1 << 1,
 };
 
-void _log_init(void);
-void _log(enum log_levels level, enum log_flags flags, const char *fmt, ...);
+void _log_init (void);
+void _log (enum log_levels level, enum log_flags flags, const char *fmt, ...);
 
 #define pr_log(level, fmt, ...) _log(level, LOG_VGA_PRT | LOG_APPEND, fmt, ##__VA_ARGS__)
 #define DBG(fmt, ...)           _log(LOG_DEBUG, LOG_VGA_PRT, fmt, ##__VA_ARGS__)

@@ -8,3 +8,7 @@ build/
 # Local-project config files
 .nvim-project.json
 .ccls
+
+cscope.*
+tags
+.string*

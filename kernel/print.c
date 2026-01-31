@@ -10,25 +10,27 @@
  * @fmt: The string
  * @...: Extra arguments
  */
-void kprintf(const char *fmt, ...)
+void
+kprintf (const char *fmt, ...)
 {
 	buf_t buf[FMT_BUF_SZ];
 
 	/* Extra arguments */
 	va_list args;
 
-	va_start(args, fmt);
+	va_start (args, fmt);
 
 	/* Format the string */
-	_fmt(buf, FMT_BUF_SZ, fmt, args);
-	va_end(args);
+	_fmt (buf, FMT_BUF_SZ, fmt, args);
+	va_end (args);
 
-	__k_print_write(buf);
+	__k_print_write (buf);
 }
 
-void __k_print_write(char *fmt)
+void
+__k_print_write (char *fmt)
 {
 	/* Write to screen */
-	_terminal_write(fmt);
-	__terminal_flush();
+	_terminal_write (fmt);
+	__terminal_flush ();
 }

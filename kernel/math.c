@@ -8,7 +8,8 @@
  * @num: Number
  * @base: Base
  */
-size_t ilog(__u64 num, __u32 base)
+size_t
+ilog (__u64 num, __u32 base)
 {
 	if (num == 0)
 		return num;
