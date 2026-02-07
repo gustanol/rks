@@ -95,10 +95,10 @@ set_entries:
 	 * In protected mode, table entries has 32 bits (1024 entries)
 	 * We are aimed in long mode, so we must write 64 bits for each of them (512 entries)
 	 *
-	 * Tables must be align to 4Kb (page size) to not overwrite flags
-	 * E.G.: A 4-Kb aligned address 0x1000 (0001 0000 0000 0000) has "free" bits from 0 to 11
-	 * For each entry, these space will be used to set flags
-	 * For a non-aligned address, we can't guarantee it will be loaded at a 4-Kb aligned address
+	 * Tables must be aligned to 4 KiB (page size) to not overwrite flags
+	 * E.G.: A 4-KiB aligned address 0x1000 (0001 0000 0000 0000) has "free" bits from 0 to 11
+	 * For each entry, this space will be used to set flags
+	 * For a non-aligned address, we can't guarantee it will be loaded at a 4-KiB aligned address
 	 */
 
 	/* Set PD pointer as the first entry of PDPT */
@@ -159,7 +159,10 @@ enable_paging:
 
 finish64:
 .code64
+
+.extern _setup_descriptors
 .extern rks_main
+
 	movw $0x20, %ax # 64-bit data segment descriptor
 
 	/* Set data descriptor as default */
@@ -167,6 +170,7 @@ finish64:
 	movw %ax, %es
 	movw %ax, %ss
 
+	call _setup_descriptors
 	call rks_main
 
 .halt:

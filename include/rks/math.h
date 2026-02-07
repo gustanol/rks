@@ -25,7 +25,6 @@ nlength (__u32 num, __u32 base)
 	return ilog (num, base) + 1;
 }
 
-#define POW16(n) \
-        (1ULL << ((n) * 4))
+#define POW16(n) (1ULL << ((n) * 4))
 
 #endif /* MATH_H */
