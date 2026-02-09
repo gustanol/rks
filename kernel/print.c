@@ -1,6 +1,6 @@
 #include <rks/args.h>
+#include <rks/console.h>
 #include <rks/print.h>
-#include <rks/screen/__terminal.h>
 #include <rks/string.h>
 
 /*

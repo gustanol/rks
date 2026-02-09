@@ -22,6 +22,7 @@ _setup_descriptors (void)
 	};
 
 	__load_gdt (&gdt_desc);
+	// load TSS
 }
 
 void

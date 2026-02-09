@@ -1,5 +1,4 @@
 #include <rks/math.h>
-#include <rks/screen/__terminal.h>
 #include <rks/string.h>
 
 /* Array mapping each algarism (considering any base) */
