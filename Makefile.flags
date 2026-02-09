@@ -4,15 +4,18 @@ AS ?= as
 LD ?= ld
 
 # Common C flags
-CFLAGS := -nostdinc -ffreestanding -fno-builtin -fno-stack-protector
-CFLAGS += -Wall -Wextra -Werror -Wpedantic -Wstrict-prototypes -Wold-style-definition -fno-pic -fno-pie
+CFLAGS := -nostdinc -ffreestanding -fno-builtin -fno-stack-protector -fno-pic -fno-pie
+CFLAGS += -Wall -Wextra -Werror -Wfatal-errors -Wpedantic -Wstrict-prototypes -Wold-style-definition
 CFLAGS += -mno-red-zone -mcmodel=kernel -std=gnu11
 CFLAGS += -mno-mmx -mno-sse -mno-sse2 -m64
 
+ROOT_BUILD_DIR := build
+CONFIG_VARS := $(filter CFG_%, $(.VARIABLES))
+
 # Defines
 CFLAGS += -D__KERNEL__ -DARCH_X64
+CFLAGS += $(foreach v, $(CONFIG_VARS), -D$(v)=$($(v)))
 ALL_OBJECTS :=
-ROOT_BUILD_DIR := build
 
 # Include paths
 CFLAGS += -I./include
@@ -23,4 +26,5 @@ ASFLAGS := -g --64
 # Linker flags
 LDFLAGS := -T kernel.ld -nostdlib -z max-page-size=0x1000 -no-pie -m elf_x86_64
 
-export CC AS LD CFLAGS ASFLAGS ASFLAGS32 LDFLAGS ALL_OBJECTS ROOT_BUILD_DIR
+TARGET := rks.elf
+export CC AS LD CFLAGS ASFLAGS ASFLAGS32 LDFLAGS ALL_OBJECTS ROOT_BUILD_DIR LDFLAGS
