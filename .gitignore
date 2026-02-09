@@ -4,11 +4,11 @@ build/
 *.swp
 *.swo
 *~
+iso/
 
 # Local-project config files
 .nvim-project.json
 .ccls
-
 cscope.*
 tags
 .string*
