@@ -3,150 +3,93 @@
 extern void _setup_descriptors (void);
 
 #define GDT_ENTRIES 7
+#define LOAD_GDT(descriptor) \
+    __asm__ volatile ("lgdt %0" : : "m"(*descriptor) : "memory")
 
-static struct gdt_e gdt[GDT_ENTRIES];
-// static struct tss_t tss;
+struct gdt_e gdt[GDT_ENTRIES] __attribute__ ((aligned (16)));
+static struct tss_t tss;
 
-static inline void __load_gdt (struct gdt_d *descriptor);
-static void        __set_gdt_entries (void);
+static void __set_gdt_entries (void);
 
 void
 _setup_descriptors (void)
 {
-	/* GDT setup */
+	static struct gdt_d gdt_desc __attribute__ ((aligned (16)));
+
 	__set_gdt_entries ();
 
-	struct gdt_d gdt_desc = {
-		.gdt_limit = (GDT_ENTRIES * sizeof gdt[0]) + gdt,
-		.gdt_start = gdt,
-	};
+	gdt_desc.gdt_limit = (GDT_ENTRIES * sizeof (gdt[0])) - 1;
+	gdt_desc.gdt_start = (__u64) & gdt;
 
-	__load_gdt (&gdt_desc);
-	// load TSS
+	LOAD_GDT (&gdt_desc);
 }
 
 void
 __set_gdt_entries (void)
 {
 	/* Null entry */
-	gdt[0] = (struct gdt_e){ 0 };
+	gdt[0] = (struct gdt_e)
+	{ 0 };
 
 	/* Kernel code segment */
-	gdt[1] = (struct gdt_e){
-		.limit_l           = 0xFFFF,
-		.base_l            = 0x0000,
-		.base_m            = 0x00,
-
-		.access_byte.p_bit = 1,
-		.access_byte.dpl   = 0, /* Ring zero */
-		.access_byte.dt    = 1, /* Code or Data segment */
-		.access_byte.exec  = 1, /* Code segment */
-		.access_byte.dc    = 0, /* Only executable by ring 0 */
-		.access_byte.rw    = 1,
-		.access_byte.acc   = 1,
-
-		.limit_u           = 0xF,
-
-		.flags.gra         = 1,
-		.flags.db          = 0,
-		.flags.lg          = 1,
-
-		.base_u            = 0,
+	gdt[1] = (struct gdt_e)
+	{
+		.limit_l = 0xFFFF,
+		.base_l = 0x0000,
+		.base_m = 0x00,
+		.access_byte = 0x9A,	/* 0b10011010 */
+		.flags_limit = 0x20 | 0x0F,
+		.base_u = 0x00,
 	};
 
 	/* Kernel data segment */
-	gdt[2] = (struct gdt_e){
-		.limit_l           = 0xFFFF,
-		.base_l            = 0x0000,
-		.base_m            = 0x00,
-
-		.access_byte.p_bit = 1,
-		.access_byte.dpl   = 0, /* Ring zero */
-		.access_byte.dt    = 1, /* Not a system segment */
-		.access_byte.exec  = 0, /* Data segment */
-		.access_byte.dc    = 0,
-		.access_byte.rw    = 1,
-		.access_byte.acc   = 1,
-
-		.limit_u           = 0xF,
-
-		.flags.gra         = 1,
-		.flags.db          = 0,
-		.flags.lg          = 1,
-
-		.base_u            = 0,
+	gdt[2] = (struct gdt_e)
+	{
+		.limit_l = 0xFFFF,
+		.base_l = 0x0000,
+		.base_m = 0x00,
+		.access_byte = 0x92,	/* 0b10010010 */
+		.flags_limit = 0x00 | 0x0F,
+		.base_u = 0x00,
 	};
 
 	/* User code segment */
-	gdt[3] = (struct gdt_e){
-		.limit_l           = 0xFFFF,
-		.base_l            = 0x0000,
-		.base_m            = 0x00,
-
-		.access_byte.p_bit = 1,
-		.access_byte.dpl   = 3, /* Ring three */
-		.access_byte.dt    = 1, /* Code or Data segment */
-		.access_byte.exec  = 1,
-		.access_byte.dc    = 0,
-		.access_byte.rw    = 1,
-		.access_byte.acc   = 1,
-
-		.limit_u           = 0xF,
-
-		.flags.gra         = 1,
-		.flags.db          = 0,
-		.flags.lg          = 1,
-
-		.base_u            = 0,
+	gdt[3] = (struct gdt_e)
+	{
+		.limit_l = 0xFFFF,
+		.base_l = 0x0000,
+		.base_m = 0x00,
+		.access_byte = 0xFA,	/* 0b11111010 */
+		.flags_limit = 0x20 | 0x0F,
+		.base_u = 0x00,
 	};
 
 	/* User data segment */
-	gdt[4] = (struct gdt_e){
-		.limit_l           = 0xFFFF,
-		.base_l            = 0x0000,
-		.base_m            = 0x00,
-
-		.access_byte.p_bit = 1,
-		.access_byte.dpl   = 3, /* Ring three */
-		.access_byte.dt    = 1, /* Code or Data segment */
-		.access_byte.exec  = 0,
-		.access_byte.dc    = 0,
-		.access_byte.rw    = 1,
-		.access_byte.acc   = 1,
-
-		.limit_u           = 0xF,
-
-		.flags.gra         = 1,
-		.flags.db          = 0,
-		.flags.lg          = 1,
-
-		.base_u            = 0,
+	gdt[4] = (struct gdt_e)
+	{
+		.limit_l = 0xFFFF,
+		.base_l = 0x0000,
+		.base_m = 0x00,
+		.access_byte = 0xF2,	/* 0b11110010 */
+		.flags_limit = 0x00 | 0x0F,
+		.base_u = 0x00,
 	};
 
 	/* Tast State Segment */
-	gdt[5] = (struct gdt_e){
-		.limit_l           = 0xFFFF,
-		.base_l            = 0x0000,
-		.base_m            = 0x00,
-
-		.access_byte.p_bit = 1,
-		.access_byte.dpl   = 0,
-		.access_byte.dt    = 0,
-		.access_byte.type  = TSS_A,
-
-		.limit_u           = 0xF,
-
-		.flags.gra         = 1,
-		.flags.db          = 0,
-		.flags.lg          = 1,
-
-		.base_u            = 0,
+	gdt[5] = (struct gdt_e)
+	{
+		.limit_l = sizeof (tss) - 1,
+		.base_l = ((__u64) & tss) & 0xFFFF,	/* Least significant 4 bits */
+		.base_m = (((__u64) & tss) >> 16) & 0xFF,	/* Next byte */
+		.access_byte = 0x80 | TSS_A,
+		.flags_limit = 0x00,
+		.base_u = (((__u64) & tss) >> 24) & 0xFF,	/* Next byte of base */
 	};
-}
 
-void
-__load_gdt (struct gdt_d *descriptor)
-{
-	/* Load the GDT table */
-	__asm__ volatile ("lgdt (%0)" : : "r"(descriptor) : "memory");
+	gdt[6] = (struct gdt_e)
+	{
+		.system_segment.base_ih =
+			(((__u64) & tss) >> 32) & 0xFFFFFFFF,
+		.system_segment.reserved = 0,
+	};
 }

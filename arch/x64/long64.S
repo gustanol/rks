@@ -163,14 +163,28 @@ finish64:
 .extern _setup_descriptors
 .extern rks_main
 
-	movw $0x20, %ax # 64-bit data segment descriptor
-
-	/* Set data descriptor as default */
+	movw $0x20, %ax
 	movw %ax, %ds
 	movw %ax, %es
 	movw %ax, %ss
 
 	call _setup_descriptors
+
+	# Far return to reload the 64-bit GDT's CS
+	pushq $0x08
+	leaq .ready(%rip), %rax
+	pushq %rax
+	lretq
+
+.ready:
+	movw $0x10, %ax # GDT kernel data segment
+	movw %ax, %ds
+	movw %ax, %es
+	movw %ax, %fs
+	movw %ax, %gs
+	movw %ax, %ss
+
+	# Call the main kernel function
 	call rks_main
 
 .halt:
