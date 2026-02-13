@@ -51,7 +51,7 @@ __rks_start:
 	jne _halt
 
 	movl %ebx, multiboot_info_ptr # Stores the pointer to Multiboot2 header
-	movl $stack_top, %esp # Set temporary stack for protected mode
+	movl $boot_stack_top, %esp # Set a boot stack for protected mode
 
 	/* Jump to next stage (GDT setup) */
 	jmp _setup_gdt
@@ -65,6 +65,6 @@ _halt:
 .section .bss
 .align 16
 
-stack_bottom:
+boot_stack_bottom:
 	.skip 16384
-stack_top:
+boot_stack_top:

@@ -160,15 +160,20 @@ enable_paging:
 finish64:
 .code64
 
-.extern _setup_descriptors
+.extern _setup_long_gdt
 .extern rks_main
+.extern _setup_tss
 
 	movw $0x20, %ax
 	movw %ax, %ds
 	movw %ax, %es
 	movw %ax, %ss
 
-	call _setup_descriptors
+	/* Update the stack pointer */
+	movq $kernel_stack_top, %rsp
+
+	/* C function to setup a GDT for long mode */
+	call _setup_long_gdt
 
 	# Far return to reload the 64-bit GDT's CS
 	pushq $0x08
@@ -184,10 +189,19 @@ finish64:
 	movw %ax, %gs
 	movw %ax, %ss
 
-	# Call the main kernel function
-	call rks_main
+	call _setup_tss
+	call rks_main # Main kernel function
 
 .halt:
 	cli
 	hlt
 	jmp .halt
+
+.section .bss
+.align 16
+
+.globl kernel_stack_top
+
+kernel_stack_bottom:
+	.skip 16384
+kernel_stack_top:

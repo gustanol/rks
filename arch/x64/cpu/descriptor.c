@@ -1,29 +1,55 @@
 #include "descriptor.h"
 
-extern void _setup_descriptors (void);
-
 #define GDT_ENTRIES 7
 #define LOAD_GDT(descriptor) \
-    __asm__ volatile ("lgdt %0" : : "m"(*descriptor) : "memory")
+        __asm__ volatile ( \
+                "lgdt %0" \
+                : \
+                : "m"(*descriptor) \
+                : "memory" \
+        )
 
+#define LOAD_TSS(descriptor) \
+        __asm__ volatile ( \
+                "ltr %0" \
+                : \
+                : "r"(descriptor) \
+                : "memory" \
+        )
+
+/* GDT struct */
 struct gdt_e gdt[GDT_ENTRIES] __attribute__ ((aligned (16)));
-static struct tss_t tss;
+static struct tss_t tss;	/* Task State Segment */
 
 static void __set_gdt_entries (void);
 
 void
-_setup_descriptors (void)
+_setup_long_gdt (void)
 {
+	/* GDT descriptor */
 	static struct gdt_d gdt_desc __attribute__ ((aligned (16)));
 
 	__set_gdt_entries ();
-
 	gdt_desc.gdt_limit = (GDT_ENTRIES * sizeof (gdt[0])) - 1;
 	gdt_desc.gdt_start = (__u64) & gdt;
 
 	LOAD_GDT (&gdt_desc);
 }
 
+extern char kernel_stack_top[];
+
+void
+_setup_tss (void)
+{
+	tss.rsp0 = (__u64) kernel_stack_top;
+	LOAD_TSS (0x28);
+}
+
+/*
+ * Set the essential GDT entries
+ *
+ * -> void
+ */
 void
 __set_gdt_entries (void)
 {
@@ -86,6 +112,14 @@ __set_gdt_entries (void)
 		.base_u = (((__u64) & tss) >> 24) & 0xFF,	/* Next byte of base */
 	};
 
+	/*
+	 * For system segments, we must set its base address
+	 *
+	 * As an address has 64 bits and an entry base has 32 bits, we must use more than one entry
+	 *
+	 * The first 32 bits are used as the upper 32 bits of TSS base address
+	 * The remaining are reserved
+	 */
 	gdt[6] = (struct gdt_e)
 	{
 		.system_segment.base_ih =
