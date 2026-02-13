@@ -1,4 +1,4 @@
-#include "descriptor.h"
+#include <descriptor.h>
 
 #define GDT_ENTRIES 7
 #define LOAD_GDT(descriptor) \

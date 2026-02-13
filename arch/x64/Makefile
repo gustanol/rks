@@ -10,6 +10,8 @@ ARCH_C_OBJECTS := $(patsubst $(ARCH_DIR)/%.c,$(ARCH_BUILD_DIR)/%.o,$(ARCH_C_SOUR
 ARCH_OBJECTS := $(ARCH_ASM_OBJECTS) $(ARCH_C_OBJECTS)
 ALL_OBJECTS += $(ARCH_OBJECTS)
 
+ARCH_CFLAGS := -I$(ARCH_DIR)/include
+
 # Build rules for Assembly
 $(ARCH_BUILD_DIR)/%.o: $(ARCH_DIR)/%.S
 	@mkdir -p $(dir $@)
@@ -20,4 +22,4 @@ $(ARCH_BUILD_DIR)/%.o: $(ARCH_DIR)/%.S
 $(ARCH_BUILD_DIR)/%.o: $(ARCH_DIR)/%.c
 	@mkdir -p $(dir $@)
 	@echo "CC  $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(ARCH_CFLAGS) -c $< -o $@
