@@ -1,16 +1,14 @@
-#include <rks/console.h>
+#include <rks/console/console.h>
 #include <rks/log.h>
 #include <rks/print.h>
-
-extern void rks_main (void);
 
 void
 rks_main (void)
 {
-	_terminal_init ();
+	console_init ();
 	_log_init ();
 
-	kprintf ("Testing %% printing, %d!\n", 1);
+	kprintf ("Testing %% >[0xEB]{printing, %d}!\n", 1);
 	kprintf ("Testing %p printing, %d, %s!\n", 20, "RKS");
 	kprintf ("Testing printing, %o, %s!\n", 343, "Test");
 	kprintf ("Testing printing, >[0xE9]{%o}!\n", 43034);
@@ -25,10 +23,4 @@ rks_main (void)
 	DBG ("something happened\n");
 	WRN ("not right, but survivable\n");
 	ERR ("error\n");
-	INF ("test: just testing\n");
-
-	while (1)
-	{
-		__asm__ volatile ("hlt");
-	}
 }

@@ -1,3 +1,4 @@
+
 /*
  * Generic layer to access/use VGA text mode
  *
@@ -5,17 +6,19 @@
  */
 
 #include <rks/drivers/console/vga.h>
+#include <rks/console/dispatcher.h>
 
 #define VGA_BUFFER_ADDRESS 0xB8000
+#define VGA_HEIGHT 25
+#define VGA_WIDTH 80
+#define VGA_BUFFER_SIZE (VGA_HEIGHT * VGA_WIDTH)
 
-struct vga_ctx
-{
-	volatile __u16 *buffer;
-	__u8            color;
+static void vga_flush_buffer (const struct screen_cell* buffer);
+
+struct console_driver vga_drv = {
+	.name = "vga",
+	.flush = vga_flush_buffer,
 };
-
-static struct vga_ctx vga;
-static char           vga_framebuffer[VGA_BUF_SIZE];
 
 /*
  * VGA context initializer
@@ -25,60 +28,8 @@ static char           vga_framebuffer[VGA_BUF_SIZE];
 void
 vga_init_context (void)
 {
-	vga.buffer = (volatile __u16 *)vga_framebuffer;
-	vga.color  = VGA_DEFAULT_COLOR;
-}
-
-/*
- * Put a character at the current position of framebuffer using the current color
- *
- * -> int: Return status
- * @void: Character to be written
- */
-int
-vga_put_char (char c, __u8 color, __u16 index)
-{
-	if (index >= VGA_BUF_SIZE)
-		return 0;
-
-	vga.buffer[index] = ((__u16)color << 8) | (__u8)(c);
-	return 1;
-}
-
-void
-vga_get_char (__u16 index, struct vga_buffer_char *bc)
-{
-	if (index >= VGA_BUF_SIZE)
-		return;
-
-	bc->character = (__u8)vga.buffer[index] >> 8;
-	bc->color     = (__u8)vga.buffer[index] << 8;
-}
-
-/*
- * Color modifier helper
- * Notice there's no other way to modify the current color but this
- *
- * -> void
- * @color: Color to be set
- */
-void
-vga_set_color (__u8 color)
-{
-	vga.color = color;
-}
-
-/*
- * Replace all content of framebuffer for spaces
- *
- * -> void
- */
-void
-vga_clear_buffer (void)
-{
-	/* For now, clear buffer manually */
-	for (__u16 i = 0; i < VGA_BUF_SIZE; i++)
-		vga.buffer[i] = (__u16)0x20;
+	/* Register this driver to start using it */
+	console_register (&vga_drv);
 }
 
 /*
@@ -88,11 +39,13 @@ vga_clear_buffer (void)
  * -> void
  */
 void
-vga_flush_buffer (void)
+vga_flush_buffer (const struct screen_cell* buffer)
 {
-	char       *video  = (char *)VGA_BUFFER_ADDRESS;
-	const char *buffer = (const char *)vga.buffer;
+	char* video = (char *) VGA_BUFFER_ADDRESS;
 
-	for (__u16 i = 0; i < VGA_BUF_SIZE; i++)
-		video[i] = buffer[i];
+	for (__u16 i = 0; i < VGA_BUFFER_SIZE; i++)
+	{
+		video[i * 2] = buffer[i].character;
+		video[i * 2 + 1] = buffer[i].color;
+	}
 }

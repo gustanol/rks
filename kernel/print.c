@@ -1,5 +1,5 @@
 #include <rks/args.h>
-#include <rks/console.h>
+#include <rks/console/console.h>
 #include <rks/print.h>
 #include <rks/string.h>
 
@@ -11,7 +11,7 @@
  * @...: Extra arguments
  */
 void
-kprintf (const char *fmt, ...)
+kprintf (const char* fmt, ...)
 {
 	buf_t buf[FMT_BUF_SZ];
 
@@ -28,9 +28,9 @@ kprintf (const char *fmt, ...)
 }
 
 void
-__k_print_write (char *fmt)
+__k_print_write (char* fmt)
 {
 	/* Write to screen */
-	_terminal_write (fmt);
-	__terminal_flush ();
+	console_write (fmt);
+	console_flush ();
 }
