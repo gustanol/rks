@@ -17,26 +17,23 @@
                 : "memory" \
         )
 
-/* GDT struct */
-struct gdt_e gdt[GDT_ENTRIES] __attribute__ ((aligned (16)));
+static struct gdt_e gdt[GDT_ENTRIES] __attribute__ ((aligned (16)));	/* GDT struct */
 static struct tss_t tss;	/* Task State Segment */
+static struct gdt_d gdt_desc __attribute__ ((aligned (16)));	/* GDT descriptor */
 
 static void __set_gdt_entries (void);
 
 void
 _setup_long_gdt (void)
 {
-	/* GDT descriptor */
-	static struct gdt_d gdt_desc __attribute__ ((aligned (16)));
-
 	__set_gdt_entries ();
-	gdt_desc.gdt_limit = (GDT_ENTRIES * sizeof (gdt[0])) - 1;
-	gdt_desc.gdt_start = (__u64) & gdt;
+	gdt_desc.limit = (GDT_ENTRIES * sizeof (struct gdt_e)) - 1;
+	gdt_desc.start = (__u64) & gdt;
 
 	LOAD_GDT (&gdt_desc);
 }
 
-extern char kernel_stack_top[];
+extern void kernel_stack_top (void);
 
 void
 _setup_tss (void)

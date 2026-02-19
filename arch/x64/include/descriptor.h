@@ -6,7 +6,7 @@
 struct tss_t
 {
 	__u32 reserved0;
-	__u64 rsp0; /* Kernel stack pointer */
+	__u64 rsp0;		/* Kernel stack pointer */
 	__u64 rsp1;
 	__u64 rsp2;
 	__u64 reserved1;
@@ -24,8 +24,8 @@ struct gdt_e
 		struct
 		{
 			__u16 limit_l;
-			__u16 base_l; /* Lower base address 16 bits */
-			__u8  base_m; /* Middle base address byte */
+			__u16 base_l;	/* Lower base address 16 bits */
+			__u8 base_m;	/* Middle base address byte */
 
 			/*
 			 * P (1b) = Present bit (should always be 1)
@@ -76,7 +76,7 @@ struct gdt_e
 
 		struct
 		{
-			__u32 base_ih; /* Upper 32 bits base address */
+			__u32 base_ih;	/* Upper 32 bits base address */
 			__u32 reserved;
 		} system_segment;
 	};
@@ -85,15 +85,15 @@ struct gdt_e
 /* GDT descriptor */
 struct gdt_d
 {
-	__u16 gdt_limit;
-	__u64 gdt_start;
+	__u16 limit;
+	__u64 start;
 } __attribute__ ((packed));
 
 enum
 {
-	LDT   = 0x2, /* Local descriptor table */
-	TSS_A = 0x9, /* Available Task State Segment */
+	LDT = 0x2,		/* Local descriptor table */
+	TSS_A = 0x9,		/* Available Task State Segment */
 	TSS_B = 0xB,
-} segment_type; /* AB.ACC = 0 */
+} segment_type;			/* AB.ACC = 0 */
 
 #endif /* DESCRIPTOR_H */

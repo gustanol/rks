@@ -161,8 +161,6 @@ finish64:
 .code64
 
 .extern _setup_long_gdt
-.extern rks_main
-.extern _setup_tss
 
 	movw $0x20, %ax
 	movw %ax, %ds
@@ -182,6 +180,11 @@ finish64:
 	lretq
 
 .ready:
+
+.extern _setup_tss
+.extern _setup_idt
+.extern rks_main
+
 	movw $0x10, %ax # GDT kernel data segment
 	movw %ax, %ds
 	movw %ax, %es
@@ -190,6 +193,7 @@ finish64:
 	movw %ax, %ss
 
 	call _setup_tss
+	call _setup_idt
 	call rks_main # Main kernel function
 
 .halt:

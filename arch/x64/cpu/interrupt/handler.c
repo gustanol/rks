@@ -1,4 +1,5 @@
 #include <rks/types.h>
+#include <rks/print.h>
 
 struct interrupt_frame_t
 {
@@ -34,7 +35,14 @@ struct interrupt_frame_t
 void
 _isr_handler (struct interrupt_frame_t* frame)
 {
-	frame->r15 = 0;
+	/*
+	 * Notice it'd only work after console is been initialized
+	 *
+	 * It means if any interruption is been called before main function, there'll not be visible
+	 *
+	 * To make kernel initialize console specifications before it usually does, enable "CFG_EARLY_CONSOLE"
+	 */
+	kprintf ("Exception %d\n", frame->err_code);
 	while (1)
 		__asm__ volatile ("hlt");
 }

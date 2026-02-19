@@ -9,8 +9,8 @@
  */
 .globl isr0
 isr0:
-	pushq 0 # Error code
-	pushq 0 # Interrupt number
+	pushq $0 # Error code
+	pushq $0 # Interrupt number
 	call isr_common_stub
 
 /*
@@ -20,8 +20,8 @@ isr0:
  */
 .globl isr1
 isr1:
-	pushq 0
-	pushq 1
+	pushq $0
+	pushq $1
 	call isr_common_stub
 
 /*
@@ -31,8 +31,8 @@ isr1:
  */
 .globl isr2
 isr2:
-	pushq 0
-	pushq 2
+	pushq $0
+	pushq $2
 	call isr_common_stub
 
 /*
@@ -42,8 +42,8 @@ isr2:
  */
 .globl isr3
 isr3:
-	pushq 0
-	pushq 3
+	pushq $0
+	pushq $3
 	call isr_common_stub
 
 /*
@@ -53,8 +53,8 @@ isr3:
  */
 .globl isr4
 isr4:
-	pushq 0
-	pushq 4
+	pushq $0
+	pushq $4
 	call isr_common_stub
 
 /*
@@ -64,8 +64,8 @@ isr4:
  */
 .globl isr5
 isr5:
-	pushq 0
-	pushq 5
+	pushq $0
+	pushq $5
 	call isr_common_stub
 
 /*
@@ -75,8 +75,8 @@ isr5:
  */
 .globl isr6
 isr6:
-	pushq 0
-	pushq 6
+	pushq $0
+	pushq $6
 	call isr_common_stub
 
 /*
@@ -86,8 +86,8 @@ isr6:
  */
 .globl isr7
 isr7:
-	pushq 0
-	pushq 7
+	pushq $0
+	pushq $7
 	call isr_common_stub
 
 /*
@@ -98,7 +98,7 @@ isr7:
 .globl isr8
 isr8:
 	// Error code already pushed by CPU
-	pushq 8
+	pushq $8
 	call isr_common_stub
 	
 /*
@@ -108,7 +108,7 @@ isr8:
  */
 .globl isr10
 isr10:
-	pushq 10
+	pushq $10
 	call isr_common_stub
 
 /*
@@ -118,7 +118,7 @@ isr10:
  */
 .globl isr11
 isr11:
-	pushq 11
+	pushq $11
 	call isr_common_stub
 
 /*
@@ -128,7 +128,7 @@ isr11:
  */
 .globl isr12
 isr12:
-	pushq 12
+	pushq $12
 	call isr_common_stub
 
 /*
@@ -138,7 +138,7 @@ isr12:
  */
 .globl isr13
 isr13:
-	pushq 13
+	pushq $13
 	call isr_common_stub
 
 /*
@@ -148,7 +148,7 @@ isr13:
  */
 .globl isr14
 isr14:
-	pushq 14
+	pushq $14
 	call isr_common_stub
 
 isr_common_stub:
@@ -194,4 +194,10 @@ isr_common_stub:
 	popq %rbx
 	popq %rax
 
+	/*
+	 * Notice that, after we pop all pushed registers, there's still the error code and the interruption number
+	 *
+	 * For them, we set the stack pointer 16 bytes up to overwrite them later
+	 */
+	addq $16, %rsp
 	iretq

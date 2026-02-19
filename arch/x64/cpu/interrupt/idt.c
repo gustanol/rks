@@ -1,6 +1,14 @@
 #include <idt.h>
 
 #define IDT_ENTRIES 256
+#define LOAD_IDT(descriptor) \
+        __asm__ volatile ( \
+                "lidt %0" \
+                : \
+                : "m"(*descriptor) \
+                : "memory" \
+        )
+
 #define IDT_ENTRY(OFFSET, SELECTOR, IST, TYPE_ATTRIBUTES) \
  (struct idt_e) \
  { \
@@ -13,34 +21,41 @@
         .reserved = 0, \
  }
 
-struct idt_e idt[IDT_ENTRIES];
+static struct idt_e idt[IDT_ENTRIES] __attribute__ ((aligned (16)));	/* IDT struct */
+static struct idtr idtr __attribute__ ((aligned (16)));	/* IDT register */
+
 static void __set_idt_entries (void);
 
 void
 _setup_idt (void)
 {
 	__set_idt_entries ();
+	idtr.limit = (IDT_ENTRIES * sizeof (struct idt_e)) - 1;
+	idtr.base = (__u64) & idt;
+
+	LOAD_IDT (&idtr);
 }
 
 void
 __set_idt_entries (void)
 {
-	/* Externs ISRs */
-	extern char isr0[];
-	extern char isr1[];
-	extern char isr2[];
-	extern char isr3[];
-	extern char isr4[];
-	extern char isr5[];
-	extern char isr6[];
-	extern char isr7[];
-	extern char isr8[];
-	extern char isr10[];
-	extern char isr11[];
-	extern char isr12[];
-	extern char isr13[];
-	extern char isr14[];
+	/* Extern ISRs */
+	extern void isr0 (void);
+	extern void isr1 (void);
+	extern void isr2 (void);
+	extern void isr3 (void);
+	extern void isr4 (void);
+	extern void isr5 (void);
+	extern void isr6 (void);
+	extern void isr7 (void);
+	extern void isr8 (void);
+	extern void isr10 (void);
+	extern void isr11 (void);
+	extern void isr12 (void);
+	extern void isr13 (void);
+	extern void isr14 (void);
 
+	/* Set entries */
 	idt[0] = IDT_ENTRY (isr0, 0x08, 0, 0x8E);
 	idt[1] = IDT_ENTRY (isr1, 0x08, 0, 0x8F);
 	idt[2] = IDT_ENTRY (isr2, 0x08, 0, 0x8E);
