@@ -3,18 +3,35 @@ include config.mk
 include Makefile.flags
 include arch/x64/Makefile
 include kernel/Makefile
+include lib/Makefile
 include drivers/Makefile
 
-all: $(ROOT_BUILD_DIR)/$(TARGET)
+all_objs := $(obj-1)
 
-$(ROOT_BUILD_DIR)/$(TARGET): $(ALL_OBJECTS)
+all: $(root_build_dir)/$(target)
+$(all_objs): $(autoconfig_header)
+
+# Target build rule
+$(root_build_dir)/$(target): $(all_objs)
 	@$(LD) $(LDFLAGS) $^ -o $@
 	@echo "LD  $@"
+	@ln -s $@ .
 
 clean:
-	rm -rf $(ROOT_BUILD_DIR)
+	rm -rf $(root_build_dir)
+	rm include/rks/autoconf.h
+	rm ./$(target)
 
-make help:
+# Rule to generate a header with all flags
+$(autoconfig_header): config.mk
+	@echo "/* Generated header */" > $@
+	@echo "#ifndef AUTOCONF_H" >> $@
+	@echo "#define AUTOCONF_H" >> $@
+	@$(foreach v, $(filter CFG_%, $(.VARIABLES)), \
+		echo "#define $(v) $($(v))" >> $@;)
+	@echo "#endif /* AUTOCONF_H */" >> $@
+
+help:
 	@echo "Research Kernel System"
 	@echo ""
 	@echo "Build rules:"

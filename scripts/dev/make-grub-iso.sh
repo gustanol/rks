@@ -1,6 +1,7 @@
 #!/bin/sh
 DIR=$(pwd)
 
+rm -rf iso
 mkdir -p iso/boot/grub
 
 cp build/rks.elf iso/boot

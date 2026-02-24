@@ -12,3 +12,6 @@ iso/
 cscope.*
 tags
 .string*
+
+# Auto-generated header file
+include/rks/autoconf.h

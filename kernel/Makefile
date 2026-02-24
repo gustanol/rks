@@ -1,12 +1,13 @@
-KERNEL_DIR := kernel
-KERNEL_BUILD_DIR := $(ROOT_BUILD_DIR)/$(KERNEL_DIR)
+kernel_dir := kernel
+kernel_build_dir := $(root_build_dir)/$(kernel_dir)
 
-KERNEL_C_SOURCES := $(shell find $(KERNEL_DIR) -name '*.c')
-KERNEL_C_OBJECTS := $(patsubst $(KERNEL_DIR)/%.c,$(KERNEL_BUILD_DIR)/%.o,$(KERNEL_C_SOURCES))
-KERNEL_OBJECTS := $(KERNEL_C_OBJECTS)
-ALL_OBJECTS += $(KERNEL_OBJECTS)
+# Kernel objects
+obj-1 += $(kernel_build_dir)/init/main.o
+obj-1 += $(kernel_build_dir)/console/console.o
+obj-$(CFG_KLOG) += $(kernel_build_dir)/klog/log.o
+obj-$(CFG_KLOG) += $(kernel_build_dir)/klog/print.o
 
-$(KERNEL_BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c
+$(kernel_build_dir)/%.o: $(kernel_dir)/%.c
 	@mkdir -p $(dir $@)
 	@echo "CC  $<"
 	@$(CC) $(CFLAGS) -c $< -o $@

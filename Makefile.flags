@@ -9,22 +9,25 @@ CFLAGS += -Wall -Wextra -Werror -Wfatal-errors -Wpedantic -Wstrict-prototypes -W
 CFLAGS += -mno-red-zone -mcmodel=kernel -std=gnu11
 CFLAGS += -mno-mmx -mno-sse -mno-sse2 -m64
 
-ROOT_BUILD_DIR := build
-CONFIG_VARS := $(filter CFG_%, $(.VARIABLES))
+root_build_dir := build
 
 # Defines
 CFLAGS += -D__KERNEL__ -DARCH_X64
-CFLAGS += $(foreach v, $(CONFIG_VARS), -D$(v)=$($(v)))
-ALL_OBJECTS :=
+obj-0 :=
+obj-1 :=
+all_objs :=
 
 # Include paths
 CFLAGS += -I./include
+CFLAGS += -I./include/rks/arch/$(ARCH)
 
 # Assembly flags
 ASFLAGS := -g --64
 
 # Linker flags
-LDFLAGS := -T kernel.ld -nostdlib -z max-page-size=0x1000 -no-pie -m elf_x86_64
+LDFLAGS := -Wunused-function --warn-common --warn-once
+LDFLAGS := -T ./arch/$(ARCH)/boot/kernel.ld -nostdlib -z max-page-size=0x1000 -no-pie -m elf_x86_64
 
-TARGET := rks.elf
-export CC AS LD CFLAGS ASFLAGS ASFLAGS32 LDFLAGS ALL_OBJECTS ROOT_BUILD_DIR LDFLAGS
+target := rks.elf
+autoconfig_header := include/rks/autoconf.h
+export CC AS LD CFLAGS ASFLAGS LDFLAGS all_objs root_build_dir

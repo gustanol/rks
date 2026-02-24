@@ -1,2 +1,9 @@
-CFG_CONSOLE_VGA=1 # Support for VGA text mode
-CFG_CONSOLE_GOP=0
+ARCH := x64
+
+CFG_CONSOLE_VGA 			:= 1
+CFG_CONSOLE_GOP 			:= 0
+CFG_EARLY_CONSOLE 		:= 1
+CFG_KLOG 							:= 1
+
+CFG_UEFI := 1
+CFG_BIOS := 0

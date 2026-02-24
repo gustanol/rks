@@ -1,25 +1,28 @@
-ARCH_DIR := arch/x64
-ARCH_BUILD_DIR := $(ROOT_BUILD_DIR)/$(ARCH_DIR)
+x64_dir := arch/x64
+x64_build_dir := $(root_build_dir)/$(x64_dir)
 
-ARCH_ASM_SOURCES := $(shell find $(ARCH_DIR) -name '*.S')
-ARCH_ASM_OBJECTS := $(patsubst $(ARCH_DIR)/%.S,$(ARCH_BUILD_DIR)/%.o,$(ARCH_ASM_SOURCES))
+# 32-bit init code
+obj-1 += $(x64_build_dir)/boot/protected/entry.o
+obj-1 += $(x64_build_dir)/boot/protected/gdt.o
+obj-1 += $(x64_build_dir)/boot/protected/setup32.o
 
-ARCH_C_SOURCES := $(shell find $(ARCH_DIR) -name '*.c')
-ARCH_C_OBJECTS := $(patsubst $(ARCH_DIR)/%.c,$(ARCH_BUILD_DIR)/%.o,$(ARCH_C_SOURCES))
+# 64-bit long mode objects
+obj-1 += $(x64_build_dir)/boot/long/transition.o
 
-ARCH_OBJECTS := $(ARCH_ASM_OBJECTS) $(ARCH_C_OBJECTS)
-ALL_OBJECTS += $(ARCH_OBJECTS)
+obj-1 += $(x64_build_dir)/cpu/descriptor.o
+obj-1 += $(x64_build_dir)/cpu/idt.o
 
-ARCH_CFLAGS := -I$(ARCH_DIR)/include
+obj-1 += $(x64_build_dir)/interrupt/isr.o
+obj-1 += $(x64_build_dir)/interrupt/handler.o
 
 # Build rules for Assembly
-$(ARCH_BUILD_DIR)/%.o: $(ARCH_DIR)/%.S
+$(x64_build_dir)/%.o: $(x64_dir)/%.S
 	@mkdir -p $(dir $@)
 	@echo "AS  $<"
 	@$(AS) $(ASFLAGS) $< -o $@
 
 # Build rules for C
-$(ARCH_BUILD_DIR)/%.o: $(ARCH_DIR)/%.c
+$(x64_build_dir)/%.o: $(x64_dir)/%.c
 	@mkdir -p $(dir $@)
 	@echo "CC  $<"
-	@$(CC) $(CFLAGS) $(ARCH_CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@

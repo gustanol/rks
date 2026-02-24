@@ -1,1 +1,1 @@
-include drivers/console/Makefile
+include drivers/video/Makefile
