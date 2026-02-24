@@ -5,8 +5,8 @@
  * Compiled if "CFG_CONSOLE_VGA=1"
  */
 
-#include <rks/drivers/console/vga.h>
-#include <rks/console/dispatcher.h>
+#include <rks/kernel/init.h>
+#include <rks/kernel/console/dispatcher.h>
 
 #define VGA_BUFFER_ADDRESS 0xB8000
 #define VGA_HEIGHT 25
@@ -31,6 +31,9 @@ vga_init_context (void)
 	/* Register this driver to start using it */
 	console_register (&vga_drv);
 }
+
+/* Declare driver to be initialized */
+DECLARE_DRIVER_INIT (vga_init_context);
 
 /*
  * Framebuffer flusher helper

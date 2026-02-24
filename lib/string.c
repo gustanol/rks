@@ -1,5 +1,5 @@
-#include <rks/math.h>
-#include <rks/string.h>
+#include <rks/lib/math.h>
+#include <rks/lib/string.h>
 
 /* Array mapping each algarism (considering any base) */
 static char nmap[17] = "0123456789ABCDEF";

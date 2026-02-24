@@ -1,10 +1,24 @@
-#include <rks/console/console.h>
-#include <rks/log.h>
-#include <rks/print.h>
+#include <rks/kernel/console/console.h>
+#include <rks/kernel/klog/log.h>
+#include <rks/kernel/klog/print.h>
+#include <rks/kernel/init.h>
+
+extern init_fn_t __drivers_init_start;
+extern init_fn_t __drivers_init_end;
+
+static void
+init_drivers (void)
+{
+	for (init_fn_t * ptr = &__drivers_init_start;
+	     ptr < &__drivers_init_end; ptr++)
+		(*ptr) ();
+}
 
 void
 rks_main (void)
 {
+	init_drivers ();
+
 	console_init ();
 	_log_init ();
 
@@ -23,4 +37,11 @@ rks_main (void)
 	DBG ("something happened\n");
 	WRN ("not right, but survivable\n");
 	ERR ("error\n");
+
+	/* Interrupts tests */
+	volatile int x = 1;
+	volatile int y = 0;
+	volatile int z = x / y;
+	kprintf ("z=%d\n", z);
+	/* */
 }

@@ -1,8 +1,7 @@
-#include <rks/drivers/console/vga.h>
-#include <rks/console/console.h>
-#include <rks/console/dispatcher.h>
-#include <rks/math.h>
-#include <rks/string.h>
+#include <rks/kernel/console/console.h>
+#include <rks/kernel/console/dispatcher.h>
+#include <rks/lib/math.h>
+#include <rks/lib/string.h>
 
 /* Console context struct */
 struct console_ctx
@@ -54,10 +53,6 @@ console_init (void)
 	console.attributes.width = (size_t) SCREEN_WIDTH;
 	console.attributes.height = (size_t) SCREEN_HEIGHT;
 	console.screen = screen;
-
-#if CFG_CONSOLE_VGA
-	vga_init_context ();
-#endif
 }
 
 /*

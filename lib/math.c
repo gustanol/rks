@@ -1,4 +1,4 @@
-#include <rks/math.h>
+#include <rks/lib/math.h>
 #include <rks/types.h>
 
 /*

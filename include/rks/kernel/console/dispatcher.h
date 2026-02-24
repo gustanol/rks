@@ -1,7 +1,7 @@
 #ifndef __DISPATCHER_H
 #define __DISPATCHER_H
 
-#include <rks/console/console.h>
+#include "console.h"
 
 #define MAX_CONSOLES 2
 

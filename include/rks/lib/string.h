@@ -1,7 +1,7 @@
 #ifndef STRING_H
 #define STRING_H
 
-#include <rks/args.h>
+#include "args.h"
 #include <rks/types.h>
 
 #define FMT_BUF_SZ 512

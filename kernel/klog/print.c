@@ -1,7 +1,7 @@
-#include <rks/args.h>
-#include <rks/console/console.h>
-#include <rks/print.h>
-#include <rks/string.h>
+#include <rks/lib/args.h>
+#include <rks/kernel/console/console.h>
+#include <rks/kernel/klog/print.h>
+#include <rks/lib/string.h>
 
 /*
  * Prints a formatted text to screen

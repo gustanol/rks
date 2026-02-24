@@ -1,10 +1,10 @@
-ENTRY(__rks_start) /* Entry point */
+ENTRY(__rks_start) /* x64 entry point */
 
 SECTIONS
 {
     . = 0x100000;  /* 1MB */
     
-    /* Multiboot header must at the start */
+    /* Multiboot header */
     .multiboot : ALIGN(4096)
     {
         *(.multiboot)
@@ -23,7 +23,7 @@ SECTIONS
     {
         *(.rodata)
     }
-    
+
     .data : ALIGN(4096)
     {
         PROVIDE(gdt_start = .);
@@ -36,6 +36,12 @@ SECTIONS
         *(.bss)
     }
 
-    /* Where the kernel ends in memory */
+    .drivers_init : ALIGN(4096)
+    {
+	__drivers_init_start = .;
+	*(.drivers_init)
+	__drivers_init_end = .;
+    }
+
     kernel_end = .;
 }

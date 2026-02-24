@@ -1,6 +1,6 @@
-#include <rks/log.h>
-#include <rks/print.h>
-#include <rks/string.h>
+#include <rks/kernel/klog/log.h>
+#include <rks/kernel/klog/print.h>
+#include <rks/lib/string.h>
 
 /* Log subsystem global state struct */
 struct log_t

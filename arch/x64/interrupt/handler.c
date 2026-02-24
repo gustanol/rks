@@ -1,5 +1,5 @@
 #include <rks/types.h>
-#include <rks/print.h>
+#include <rks/kernel/klog/print.h>
 
 struct interrupt_frame_t
 {
