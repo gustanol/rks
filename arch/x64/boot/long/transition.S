@@ -147,7 +147,7 @@ enable_long_mode:
 
 	/* Set bit 8 of EFER (LME - Long Mode Enable) */
 	orl $(1 << 8), %eax
-	wrmsr # Write EFER back
+	wrmsr /* Write EFER back */
 
 enable_paging:
 	/* Enable paging by setting the bit 31 of CR0 */
@@ -160,7 +160,8 @@ enable_paging:
 finish64:
 .code64
 
-.extern _setup_long_gdt
+.extern rks_main
+.extern multiboot_info_ptr
 
 	movw $0x20, %ax
 	movw %ax, %ds
@@ -170,32 +171,11 @@ finish64:
 	/* Update the stack pointer */
 	movq $kernel_stack_top, %rsp
 
-	/* C function to setup a GDT for long mode */
-	call _setup_long_gdt
+	/* Call the main kernel function */
+	movq multiboot_info_ptr, %rdi
+	call rks_main
 
-	# Far return to reload the 64-bit GDT's CS
-	pushq $0x08
-	leaq .ready(%rip), %rax
-	pushq %rax
-	lretq
-
-.ready:
-
-.extern _setup_tss
-.extern _setup_idt
-.extern rks_main
-
-	movw $0x10, %ax # GDT kernel data segment
-	movw %ax, %ds
-	movw %ax, %es
-	movw %ax, %fs
-	movw %ax, %gs
-	movw %ax, %ss
-
-	call _setup_tss
-	call _setup_idt
-	call rks_main # Main kernel function
-
+/* It should not be reached */
 .halt:
 	cli
 	hlt
