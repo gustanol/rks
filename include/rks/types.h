@@ -1,10 +1,16 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#define NULL (void*)0
+
 typedef unsigned char __u8;
 typedef unsigned short __u16;
 typedef unsigned int __u32;
 typedef unsigned long __u64;
+
+typedef unsigned int u32;
+typedef unsigned long u64;
+typedef unsigned long long ul64;
 
 typedef signed char __s8;
 typedef signed short __s16;
@@ -15,7 +21,7 @@ typedef _Bool bool;
 #define true  1;
 #define false 0;
 
-typedef __u32 size_t;
-typedef __s32 ssize_t;
+typedef __u64 size_t;
+typedef __s64 ssize_t;
 
 #endif /* TYPES_H */

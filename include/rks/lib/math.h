@@ -8,19 +8,19 @@
 #define DEC_BASE 10
 #define HEX_BASE 16
 
-typedef __u32 nlength_t;
+typedef size_t nlength;
 
-size_t ilog (__u64 num, __u32 base);
-size_t ilog2 (__u64 num);
+size_t ilog (ul64 num, size_t base);
+size_t ilog2 (ul64 num);
 
-static inline __u32
-ilog10 (__u32 num)
+static inline size_t
+ilog10 (ul64 num)
 {
 	return ilog (num, 10);
 }
 
-static inline nlength_t
-nlength (__u32 num, __u32 base)
+static inline nlength
+numlen (ul64 num, size_t base)
 {
 	return ilog (num, base) + 1;
 }
