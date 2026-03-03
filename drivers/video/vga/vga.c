@@ -14,6 +14,7 @@
 #define VGA_BUFFER_SIZE (VGA_HEIGHT * VGA_WIDTH)
 
 static void vga_flush_buffer (const struct screen_cell* buffer);
+static volatile char* vga_mem = (volatile char *) VGA_BUFFER_ADDRESS;
 
 struct console_driver vga_drv = {
 	.name = "vga",
@@ -44,11 +45,9 @@ DECLARE_DRIVER_INIT (vga_init_context);
 void
 vga_flush_buffer (const struct screen_cell* buffer)
 {
-	char* video = (char *) VGA_BUFFER_ADDRESS;
-
 	for (__u16 i = 0; i < VGA_BUFFER_SIZE; i++)
 	{
-		video[i * 2] = buffer[i].character;
-		video[i * 2 + 1] = buffer[i].color;
+		vga_mem[i * 2] = buffer[i].character;
+		vga_mem[i * 2 + 1] = buffer[i].color;
 	}
 }

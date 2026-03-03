@@ -2,6 +2,7 @@
 #include <rks/kernel/klog/log.h>
 #include <rks/kernel/klog/print.h>
 #include <rks/kernel/init.h>
+#include <rks/kernel/mem/pmm.h>
 
 extern init_fn_t __drivers_init_start;
 extern init_fn_t __drivers_init_end;
@@ -14,16 +15,27 @@ init_drivers (void)
 		(*ptr) ();
 }
 
+/*
+ * RKS main generic entry point function
+ *
+ * -> void (should not return)
+ * @mb: Multiboot2 info struct base pointer
+ */
 void
-rks_main (void)
+rks_main (void* mbi)
 {
-	init_drivers ();
+	/* Call architecture-dependent code right here */
+	arch_early_init ();
 
+	/* Init all self-registered drivers */
+	init_drivers ();
 	console_init ();
 	_log_init ();
 
+	pmm_init (mbi);
+
 	kprintf ("Testing %% >[0xEB]{printing, %d}!\n", 1);
-	kprintf ("Testing %p printing, %d, %s!\n", 20, "RKS");
+	kprintf ("Testing %p printing, %d, %s!\n", mbi, 20, "RKS");
 	kprintf ("Testing printing, %o, %s!\n", 343, "Test");
 	kprintf ("Testing printing, >[0xE9]{%o}!\n", 43034);
 
@@ -44,4 +56,9 @@ rks_main (void)
 	volatile int z = x / y;
 	kprintf ("z=%d\n", z);
 	/* */
+
+	do
+	{
+		__asm__ volatile ("hlt");
+	} while (1);
 }

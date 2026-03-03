@@ -1,5 +1,4 @@
 #include <rks/lib/math.h>
-#include <rks/types.h>
 
 /*
  * Integer logarithm operation
@@ -9,13 +8,23 @@
  * @base: Base
  */
 size_t
-ilog (__u64 num, __u32 base)
+ilog (ul64 num, size_t base)
 {
+	/* THe logarithm of zero is zero */
 	if (num == 0)
 		return num;
 
-	__u32 res = 0;
-	for (; num >= base; res++)
+	/* Result */
+	ul64 res = 0;
+
+	/*
+	 * From here, the passed number is divided by the given base multiples times
+	 *
+	 * It means the last digit is "lost"
+	 *
+	 * We must stop when the number is less the its base because it expects a values less than "real" one
+	 */
+	for (; num >= base; res++ /* Each `d * base^{n} */ )
 		num /= base;
 	return res;
 }

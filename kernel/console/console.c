@@ -122,13 +122,25 @@ console_putchar (char** c)
 					console.attributes.color =
 						atoi (&(*c)[2], i);
 					(*c) += i + 2;
+					return;
 				}
-				return;
+				break;
 			}
 
+			/*
+			 * Special character
+			 *
+			 * Determine the start of color modifier
+			 * Every text inside it will be applied
+			 *
+			 * It can be printed using `\\{`
+			 */
 		case '{':
 			return;
 
+			/*
+			 * End of color modifier
+			 */
 		case '}':
 			{
 				console.attributes.color =
@@ -176,12 +188,22 @@ console_write (char* c)
 void
 handle_overflow (void)
 {
+	/*
+	 * If we reach the end of the line, it means we must break to the next one
+	 *
+	 * For that reason, we increase `y` and set `x` to zero (start of the next line)
+	 */
 	if (console.coordinates.x >= SCREEN_WIDTH)
 	{
 		console.coordinates.x = 0;
 		console.coordinates.y++;
 	}
 
+	/*
+	 * Notice that, if we were already at the last row, we must scroll all lines
+	 *
+	 * In other hand, if we don't do it, there'd be an overflow of text
+	 */
 	if (console.coordinates.y >= SCREEN_HEIGHT)
 		console_scroll ();
 }
@@ -205,9 +227,12 @@ console_scroll (void)
 	/* Clear the last row */
 	for (__u16 x = 0; x < console.attributes.width; x++)
 	{
+		/* Null character */
 		console.screen[(console.attributes.height -
 				1) * console.attributes.width + x].character =
 			(__u8) ' ';
+
+		/* Black background */
 		console.screen[(console.attributes.height -
 				1) * console.attributes.width + x].color =
 			(__u16) CONSOLE_DEFAULT_COLOR;
@@ -219,7 +244,7 @@ console_scroll (void)
 }
 
 /*
- * Write the framebuffer to the VGA text buffer address
+ * Caller of every registered console driver flush function
  *
  * -> `void`
  */
@@ -228,5 +253,5 @@ console_flush (void)
 {
 	/* Flush the current screen to every registered driver */
 	for (__u32 i = 0; i < console_count; i++)
-		consoles[i]->flush (console.screen);
+		consoles[i]->flush (console.screen);	/* Pass the screen framebuffer */
 }

@@ -1,9 +1,10 @@
 #include <rks/lib/math.h>
 #include <rks/lib/string.h>
 
-/* Array mapping each algarism (considering any base) */
+/* Array mapping each digit */
 static char nmap[17] = "0123456789ABCDEF";
-static void __buf_putnumber (int value, size_t base, buf_t **buf, nlength_t nlen);
+static void __buf_putnumber (ul64 value, size_t base, buf_t ** buf,
+			     nlength nlen);
 
 /*
  * Convert a number to ASCII text
@@ -15,29 +16,38 @@ static void __buf_putnumber (int value, size_t base, buf_t **buf, nlength_t nlen
  * @buf_s: Buffer size (non-zero-terminated)
  */
 size_t
-itoa (__u64 value, __u32 base, buf_t *buf, size_t buf_s)
+itoa (ul64 value, size_t base, buf_t* buf, size_t buf_s)
 {
 	buf[--buf_s] = '\0';
 
 	do
 	{
-		buf[--buf_s]  = nmap[value % base];
-		value        /= base;
+		/*
+		 * For each iteration, the digits will be put at the final to start of buffer
+		 *
+		 * Dividing a number by any base, we'll get its last digit
+		 * Get its modulus from `nmap` (the character corresponding to that value)
+		 * - Notice that digits are placed in order in `nmap`; exactly for this
+		 *
+		 * After getting the last digit, dividing the number by any base will "discard" it
+		 */
+		buf[--buf_s] = nmap[value % base];
+		value /= base;
 	} while (value > 0);
-	return nlength (value, base);
+	return numlen (value, base);
 }
 
 /*
  * Convert an ASCII text to number
  *
- * -> `__u64`: The number
+ * -> `ul64`: The number
  * @buf: Buffer text
  * @buf_s: Buffer size (number length)
  */
-__u64
-atoi (buf_t *buf, size_t buf_s)
+ul64
+atoi (buf_t* buf, size_t buf_s)
 {
-	__u64 res = 0;
+	ul64 res = 0;
 	for (size_t i = 0; i < buf_s; i++)
 	{
 		if (buf[buf_s - i - 1] == 'x')
@@ -60,14 +70,11 @@ atoi (buf_t *buf, size_t buf_s)
  * @args: Extra arguments
  */
 void
-_fmt (buf_t *buf, size_t size, const char *fmt, va_list args)
+_fmt (buf_t* buf, size_t size, const char* fmt, va_list args)
 {
 	/* Don't continue if the string was larger than the buffer size */
 	if (sizeof (fmt) > size)
 		return;
-
-	nlength_t nlen;
-	int       value;
 
 	do
 	{
@@ -77,65 +84,199 @@ _fmt (buf_t *buf, size_t size, const char *fmt, va_list args)
 			fmt++;
 			switch (*fmt)
 			{
-				case 'c': /* Character */
-				{
-					char c = (char)va_arg (args, int);
-					*buf++ = c;
-					break;
-				}
+					/*
+					 * For each of the following numeric cases, there's a couple of operations:
+					 *
+					 * - `value`: The gotten value from args; casted to the correct type
+					 * - `nlen`: The amount of digits `value` has; it's used to created a buffer with an exact size
+					 * - `__buf_putnumber` call: It calls this function to correctly put the value on buffer
+					 */
 
-				case 'b': /* Binary */
-				{
-					value = (int)va_arg (args, int);
-					nlen  = nlength (value, BIN_BASE);
-					__buf_putnumber (value, BIN_BASE, &buf, nlen);
-					break;
-				}
+				case 'b':	/* Binary */
+					{
+						int value =
+							(int) va_arg (args,
+								      int);
+						nlength nlen = numlen (value,
+								       BIN_BASE);
+						__buf_putnumber (value,
+								 BIN_BASE,
+								 &buf, nlen);
+						break;
+					}
 
-				case 'o': /* Octal */
-				{
-					value = (int)va_arg (args, int);
-					nlen  = nlength (value, OCT_BASE);
-					__buf_putnumber (value, OCT_BASE, &buf, nlen);
-					break;
-				}
+				case 'o':	/* Octal */
+					{
+						int value =
+							(int) va_arg (args,
+								      int);
+						nlength nlen = numlen (value,
+								       OCT_BASE);
+						__buf_putnumber (value,
+								 OCT_BASE,
+								 &buf, nlen);
+						break;
+					}
 
-				case 'd': /* Decimal */
-				{
-					value = (int)va_arg (args, int);
-					nlen  = nlength (value, DEC_BASE);
-					__buf_putnumber (value, DEC_BASE, &buf, nlen);
-					break;
-				}
+				case 'd':	/* 32-bit Decimal */
+					{
+						int value =
+							(int) va_arg (args,
+								      int);
+						nlength nlen = numlen (value,
+								       DEC_BASE);
+						__buf_putnumber (value,
+								 DEC_BASE,
+								 &buf, nlen);
+						break;
+					}
 
-				case 'x': /* Hexadecimal */
-				{
-					value = (int)va_arg (args, int);
-					nlen  = nlength (value, HEX_BASE);
-					__buf_putnumber (value, HEX_BASE, &buf, nlen);
-					break;
-				}
+				case 'l':	/* Long */
+					{
 
-				case 's': /* String */
-				{
-					const char *str = (const char *)va_arg (args, long);
-					for (; *str != '\0'; str++, buf++)
-						*buf = *str;
-					break;
-				}
+						/* Treat "long long" cases */
+						if (*(fmt + 1) == 'l')
+						{
+							/* We just advanced 1 */
+							fmt++;
+							switch (*(fmt + 1))
+							{
 
-				case '%': /* Literal % */
-				{
-					*buf++ = *fmt;
-					break;
-				}
+									/* Decimal unsigned long long */
+								case 'u':
+									{
+										ul64 value = (ul64) va_arg (args, ul64);
+										nlength nlen = numlen (value, DEC_BASE);
+										__buf_putnumber
+											(value,
+											 DEC_BASE,
+											 &buf,
+											 nlen);
+
+										fmt++;
+										break;
+									}
+
+									/* Hexdecimal unsigned long long */
+								case 'x':
+									{
+										ul64 value = (ul64) va_arg (args, ul64);
+										nlength nlen = numlen (value, HEX_BASE);
+										__buf_putnumber
+											(value,
+											 HEX_BASE,
+											 &buf,
+											 nlen);
+
+										fmt++;
+										break;
+									}
+
+								default:
+									{
+										fmt--;
+										break;
+									}
+							}
+						}
+
+						/* Decimal unsigned long */
+						else if (*(fmt + 1) == 'u')
+						{
+							u64 value =
+								(u64)
+								va_arg (args,
+									u64);
+							nlength nlen =
+								numlen (value,
+									DEC_BASE);
+							__buf_putnumber
+								(value,
+								 DEC_BASE,
+								 &buf, nlen);
+							fmt++;
+						}
+
+						/* Hex unsigned long */
+						else if (*(fmt + 1) == 'x')
+						{
+
+							u64 value =
+								(u64)
+								va_arg (args,
+									u64);
+							nlength nlen =
+								numlen (value,
+									HEX_BASE);
+							__buf_putnumber
+								(value,
+								 HEX_BASE,
+								 &buf, nlen);
+							fmt++;
+						}
+						break;
+					}
+
+				case 'p':	/* Pointer */
+					{
+						ul64 value =
+							(ul64) va_arg (args,
+								       ul64);
+						nlength nlen = numlen (value,
+								       HEX_BASE);
+						__buf_putnumber (value,
+								 HEX_BASE,
+								 &buf, nlen);
+						break;
+
+					}
+
+				case 'x':	/* Hexadecimal */
+					{
+						u32 value =
+							(u32) va_arg (args,
+								      u32);
+						nlength nlen = numlen (value,
+								       HEX_BASE);
+						__buf_putnumber (value,
+								 HEX_BASE,
+								 &buf, nlen);
+						break;
+					}
+
+				case 'c':	/* Character */
+					{
+						char c = (char) va_arg (args,
+									int);
+						*buf++ = c;
+						break;
+					}
+
+				case 's':	/* String */
+					{
+						const char* str =
+							(const char *)
+							va_arg (args, long);
+
+						/* While it's not the final of string, copy its characters to the buffer */
+						for (; *str != '\0';
+						     str++, buf++)
+							*buf = *str;
+						break;
+					}
+
+				case '%':	/* Literal % */
+					{
+						*buf++ = *fmt;
+						break;
+					}
 
 				default:
-				{
-					*buf++ = (const char)'%';
-					*buf++ = *fmt;
-					break;
-				}
+					{
+						*buf++ = (const char) '%';
+						*buf++ = *fmt;
+						break;
+					}
 			}
 
 			fmt++;
@@ -157,18 +298,22 @@ _fmt (buf_t *buf, size_t size, const char *fmt, va_list args)
  * @buf: Buffer double pointer
  * @nlen: Number length
  */
-static void
-__buf_putnumber (int value, size_t base, buf_t **buf, nlength_t nlen)
+void
+__buf_putnumber (ul64 value, size_t base, buf_t** buf, nlength nlen)
 {
+	/*
+	 * The following "+3" referes to:
+	 * 1. 0 at start
+	 * 2. Base indicator
+	 * 3. \0 at the final
+	 */
 	buf_t buf_n[nlen + 3];
 
 	/* Format number adding '0_' at start */
 	buf_n[0] = '0';
-	buf_n[1] = base == BIN_BASE   ? 'b'
-	           : base == OCT_BASE ? 'o'
-	           : base == DEC_BASE ? 'd'
-	           : base == HEX_BASE ? 'x'
-	                              : '?';
+	buf_n[1] = base == BIN_BASE ? 'b'
+		: base == OCT_BASE ? 'o'
+		: base == DEC_BASE ? 'd' : base == HEX_BASE ? 'x' : '?';
 
 	/* Convert the value to string and copy it to given buffer */
 	itoa (value, base, buf_n, nlen + 3);
