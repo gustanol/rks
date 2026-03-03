@@ -3,6 +3,7 @@ ENTRY(__rks_start) /* x64 entry point */
 SECTIONS
 {
     . = 0x100000;  /* 1MB */
+    kernel_start = .;
     
     /* Multiboot header */
     .multiboot : ALIGN(4096)
@@ -43,5 +44,6 @@ SECTIONS
 	__drivers_init_end = .;
     }
 
+    . = ALIGN(4096);
     kernel_end = .;
 }

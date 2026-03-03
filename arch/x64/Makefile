@@ -8,6 +8,7 @@ obj-1 += $(x64_build_dir)/boot/protected/setup32.o
 
 # 64-bit long mode objects
 obj-1 += $(x64_build_dir)/boot/long/transition.o
+obj-1 += $(x64_build_dir)/init.o
 
 obj-1 += $(x64_build_dir)/cpu/descriptor.o
 obj-1 += $(x64_build_dir)/cpu/idt.o

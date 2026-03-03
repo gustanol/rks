@@ -31,10 +31,10 @@ LONG_DESCRIPTION: Explanation (why) of changes. Use multiple lines. Each one of 
 
 ---
 
-ISSUES [OPTIONAL]: Specific must-to-fix issues for next changes
+ISSUES [OPTIONAL]: Specific must-fix issues for next changes
 
 ---
 
 REFERENCE_SPECIFICATION: Keep this style:
 
-USERNAME: DATE
+USERNAME: DATE (Using ISO Format - YYYY-MM-dd)
