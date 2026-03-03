@@ -1,4 +1,4 @@
 # Glossary
 
 - **Boot**:
-    - [[../boot/boot-sequence.md|Boot sequence]]
+    - [Boot sequence](../boot/boot-sequence.md)
