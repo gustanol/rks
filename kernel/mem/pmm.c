@@ -23,7 +23,7 @@ pmm_init (void* mbi)
 		return;		/* Treat error */
 
 	/* Define the base address of bitmap as being the end of kernel */
-	pmm.bitmap = (__u8 *) kernel_end;
+	pmm.bitmap = (char *) kernel_end;
 
 	/*
 	 * Parse the mmap
@@ -86,6 +86,42 @@ parse_mmap (struct multiboot2_tag_mmap* mmap)
 
 	/* Return the total memory size */
 	return total_memory;
+}
+
+/*
+ * Find the first allocable frame and return its physical address
+ *
+ * -> u64: Frame address
+ */
+u64
+pmm_alloc_frame (void)
+{
+	int bit = FIND_FIRST_ZERO_BIT (pmm.bitmap, pmm.bitmap_size);
+	if (bit == -1)
+		return 0;	/* No available memory */
+
+	BITMAP_SET_BIT (pmm.bitmap, bit);
+	pmm.used_frames++;
+
+	/* Each bit of bitmap represents a physical frame */
+	return bit * FRAME_SIZE;
+}
+
+/*
+ * Free an allocated frame receiving its physical memory
+ *
+ * -> void
+ * @phys_addr: Frame physical address
+ */
+void
+pmm_free_frame (u64 phys_addr)
+{
+	/* Physical frame */
+	u64 frame = phys_addr / FRAME_SIZE;
+
+	/* Zero this index in bitmap */
+	BITMAP_CLEAR_BIT (pmm.bitmap, frame);
+	pmm.used_frames--;
 }
 
 /*

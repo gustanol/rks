@@ -50,13 +50,6 @@ rks_main (void* mbi)
 	WRN ("not right, but survivable\n");
 	ERR ("error\n");
 
-	/* Interrupts tests */
-	volatile int x = 1;
-	volatile int y = 0;
-	volatile int z = x / y;
-	kprintf ("z=%d\n", z);
-	/* */
-
 	do
 	{
 		__asm__ volatile ("hlt");

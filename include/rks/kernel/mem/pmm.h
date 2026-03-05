@@ -6,6 +6,8 @@
 #define FRAME_SIZE 4096
 
 void pmm_init (void* mbi);
+u64 pmm_alloc_frame (void);
+void pmm_free_frame (u64 phys_addr);
 
 /* PMM context struct */
 struct pmm_t
@@ -13,7 +15,7 @@ struct pmm_t
 	__u64 total_frames;
 	__u64 used_frames;
 	__u64 bitmap_size;
-	__u8* bitmap;		/* Array made out of bits */
+	char* bitmap;		/* Array made out of bits */
 };
 
 #endif /* PMM_H */
