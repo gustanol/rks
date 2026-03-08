@@ -35,15 +35,17 @@ pmm_init (void* mbi)
 	/* How many frames does the physical memory has */
 	pmm.total_frames = total_memory / FRAME_SIZE;
 	pmm.bitmap_size = (pmm.total_frames + 7) / 8;	/* Divide by 8 to get the size in bytes */
+	pmm.used_frames = 0;
 
 	/* Mark regions we're using */
 	mark_region_used ((ul64) kernel_start,
 			  (ul64) (kernel_end - kernel_start));
 	mark_region_used ((ul64) pmm.bitmap, pmm.bitmap_size);
 
-	kprintf ("pmm: Total memory = %llu MiB\n",
+	kprintf ("pmm: Available memory = %llu MiB\n",
 		 total_memory / 1024 / 1024);
 	kprintf ("pmm: Total frames = %lu\n", pmm.total_frames);
+	kprintf ("pmm: Used frames = %lu\n", pmm.used_frames);
 }
 
 /*
@@ -94,17 +96,35 @@ parse_mmap (struct multiboot2_tag_mmap* mmap)
  * -> u64: Frame address
  */
 u64
-pmm_alloc_frame (void)
+pmm_alloc_frames (u64 frames_needed)
 {
-	int bit = FIND_FIRST_ZERO_BIT (pmm.bitmap, pmm.bitmap_size);
-	if (bit == -1)
-		return 0;	/* No available memory */
+	long bit;		/* The bit can return -1 in errors */
+	u64 first_bit;		/* For multiple allocations, we must return the address for the first frame */
 
-	BITMAP_SET_BIT (pmm.bitmap, bit);
-	pmm.used_frames++;
+	/* Repeat the operation as the value of `frames_needed` */
+	for (u64 i = 0; i < frames_needed; i++, pmm.used_frames++)
+	{
+		/* Find the first available frame by looking at the bitmap */
+		bit = FIND_FIRST_ZERO_BIT (pmm.bitmap, pmm.bitmap_size);
+
+		/*
+		 * In errors, bit can be -1
+		 */
+		if (bit == -1)
+		{
+			/* Clean already set bits soon */
+			return 0;	/* No available memory */
+		}
+
+		BITMAP_SET_BIT (pmm.bitmap, bit);
+
+		/* Only get it at the first iteration */
+		if (!i)
+			first_bit = bit;
+	}
 
 	/* Each bit of bitmap represents a physical frame */
-	return bit * FRAME_SIZE;
+	return first_bit * FRAME_SIZE;
 }
 
 /*
@@ -143,6 +163,8 @@ mark_region_free (ul64 addr, u64 len)
 	/* Clear all bits in this interval */
 	for (u64 i = 0; i < count; i++)
 		BITMAP_CLEAR_BIT (pmm.bitmap, start + i);
+
+	pmm.used_frames -= count;
 }
 
 /*
@@ -161,4 +183,24 @@ mark_region_used (ul64 addr, u64 len)
 	/* Set all bits in this interval */
 	for (u64 i = 0; i < count; i++)
 		BITMAP_SET_BIT (pmm.bitmap, start + i);
+
+	pmm.used_frames += count;
+}
+
+void
+test_pmm (void)
+{
+	kprintf ("Testing PMM\n");
+
+	u64 f1 = pmm_alloc_frames (1);
+	u64 f2 = pmm_alloc_frames (1);
+	kprintf ("f1=%lu; f2=%lu; f1=f2=%d\n", f1, f2, f1 == f2);
+
+	kprintf ("Allocated different frames\n");
+
+	pmm_free_frame (f1);
+	u64 f3 = pmm_alloc_frames (1);
+	kprintf ("f1=%lu; f3=%lu; f1=f3=%d\n", f1, f3, f1 == f3);
+
+	kprintf ("Frame reused\n");
 }

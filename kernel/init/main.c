@@ -3,6 +3,7 @@
 #include <rks/kernel/klog/print.h>
 #include <rks/kernel/init.h>
 #include <rks/kernel/mem/pmm.h>
+#include <rks/kernel/mem/heap.h>
 
 extern init_fn_t __drivers_init_start;
 extern init_fn_t __drivers_init_end;
@@ -33,22 +34,10 @@ rks_main (void* mbi)
 	_log_init ();
 
 	pmm_init (mbi);
+	heap_init ();
 
-	kprintf ("Testing %% >[0xEB]{printing, %d}!\n", 1);
-	kprintf ("Testing %p printing, %d, %s!\n", mbi, 20, "RKS");
-	kprintf ("Testing printing, %o, %s!\n", 343, "Test");
-	kprintf ("Testing printing, >[0xE9]{%o}!\n", 43034);
-
-	kprintf ("%b\n", 5);
-	kprintf ("%b\n", 0xAB);
-	kprintf ("%b\n", 0xFFFF);
-
-	pr_log (LOG_ERR, "\nx=%d\n", 7);
-
-	INF ("mm: initialized\n");
-	DBG ("something happened\n");
-	WRN ("not right, but survivable\n");
-	ERR ("error\n");
+	test_pmm ();
+	test_heap ();
 
 	do
 	{
