@@ -5,17 +5,11 @@ SECTIONS
     . = 0x100000;  /* 1MB */
     kernel_start = .;
     
-    /* Multiboot header */
-    .multiboot : ALIGN(4096)
-    {
-        *(.multiboot)
-    }
-    
     .text : ALIGN(4096)
     {
+        KEEP(*(.boot))
         *(.text.init)
         *(.text.gdt)
-        *(.text.boot)
         *(.text.long)
         *(.text)
     }
@@ -39,9 +33,9 @@ SECTIONS
 
     .drivers_init : ALIGN(4096)
     {
-	__drivers_init_start = .;
-	*(.drivers_init)
-	__drivers_init_end = .;
+	    __drivers_init_start = .;
+	    *(.drivers_init)
+	    __drivers_init_end = .;
     }
 
     . = ALIGN(4096);
