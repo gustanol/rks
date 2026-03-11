@@ -1,13 +1,18 @@
 x64_dir := arch/x64
 x64_build_dir := $(root_build_dir)/$(x64_dir)
 
-# 32-bit init code
-obj-1 += $(x64_build_dir)/boot/protected/entry.o
-obj-1 += $(x64_build_dir)/boot/protected/gdt.o
-obj-1 += $(x64_build_dir)/boot/protected/setup32.o
+# Bootloader-specific code
+obj-1 += $(x64_build_dir)/boot/multiboot2/header.o
+obj-1 += $(x64_build_dir)/boot/multiboot2/parser.o
+
+obj-1 += $(x64_build_dir)/boot/common/gdt.o
+obj-1 += $(x64_build_dir)/boot/common/setup32.o
 
 # 64-bit long mode objects
-obj-1 += $(x64_build_dir)/boot/long/transition.o
+obj-1 += $(x64_build_dir)/boot/common/transition_64.o
+obj-1 += $(x64_build_dir)/boot/loader_parser.o
+obj-1 += $(x64_build_dir)/boot/early_alloc.o
+obj-1 += $(x64_build_dir)/boot/entry.o
 obj-1 += $(x64_build_dir)/init.o
 
 obj-1 += $(x64_build_dir)/cpu/descriptor.o

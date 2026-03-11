@@ -1,3 +1,12 @@
+.section .bss
+.align 16
+
+.globl kernel_stack_top
+
+kernel_stack_bottom:
+	.skip 16384
+kernel_stack_top:
+
 .section .data
 .align 4096
 
@@ -161,7 +170,7 @@ finish64:
 .code64
 
 .extern rks_main
-.extern multiboot_info_ptr
+.extern loader_info
 
 	movw $0x20, %ax
 	movw %ax, %ds
@@ -172,7 +181,7 @@ finish64:
 	movq $kernel_stack_top, %rsp
 
 	/* Call the main kernel function */
-	movq multiboot_info_ptr, %rdi
+	movq $loader_info, %rdi
 	call rks_main
 
 /* It should not be reached */
@@ -180,12 +189,3 @@ finish64:
 	cli
 	hlt
 	jmp .halt
-
-.section .bss
-.align 16
-
-.globl kernel_stack_top
-
-kernel_stack_bottom:
-	.skip 16384
-kernel_stack_top:
