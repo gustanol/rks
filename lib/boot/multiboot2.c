@@ -1,5 +1,4 @@
-#include <rks/kernel/boot/multiboot2.h>
-#include <rks/kernel/klog/print.h>
+#include <rks/lib/boot/multiboot2.h>
 
 void*
 find_multiboot2_tag (void* mbi, __u32 type)

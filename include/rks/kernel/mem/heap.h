@@ -9,9 +9,6 @@ void heap_init (void);
 void* kmalloc (size_t size);
 void kfree (void* ptr);
 
-void test_pmm (void);
-void test_heap (void);
-
 /* Heap object context header */
 struct heap_header
 {

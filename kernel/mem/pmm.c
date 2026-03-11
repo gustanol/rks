@@ -1,5 +1,4 @@
 #include <rks/kernel/mem/pmm.h>
-#include <rks/kernel/boot/multiboot2.h>
 #include <rks/kernel/klog/print.h>
 #include <rks/lib/bitwise.h>
 
@@ -8,33 +7,42 @@ extern char kernel_start[];
 extern char kernel_end[];
 
 /* Prototypes */
-static ul64 parse_mmap (struct multiboot2_tag_mmap* mmap);
-static void mark_region_free (ul64 addr, __u64 len);
-static void mark_region_used (ul64 addr, __u64 len);
+static void mark_region_free (ul64 addr, u64 len);
+static void mark_region_used (ul64 addr, u64 len);
 
 void
-pmm_init (void* mbi)
+pmm_init (mmap_tag_t* mmap)
 {
-	/* Memory mapping tag provided by the Multiboot2 info struct */
-	struct multiboot2_tag_mmap* mmap =
-		find_multiboot2_tag (mbi, MULTIBOOT2_TAG_TYPE_MMAP);
-
+	/* We can't continue if it's NULL */
 	if (mmap == NULL)
 		return;		/* Treat error */
 
 	/* Define the base address of bitmap as being the end of kernel */
 	pmm.bitmap = (char *) kernel_end;
 
-	/*
-	 * Parse the mmap
-	 * Fill the bitmap
-	 * Return the total memory
-	 */
-	ul64 total_memory = parse_mmap (mmap);
+	/* Total memory size in bytes */
+	ul64 total_memory = 0;
+
+	/* Iterate for each entry, incrementing the total_memory by the current entry length */
+	for (u32 i = 0; i < mmap->entry_count; i++)
+	{
+		/* Only get available memory */
+		if (mmap->entries[i].type == MEM_AVAILABLE)
+		{
+			/* Increment the total memory */
+			total_memory += mmap->entries[i].len;
+
+			/* Mark this region as free */
+			mark_region_free (mmap->entries[i].addr,
+					  mmap->entries[i].len);
+		}
+	}
 
 	/* How many frames does the physical memory has */
 	pmm.total_frames = total_memory / FRAME_SIZE;
-	pmm.bitmap_size = (pmm.total_frames + 7) / 8;	/* Divide by 8 to get the size in bytes */
+
+	/* Divide by 8 to get the size in bytes */
+	pmm.bitmap_size = (pmm.total_frames + 7) / 8;
 	pmm.used_frames = 0;
 
 	/* Mark regions we're using */
@@ -42,52 +50,10 @@ pmm_init (void* mbi)
 			  (ul64) (kernel_end - kernel_start));
 	mark_region_used ((ul64) pmm.bitmap, pmm.bitmap_size);
 
-	kprintf ("pmm: Available memory = %llu MiB\n",
+	kprintf ("PMM: Available memory = %llu MiB\n",
 		 total_memory / 1024 / 1024);
-	kprintf ("pmm: Total frames = %lu\n", pmm.total_frames);
-	kprintf ("pmm: Used frames = %lu\n", pmm.used_frames);
-}
-
-/*
- * Memory map parser
- *
- * -> ul64: The total amound of available addressable memory
- * @mmap: Memory map struct
- */
-ul64
-parse_mmap (struct multiboot2_tag_mmap* mmap)
-{
-	/*
-	 * Calculate the amount of available mmap entries
-	 *
-	 * We must consider only the entries to calculate the size itself
-	 * The 16 comes from the other fields on mmap tag
-	 */
-	u32 entry_count = (mmap->size - 16) / mmap->entry_size;
-	ul64 total_memory = 0;
-
-	/* Iterate for each mmap entry */
-	for (u32 i = 0; i < entry_count; i++)
-	{
-		/*
-		 * Get the current entry by summing the current one offset to `entries` base
-		 */
-		struct multiboot2_mmap_entry* entry =
-			(struct multiboot2_mmap_entry *) ((ul64)
-							  mmap->entries +
-							  (i *
-							   mmap->entry_size));
-
-		/* For each available region, mark it as free and sum it to the total memory */
-		if (entry->type == MULTIBOOT2_MEMORY_AVAILABLE)
-		{
-			mark_region_free (entry->addr, entry->len);
-			total_memory += entry->len;
-		}
-	}
-
-	/* Return the total memory size */
-	return total_memory;
+	kprintf ("PMM: Total frames = %lu\n", pmm.total_frames);
+	kprintf ("PMM: Used frames = %lu\n", pmm.used_frames);
 }
 
 /*
@@ -185,22 +151,4 @@ mark_region_used (ul64 addr, u64 len)
 		BITMAP_SET_BIT (pmm.bitmap, start + i);
 
 	pmm.used_frames += count;
-}
-
-void
-test_pmm (void)
-{
-	kprintf ("Testing PMM\n");
-
-	u64 f1 = pmm_alloc_frames (1);
-	u64 f2 = pmm_alloc_frames (1);
-	kprintf ("f1=%lu; f2=%lu; f1=f2=%d\n", f1, f2, f1 == f2);
-
-	kprintf ("Allocated different frames\n");
-
-	pmm_free_frame (f1);
-	u64 f3 = pmm_alloc_frames (1);
-	kprintf ("f1=%lu; f3=%lu; f1=f3=%d\n", f1, f3, f1 == f3);
-
-	kprintf ("Frame reused\n");
 }

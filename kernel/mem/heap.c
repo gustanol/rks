@@ -96,21 +96,3 @@ kfree (void* ptr)
 			current = current->next;
 	} while (current && current->next);
 }
-
-void
-test_heap (void)
-{
-	kprintf ("\nTesting Heap\n");
-
-	void* ptr1 = kmalloc (128);
-	void* ptr2 = kmalloc (256);
-
-	kprintf ("ptr1=%p; ptr2=%p; ptr1=ptr2=%d\n", ptr1, ptr2,
-		 ptr1 == ptr2);
-
-	kfree (ptr1);
-
-	void* ptr3 = kmalloc (64);
-	kprintf ("ptr1=%p; ptr3=%p; ptr1=ptr3=%d\n", ptr1, ptr3,
-		 ptr1 == ptr3);
-}

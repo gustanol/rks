@@ -2,10 +2,11 @@
 #define PMM_H
 
 #include <rks/types.h>
+#include <rks/boot.h>
 
 #define FRAME_SIZE 4096
 
-void pmm_init (void* mbi);
+void pmm_init (mmap_tag_t * mmap);
 u64 pmm_alloc_frames (u64 frames_needed);
 void pmm_free_frame (u64 phys_addr);
 

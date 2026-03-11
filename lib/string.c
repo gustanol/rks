@@ -301,22 +301,24 @@ _fmt (buf_t* buf, size_t size, const char* fmt, va_list args)
 void
 __buf_putnumber (ul64 value, size_t base, buf_t** buf, nlength nlen)
 {
+	/* For decimal values, do not put the base indicator (0d) */
+	nlength final_nlen = base == DEC_BASE ? nlen + 1 : nlen + 3;
+
 	/*
 	 * The following "+3" referes to:
 	 * 1. 0 at start
 	 * 2. Base indicator
 	 * 3. \0 at the final
 	 */
-	buf_t buf_n[nlen + 3];
+	buf_t buf_n[final_nlen];
 
 	/* Format number adding '0_' at start */
 	buf_n[0] = '0';
 	buf_n[1] = base == BIN_BASE ? 'b'
-		: base == OCT_BASE ? 'o'
-		: base == DEC_BASE ? 'd' : base == HEX_BASE ? 'x' : '?';
+		: base == OCT_BASE ? 'o' : base == HEX_BASE ? 'x' : '?';
 
 	/* Convert the value to string and copy it to given buffer */
-	itoa (value, base, buf_n, nlen + 3);
+	itoa (value, base, buf_n, final_nlen);
 	for (__u32 i = 0; buf_n[i] != '\0'; i++, (*buf)++)
 		**buf = buf_n[i];
 }

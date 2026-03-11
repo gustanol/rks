@@ -34,27 +34,27 @@
 
 struct multiboot2_tag
 {
-	__u32 type;
-	__u32 size;
+	u32 type;
+	u32 size;
 };
 
 struct multiboot2_mmap_entry
 {
-	__u64 addr;
-	__u64 len;
-	__u32 type;
-	__u32 zero;
+	u64 addr;
+	u64 len;
+	u32 type;
+	u32 zero;
 };
 
 struct multiboot2_tag_mmap
 {
-	__u32 type;
-	__u32 size;
-	__u32 entry_size;
-	__u32 entry_version;
+	u32 type;
+	u32 size;
+	u32 entry_size;
+	u32 entry_version;
 	struct multiboot2_mmap_entry entries[];
 };
 
-void* find_multiboot2_tag (void* mbi, __u32 type);
+void* find_multiboot2_tag (void* mbi, u32 type);
 
 #endif /* MULTIBOOT2_H */
