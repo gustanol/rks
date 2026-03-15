@@ -5,12 +5,14 @@
 
 #define MULTIBOOT2_BOOTLOADER_MAGIC 0x36D76289
 
+/* Information about the bootloader */
 typedef struct
 {
 	u32 magic;
 	u64 info_ptr;
 } __attribute__ ((packed)) loader_info_t;
 
+/* Memory types */
 typedef enum
 {
 	MEM_AVAILABLE = 1,
@@ -34,9 +36,14 @@ typedef struct
 typedef struct
 {
 	mmap_tag_t* mmap;
-	void* fb_ptr;
-	u32 fb_width;
-	u32 fb_height;
+
+	struct
+	{
+		void* ptr;
+		u32 width;
+		u32 height;
+	} fb;			/* Framebuffer */
+
 	void* rsdp;
 	const char* cmdline;
 } boot_info_t;

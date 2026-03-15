@@ -19,7 +19,7 @@ all_objs :=
 
 # Include paths
 CFLAGS += -I./include
-CFLAGS += -I./include/rks/arch/$(ARCH)
+CFLAGS += -I./arch/$(ARCH)/include
 
 # Assembly flags
 ASFLAGS := -g --64

@@ -4,8 +4,7 @@ void*
 find_multiboot2_tag (void* mbi, __u32 type)
 {
 	/* Skip the Multiboot2 header, which has 8 bytes */
-	struct multiboot2_tag* tag =
-		(struct multiboot2_tag *) ((__u8 *) mbi + 8);
+	multiboot2_tag_t* tag = (multiboot2_tag_t *) ((__u8 *) mbi + 8);
 
 	do
 	{
@@ -34,7 +33,7 @@ find_multiboot2_tag (void* mbi, __u32 type)
 		 *
 		 * Every number besides the three first bits are multiple of 8
 		 */
-		tag = (struct multiboot2_tag *) ((next_addr + 7) & ~7);
+		tag = (multiboot2_tag_t *) ((next_addr + 7) & ~7);
 	} while (tag->type != MULTIBOOT2_TAG_TYPE_END);	/* End tag */
 
 	/* No tag found */

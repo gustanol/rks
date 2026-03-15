@@ -8,13 +8,13 @@ struct console_ctx
 {
 	struct
 	{
-		__u32 x,
+		u32 x,
 		  y;
 	} coordinates;
 
 	struct
 	{
-		__u8 color;
+		u8 color;
 		size_t width;
 		size_t height;
 	} attributes;
@@ -33,7 +33,7 @@ static struct console_ctx console;
 
 /* Console drivers specifics */
 static struct console_driver* consoles[MAX_CONSOLES];
-static __u32 console_count = 0;
+static u32 console_count = 0;
 
 /* Prototypes */
 static inline void handle_overflow (void);
@@ -49,7 +49,7 @@ console_init (void)
 {
 	/* Start console context */
 	console.coordinates.x = console.coordinates.y = 0;
-	console.attributes.color = (__u8) CONSOLE_DEFAULT_COLOR;
+	console.attributes.color = (u8) CONSOLE_DEFAULT_COLOR;
 	console.attributes.width = (size_t) SCREEN_WIDTH;
 	console.attributes.height = (size_t) SCREEN_HEIGHT;
 	console.screen = screen;
@@ -156,7 +156,7 @@ console_putchar (char** c)
 	 * That's the reason we must use `y * width + x`
 	 */
 	console.screen[console.coordinates.y * console.attributes.width +
-		       console.coordinates.x].character = (__u8) ** c;
+		       console.coordinates.x].character = (u8) ** c;
 	console.screen[console.coordinates.y * console.attributes.width +
 		       console.coordinates.x].color =
 		console.attributes.color;
@@ -217,25 +217,25 @@ void
 console_scroll (void)
 {
 	/* Copy each row to the previous one */
-	for (__u16 y = 1; y < console.attributes.height; y++)
-		for (__u16 x = 0; x < console.attributes.width; x++)
+	for (u16 y = 1; y < console.attributes.height; y++)
+		for (u16 x = 0; x < console.attributes.width; x++)
 			console.screen[(y - 1) * console.attributes.width +
 				       x] =
 				console.screen[y * console.attributes.width +
 					       x];
 
 	/* Clear the last row */
-	for (__u16 x = 0; x < console.attributes.width; x++)
+	for (u16 x = 0; x < console.attributes.width; x++)
 	{
 		/* Null character */
 		console.screen[(console.attributes.height -
 				1) * console.attributes.width + x].character =
-			(__u8) ' ';
+			(u8) ' ';
 
 		/* Black background */
 		console.screen[(console.attributes.height -
 				1) * console.attributes.width + x].color =
-			(__u16) CONSOLE_DEFAULT_COLOR;
+			(u16) CONSOLE_DEFAULT_COLOR;
 	}
 
 	/* Keep cursor on the last line */
@@ -252,6 +252,6 @@ void
 console_flush (void)
 {
 	/* Flush the current screen to every registered driver */
-	for (__u32 i = 0; i < console_count; i++)
+	for (u32 i = 0; i < console_count; i++)
 		consoles[i]->flush (console.screen);	/* Pass the screen framebuffer */
 }

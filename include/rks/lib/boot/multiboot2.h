@@ -32,28 +32,42 @@
 #define MULTIBOOT2_TAG_TYPE_EFI64_IH 20
 #define MULTIBOOT2_TAG_TYPE_LOAD_BASE_ADDR 21
 
-struct multiboot2_tag
+typedef struct
 {
 	u32 type;
 	u32 size;
-};
+} multiboot2_tag_t;
 
-struct multiboot2_mmap_entry
+typedef struct
+{
+	u32 type;
+	u32 size;
+	char* string;
+} multiboot2_tag_cmdline_t;
+
+typedef struct
 {
 	u64 addr;
 	u64 len;
 	u32 type;
 	u32 zero;
-};
+} multiboot2_mmap_entry_t;
 
-struct multiboot2_tag_mmap
+typedef struct
 {
 	u32 type;
 	u32 size;
 	u32 entry_size;
 	u32 entry_version;
-	struct multiboot2_mmap_entry entries[];
-};
+	multiboot2_mmap_entry_t entries[];
+} multiboot2_tag_mmap_t;
+
+typedef struct
+{
+	u32 type;
+	u32 size;
+	void* rsdp;
+} multiboot2_tag_new_rsdp_t;
 
 void* find_multiboot2_tag (void* mbi, u32 type);
 
