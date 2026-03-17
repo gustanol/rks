@@ -1,31 +1,18 @@
-#ifndef DESCRIPTOR_H
-#define DESCRIPTOR_H
+#ifndef GDT_H
+#define GDT_H
 
 #include <rks/types.h>
 
-struct tss_t
-{
-	__u32 reserved0;
-	__u64 rsp0;		/* Kernel stack pointer */
-	__u64 rsp1;
-	__u64 rsp2;
-	__u64 reserved1;
-	__u64 ist[7];
-	__u64 reserved2;
-	__u64 reserved3;
-	__u64 iomap_base;
-} __attribute__ ((packed));
-
 /* GDT entry */
-struct gdt_e
+typedef struct
 {
 	union
 	{
 		struct
 		{
-			__u16 limit_l;
-			__u16 base_l;	/* Lower base address 16 bits */
-			__u8 base_m;	/* Middle base address byte */
+			u16 limit_l;    /* Lower 16-bit limit value */
+			u16 base_l;     /* Lower base address 16 bits */
+			u8 base_m;      /* Middle base address byte */
 
 			/*
 			 * P (1b) = Present bit (should always be 1)
@@ -56,7 +43,7 @@ struct gdt_e
 			 *     - Write never allowed
 			 * A (1b) = Accessed bit
 			 */
-			__u8 access_byte;
+			ubyte_t access_byte;
 
 			/*
 			 * G (1b) = Granularity flag
@@ -69,31 +56,32 @@ struct gdt_e
 			 * L (1b) = Long-mode code flag
 			 *   - 1 = 64-bit code segment
 			 * Reserved (1b)
+			 * LIMIT (4b) = 4 upper limit bits
 			 */
-			__u8 flags_limit;
-			__u8 base_u;
+			ubyte_t flags_limit;
+			ubyte_t base_u;
 		};
 
 		struct
 		{
-			__u32 base_ih;	/* Upper 32 bits base address */
-			__u32 reserved;
+			u32 base_ih;    /* Upper 32 bits base address */
+			pad_t reserved[2];
 		} system_segment;
 	};
-} __attribute__ ((packed));
+} __attribute__ ( ( packed ) ) gdt_entry_t;
 
 /* GDT descriptor */
-struct gdt_d
+typedef struct
 {
-	__u16 limit;
-	__u64 start;
-} __attribute__ ((packed));
+	u16 limit;
+	addr_t start;
+} __attribute__ ( ( packed ) ) gdt_desc_t;
 
-enum
+typedef enum
 {
-	LDT = 0x2,		/* Local descriptor table */
-	TSS_A = 0x9,		/* Available Task State Segment */
+	LDT = 0x2,              /* Local descriptor table */
+	TSS_A = 0x9,            /* Available Task State Segment */
 	TSS_B = 0xB,
-} segment_type;			/* AB.ACC = 0 */
+} segment_t;                    /* AB.ACC = 0 */
 
-#endif /* DESCRIPTOR_H */
+#endif /* GDT_H */

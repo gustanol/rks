@@ -1,6 +1,7 @@
 .section .text
 .globl arch_early_init
 
+/* External symbols */
 .extern _setup_long_gdt
 .extern _setup_tss
 .extern _setup_idt

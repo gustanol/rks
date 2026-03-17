@@ -1,30 +1,30 @@
 #include <rks/types.h>
 #include <rks/kernel/klog/print.h>
 
-struct interrupt_frame_t
+typedef struct
 {
-	__u64 r15,
+	u64 r15,
 	  r14,
 	  r13,
 	  r12,
 	  r11,
 	  r10,
 	  r9;
-	__u64 rbp,
+	u64 rbp,
 	  rdi,
 	  rsi,
 	  rdx,
 	  rcx,
 	  rbx,
 	  rax;
-	__u64 int_num,
+	u64 int_num,
 	  err_code;
-	__u64 rip,
+	u64 rip,
 	  cs,
 	  rflags,
 	  rsp,
 	  ss;
-} __attribute__ ((packed));
+} __attribute__ ( ( packed ) ) interrupt_frame_t;
 
 /*
  * Interrupt Service Routine handler
@@ -33,7 +33,7 @@ struct interrupt_frame_t
  * @frame: Stack frame pointer
  */
 void
-_isr_handler (struct interrupt_frame_t* frame)
+_isr_handler ( interrupt_frame_t* frame )
 {
 	/*
 	 * Notice it'd only work after console is been initialized
@@ -42,7 +42,7 @@ _isr_handler (struct interrupt_frame_t* frame)
 	 *
 	 * To make kernel initialize console specifications before it usually does, enable "CFG_EARLY_CONSOLE"
 	 */
-	kprintf ("Exception %d\n", frame->err_code);
-	while (1)
-		__asm__ volatile ("hlt");
+	kprintf ( "Exception %d\n", frame->err_code );
+	while ( 1 )
+		__asm__ volatile ( "hlt" );
 }

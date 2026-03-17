@@ -15,7 +15,8 @@ obj-1 += $(x64_build_dir)/boot/early_alloc.o
 obj-1 += $(x64_build_dir)/boot/entry.o
 obj-1 += $(x64_build_dir)/init.o
 
-obj-1 += $(x64_build_dir)/cpu/descriptor.o
+obj-1 += $(x64_build_dir)/cpu/gdt.o
+obj-1 += $(x64_build_dir)/cpu/tss.o
 obj-1 += $(x64_build_dir)/cpu/idt.o
 
 obj-1 += $(x64_build_dir)/interrupt/isr.o

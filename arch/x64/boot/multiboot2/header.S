@@ -8,6 +8,7 @@
 .align 8
 
 .globl MULTIBOOT_BOOTLOADER_MAGIC
+
 /* Constants */
 .equ MULTIBOOT2_BOOTLOADER_MAGIC, 0x36D76289
 .equ MULTIBOOT2_HEADER_MAGIC, 0xE85250D6
@@ -26,6 +27,7 @@ multiboot_header_start:
 	.short 1 /* Type 1: Information request */
     	.short 0 /* Flags */
     	.long 24 /* Size: 8 (header) + 4 (one request) */
+
 	.long 1 /* Boot command line */
 	.long 6 /* Memory map */
 	.long 8 /* Framebuffer info */
