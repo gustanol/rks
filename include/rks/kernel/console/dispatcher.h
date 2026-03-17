@@ -5,12 +5,12 @@
 
 #define MAX_CONSOLES 2
 
-struct console_driver
+typedef struct
 {
 	char* name;
-	void (*flush) (const struct screen_cell * buffer);
-};
+	void ( *flush ) ( const screen_cell_t * buffer );
+} console_driver_t;
 
-void console_register (struct console_driver* drv);
+void console_register ( console_driver_t * drv );
 
 #endif /* __DISPATCHER_H */

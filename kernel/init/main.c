@@ -1,3 +1,12 @@
+
+/*
+ * Main C kernel code point
+ *
+ * Define the initial kernel context
+ *
+ * The `rks_main` function, once reached, should not return to where it was called
+ */
+
 #include <rks/kernel/console/console.h>
 #include <rks/kernel/klog/log.h>
 #include <rks/kernel/klog/print.h>

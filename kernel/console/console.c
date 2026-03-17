@@ -4,7 +4,7 @@
 #include <rks/lib/string.h>
 
 /* Console context struct */
-struct console_ctx
+typedef struct
 {
 	struct
 	{
@@ -14,13 +14,13 @@ struct console_ctx
 
 	struct
 	{
-		u8 color;
+		ubyte_t color;
 		size_t width;
 		size_t height;
 	} attributes;
 
-	struct screen_cell* screen;
-};
+	screen_cell_t* screen;
+} console_ctx_t;
 
 /*
  * TODO: Allocate this buffer dynamically on init and on every resize
@@ -28,16 +28,16 @@ struct console_ctx
  *
  * When resized, smaller buffers will not be altered
  */
-static struct screen_cell screen[SCREEN_BUFFER_SIZE];
-static struct console_ctx console;
+static screen_cell_t screen[SCREEN_BUFFER_SIZE];
+static console_ctx_t console;
 
 /* Console drivers specifics */
-static struct console_driver* consoles[MAX_CONSOLES];
+static console_driver_t* consoles[MAX_CONSOLES];
 static u32 console_count = 0;
 
 /* Prototypes */
-static inline void handle_overflow (void);
-static void console_scroll (void);
+static inline void handle_overflow ( void );
+static void console_scroll ( void );
 
 /*
  * Initialize the virtual console
@@ -45,13 +45,13 @@ static void console_scroll (void);
  * -> `void`
  */
 void
-console_init (void)
+console_init ( void )
 {
 	/* Start console context */
 	console.coordinates.x = console.coordinates.y = 0;
-	console.attributes.color = (u8) CONSOLE_DEFAULT_COLOR;
-	console.attributes.width = (size_t) SCREEN_WIDTH;
-	console.attributes.height = (size_t) SCREEN_HEIGHT;
+	console.attributes.color = ( ubyte_t ) CONSOLE_DEFAULT_COLOR;
+	console.attributes.width = ( size_t ) SCREEN_WIDTH;
+	console.attributes.height = ( size_t ) SCREEN_HEIGHT;
 	console.screen = screen;
 }
 
@@ -63,9 +63,9 @@ console_init (void)
  * @drv: Pointer to console driver identifier struct
  */
 void
-console_register (struct console_driver* drv)
+console_register ( console_driver_t* drv )
 {
-	if (console_count < MAX_CONSOLES)
+	if ( console_count < MAX_CONSOLES )
 		consoles[console_count++] = drv;
 }
 
@@ -76,77 +76,77 @@ console_register (struct console_driver* drv)
  * @c: The character
  */
 void
-console_putchar (char** c)
+console_putchar ( char** c )
 {
-	switch (**c)
+	switch ( **c )
 	{
-			/* Newline */
-		case '\n':
-			{
-				console.coordinates.x = 0;
-				console.coordinates.y++;
-				handle_overflow ();
-				return;
-			}
+		  /* Newline */
+	  case '\n':
+		  {
+			  console.coordinates.x = 0;
+			  console.coordinates.y++;
+			  handle_overflow (  );
+			  return;
+		  }
 
-			/*
-			 * Backslash
-			 *
-			 * It can be used to print control characters, such as `{`
-			 */
-		case '\\':
-			{
-				(*c)++;
-				break;
-			}
+		  /*
+		   * Backslash
+		   *
+		   * It can be used to print control characters, such as `{`
+		   */
+	  case '\\':
+		  {
+			  ( *c )++;
+			  break;
+		  }
 
-			/* Colors */
-		case '>':
-			{
-				/* Treat colors modifiers (>[]) */
-				if ((*c)[1] == '[')
-				{
-					/* Number character array length-only (within []) */
-					size_t i = 0;
-					while ((*c)[i + 2] != ']')
-					{
-						if ((*c)[i + 2] == '\0')
-							return;
-						i++;
-					}
+		  /* Colors */
+	  case '>':
+		  {
+			  /* Treat colors modifiers (>[]) */
+			  if ( ( *c )[1] == '[' )
+			  {
+				  /* Number character array length-only (within []) */
+				  size_t i = 0;
 
-					if (!i)
-						break;
+				  while ( ( *c )[i + 2] != ']' )
+				  {
+					  if ( ( *c )[i + 2] == '\0' )
+						  return;
+					  i++;
+				  }
 
-					/* Convert this character array to number */
-					console.attributes.color =
-						atoi (&(*c)[2], i);
-					(*c) += i + 2;
-					return;
-				}
-				break;
-			}
+				  if ( !i )
+					  break;
 
-			/*
-			 * Special character
-			 *
-			 * Determine the start of color modifier
-			 * Every text inside it will be applied
-			 *
-			 * It can be printed using `\\{`
-			 */
-		case '{':
-			return;
+				  /* Convert this character array to number */
+				  console.attributes.color =
+				          atoi ( &( *c )[2], i );
+				  ( *c ) += i + 2;
+				  return;
+			  }
+			  break;
+		  }
 
-			/*
-			 * End of color modifier
-			 */
-		case '}':
-			{
-				console.attributes.color =
-					CONSOLE_DEFAULT_COLOR;
-				return;
-			}
+		  /*
+		   * Special character
+		   *
+		   * Determine the start of color modifier
+		   * Every text inside it will be applied
+		   *
+		   * It can be printed using `\\{`
+		   */
+	  case '{':
+		  return;
+
+		  /*
+		   * End of color modifier
+		   */
+	  case '}':
+		  {
+			  console.attributes.color = CONSOLE_DEFAULT_COLOR;
+			  return;
+		  }
 	}
 
 	/*
@@ -156,14 +156,13 @@ console_putchar (char** c)
 	 * That's the reason we must use `y * width + x`
 	 */
 	console.screen[console.coordinates.y * console.attributes.width +
-		       console.coordinates.x].character = (u8) ** c;
+	               console.coordinates.x].character = ( ubyte_t ) ** c;
 	console.screen[console.coordinates.y * console.attributes.width +
-		       console.coordinates.x].color =
-		console.attributes.color;
+	               console.coordinates.x].color = console.attributes.color;
 
 	/* Advance the line and treat overflow */
 	console.coordinates.x++;
-	handle_overflow ();
+	handle_overflow (  );
 }
 
 /*
@@ -173,10 +172,10 @@ console_putchar (char** c)
  * @c: Pointer to the string
  */
 void
-console_write (char* c)
+console_write ( char* c )
 {
-	for (; *c != '\0'; c++)
-		console_putchar (&c);
+	for ( ; *c != '\0'; c++ )
+		console_putchar ( &c );
 	console.attributes.color = CONSOLE_DEFAULT_COLOR;
 }
 
@@ -186,14 +185,14 @@ console_write (char* c)
  * -> void
  */
 void
-handle_overflow (void)
+handle_overflow ( void )
 {
 	/*
 	 * If we reach the end of the line, it means we must break to the next one
 	 *
 	 * For that reason, we increase `y` and set `x` to zero (start of the next line)
 	 */
-	if (console.coordinates.x >= SCREEN_WIDTH)
+	if ( console.coordinates.x >= SCREEN_WIDTH )
 	{
 		console.coordinates.x = 0;
 		console.coordinates.y++;
@@ -204,8 +203,8 @@ handle_overflow (void)
 	 *
 	 * In other hand, if we don't do it, there'd be an overflow of text
 	 */
-	if (console.coordinates.y >= SCREEN_HEIGHT)
-		console_scroll ();
+	if ( console.coordinates.y >= SCREEN_HEIGHT )
+		console_scroll (  );
 }
 
 /*
@@ -214,28 +213,28 @@ handle_overflow (void)
  * -> `void`
  */
 void
-console_scroll (void)
+console_scroll ( void )
 {
 	/* Copy each row to the previous one */
-	for (u16 y = 1; y < console.attributes.height; y++)
-		for (u16 x = 0; x < console.attributes.width; x++)
-			console.screen[(y - 1) * console.attributes.width +
-				       x] =
-				console.screen[y * console.attributes.width +
-					       x];
+	for ( u16 y = 1; y < console.attributes.height; y++ )
+		for ( u16 x = 0; x < console.attributes.width; x++ )
+			console.screen[( y - 1 ) * console.attributes.width +
+	                               x] =
+	                        console.screen[y * console.attributes.width +
+	                                       x];
 
 	/* Clear the last row */
-	for (u16 x = 0; x < console.attributes.width; x++)
+	for ( u16 x = 0; x < console.attributes.width; x++ )
 	{
 		/* Null character */
-		console.screen[(console.attributes.height -
-				1) * console.attributes.width + x].character =
-			(u8) ' ';
+		console.screen[( console.attributes.height -
+		                 1 ) * console.attributes.width + x].character =
+		        ( ubyte_t ) ' ';
 
 		/* Black background */
-		console.screen[(console.attributes.height -
-				1) * console.attributes.width + x].color =
-			(u16) CONSOLE_DEFAULT_COLOR;
+		console.screen[( console.attributes.height -
+		                 1 ) * console.attributes.width + x].color =
+		        ( u16 ) CONSOLE_DEFAULT_COLOR;
 	}
 
 	/* Keep cursor on the last line */
@@ -249,9 +248,9 @@ console_scroll (void)
  * -> `void`
  */
 void
-console_flush (void)
+console_flush ( void )
 {
 	/* Flush the current screen to every registered driver */
-	for (u32 i = 0; i < console_count; i++)
-		consoles[i]->flush (console.screen);	/* Pass the screen framebuffer */
+	for ( u32 i = 0; i < console_count; i++ )
+		consoles[i]->flush ( console.screen );  /* Pass the screen framebuffer */
 }

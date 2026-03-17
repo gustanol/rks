@@ -1,19 +1,20 @@
 #include <rks/lib/boot/multiboot2.h>
 
 void*
-find_multiboot2_tag (void* mbi, __u32 type)
+find_multiboot2_tag ( void* mbi, u32 type )
 {
 	/* Skip the Multiboot2 header, which has 8 bytes */
-	multiboot2_tag_t* tag = (multiboot2_tag_t *) ((__u8 *) mbi + 8);
+	multiboot2_tag_t* tag =
+	        ( multiboot2_tag_t * ) ( ( ubyte_t * ) mbi + 8 );
 
 	do
 	{
 		/* If it's the target type, return it as a pointer to void */
-		if (tag->type == type)
-			return (void *) tag;
+		if ( tag->type == type )
+			return ( void * ) tag;
 
 		/* Get the following tag by summing the size and the base of the current one */
-		__u64 next_addr = (__u64) tag + tag->size;
+		addr_t next_addr = ( addr_t ) tag + tag->size;
 
 		/*
 		 * In here, besides using the next address (next flag), we guarantee a 8-byte align
@@ -33,8 +34,8 @@ find_multiboot2_tag (void* mbi, __u32 type)
 		 *
 		 * Every number besides the three first bits are multiple of 8
 		 */
-		tag = (multiboot2_tag_t *) ((next_addr + 7) & ~7);
-	} while (tag->type != MULTIBOOT2_TAG_TYPE_END);	/* End tag */
+		tag = ( multiboot2_tag_t * ) ( ( next_addr + 7 ) & ~7 );
+	} while ( tag->type != MULTIBOOT2_TAG_TYPE_END );       /* End tag */
 
 	/* No tag found */
 	return NULL;

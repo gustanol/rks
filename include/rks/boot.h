@@ -9,8 +9,8 @@
 typedef struct
 {
 	u32 magic;
-	u64 info_ptr;
-} __attribute__ ((packed)) loader_info_t;
+	addr_t info_ptr;
+} __attribute__ ( ( packed ) ) loader_info_t;
 
 /* Memory types */
 typedef enum
@@ -22,8 +22,8 @@ typedef enum
 
 typedef struct
 {
-	u64 addr;
-	u64 len;
+	addr_t addr;
+	size_t len;
 	u32 type;
 } mmap_entry_t;
 
@@ -42,12 +42,12 @@ typedef struct
 		void* ptr;
 		u32 width;
 		u32 height;
-	} fb;			/* Framebuffer */
+	} fb;                   /* Framebuffer */
 
 	void* rsdp;
 	const char* cmdline;
 } boot_info_t;
 
-void parse_boot (loader_info_t * loader_info, boot_info_t * boot_info);
+void parse_boot ( loader_info_t * loader_info, boot_info_t * boot_info );
 
 #endif /* BOOT_H */

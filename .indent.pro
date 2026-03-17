@@ -1,19 +1,42 @@
--i8
--ip5
--nbad
+/* Blank lines */
+-bad
 -bap
+
+/* Comments */
 -bbb
--nbbo
+
+/* Statements */
+-bl
+-bli0
+-cli2
+-prs
+-ut
+
+/* Declarations */
 -bc
 -nbfda
--bl
 -bls
 -blf
--bli0
+-sar
+-sai
+-saw
 -cdw
--cli8
+
+/* Indentation */
+-i8
+-lp
+-ip5
+-as
+-cs
+
+/* Wrapping */
+-nbbo
+-l80
+-gts
+
+/* Others */
 -psl
 -bs
--cs
 -pal
 -pcs
+-ss

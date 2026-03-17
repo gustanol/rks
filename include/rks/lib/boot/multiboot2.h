@@ -50,7 +50,7 @@ typedef struct
 	u64 addr;
 	u64 len;
 	u32 type;
-	u32 zero;
+	pad_t zero[2];
 } multiboot2_mmap_entry_t;
 
 typedef struct
@@ -69,6 +69,6 @@ typedef struct
 	void* rsdp;
 } multiboot2_tag_new_rsdp_t;
 
-void* find_multiboot2_tag (void* mbi, u32 type);
+void* find_multiboot2_tag ( void* mbi, u32 type );
 
 #endif /* MULTIBOOT2_H */

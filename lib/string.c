@@ -3,8 +3,8 @@
 
 /* Array mapping each digit */
 static char nmap[17] = "0123456789ABCDEF";
-static void __buf_putnumber (ul64 value, size_t base, buf_t ** buf,
-			     nlength nlen);
+static void __buf_putnumber ( ul64 value, size_t base, buf_t ** buf,
+                              nlength nlen );
 
 /*
  * Convert a number to ASCII text
@@ -16,7 +16,7 @@ static void __buf_putnumber (ul64 value, size_t base, buf_t ** buf,
  * @buf_s: Buffer size (non-zero-terminated)
  */
 size_t
-itoa (ul64 value, size_t base, buf_t* buf, size_t buf_s)
+itoa ( ul64 value, size_t base, buf_t* buf, size_t buf_s )
 {
 	buf[--buf_s] = '\0';
 
@@ -33,8 +33,8 @@ itoa (ul64 value, size_t base, buf_t* buf, size_t buf_s)
 		 */
 		buf[--buf_s] = nmap[value % base];
 		value /= base;
-	} while (value > 0);
-	return numlen (value, base);
+	} while ( value > 0 );
+	return numlen ( value, base );
 }
 
 /*
@@ -45,17 +45,18 @@ itoa (ul64 value, size_t base, buf_t* buf, size_t buf_s)
  * @buf_s: Buffer size (number length)
  */
 ul64
-atoi (buf_t* buf, size_t buf_s)
+atoi ( buf_t* buf, size_t buf_s )
 {
 	ul64 res = 0;
-	for (size_t i = 0; i < buf_s; i++)
+
+	for ( size_t i = 0; i < buf_s; i++ )
 	{
-		if (buf[buf_s - i - 1] == 'x')
+		if ( buf[buf_s - i - 1] == 'x' )
 			break;
 
-		for (size_t j = 0; j < sizeof (nmap); j++)
-			if (buf[buf_s - i - 1] == nmap[j])
-				res += j * POW16 (i);
+		for ( size_t j = 0; j < sizeof ( nmap ); j++ )
+			if ( buf[buf_s - i - 1] == nmap[j] )
+				res += j * POW16 ( i );
 	}
 	return res;
 }
@@ -70,213 +71,227 @@ atoi (buf_t* buf, size_t buf_s)
  * @args: Extra arguments
  */
 void
-_fmt (buf_t* buf, size_t size, const char* fmt, va_list args)
+_fmt ( buf_t* buf, size_t size, const char* fmt, va_list args )
 {
 	/* Don't continue if the string was larger than the buffer size */
-	if (sizeof (fmt) > size)
+	if ( sizeof ( fmt ) > size )
 		return;
 
 	do
 	{
 		/* Parse and handle arguments */
-		if (*fmt == '%')
+		if ( *fmt == '%' )
 		{
 			fmt++;
-			switch (*fmt)
+			switch ( *fmt )
 			{
-					/*
-					 * For each of the following numeric cases, there's a couple of operations:
-					 *
-					 * - `value`: The gotten value from args; casted to the correct type
-					 * - `nlen`: The amount of digits `value` has; it's used to created a buffer with an exact size
-					 * - `__buf_putnumber` call: It calls this function to correctly put the value on buffer
-					 */
+				  /*
+				   * For each of the following numeric cases, there's a couple of operations:
+				   *
+				   * - `value`: The gotten value from args; casted to the correct type
+				   * - `nlen`: The amount of digits `value` has; it's used to created a buffer with an exact size
+				   * - `__buf_putnumber` call: It calls this function to correctly put the value on buffer
+				   */
 
-				case 'b':	/* Binary */
-					{
-						int value =
-							(int) va_arg (args,
-								      int);
-						nlength nlen = numlen (value,
-								       BIN_BASE);
-						__buf_putnumber (value,
-								 BIN_BASE,
-								 &buf, nlen);
-						break;
-					}
+			  case 'b':    /* Binary */
+				  {
+					  int value = ( int ) va_arg ( args,
+					                               int );
+					  nlength nlen = numlen ( value,
+					                          BIN_BASE );
 
-				case 'o':	/* Octal */
-					{
-						int value =
-							(int) va_arg (args,
-								      int);
-						nlength nlen = numlen (value,
-								       OCT_BASE);
-						__buf_putnumber (value,
-								 OCT_BASE,
-								 &buf, nlen);
-						break;
-					}
+					  __buf_putnumber ( value,
+					                    BIN_BASE,
+					                    &buf, nlen );
+					  break;
+				  }
 
-				case 'd':	/* 32-bit Decimal */
-					{
-						int value =
-							(int) va_arg (args,
-								      int);
-						nlength nlen = numlen (value,
-								       DEC_BASE);
-						__buf_putnumber (value,
-								 DEC_BASE,
-								 &buf, nlen);
-						break;
-					}
+			  case 'o':    /* Octal */
+				  {
+					  int value = ( int ) va_arg ( args,
+					                               int );
+					  nlength nlen = numlen ( value,
+					                          OCT_BASE );
 
-				case 'l':	/* Long */
-					{
+					  __buf_putnumber ( value,
+					                    OCT_BASE,
+					                    &buf, nlen );
+					  break;
+				  }
 
-						/* Treat "long long" cases */
-						if (*(fmt + 1) == 'l')
-						{
-							/* We just advanced 1 */
-							fmt++;
-							switch (*(fmt + 1))
-							{
+			  case 'd':    /* 32-bit Decimal */
+				  {
+					  int value = ( int ) va_arg ( args,
+					                               int );
+					  nlength nlen = numlen ( value,
+					                          DEC_BASE );
 
-									/* Decimal unsigned long long */
-								case 'u':
-									{
-										ul64 value = (ul64) va_arg (args, ul64);
-										nlength nlen = numlen (value, DEC_BASE);
-										__buf_putnumber
-											(value,
-											 DEC_BASE,
-											 &buf,
-											 nlen);
+					  __buf_putnumber ( value,
+					                    DEC_BASE,
+					                    &buf, nlen );
+					  break;
+				  }
 
-										fmt++;
-										break;
-									}
+			  case 'l':    /* Long */
+				  {
 
-									/* Hexdecimal unsigned long long */
-								case 'x':
-									{
-										ul64 value = (ul64) va_arg (args, ul64);
-										nlength nlen = numlen (value, HEX_BASE);
-										__buf_putnumber
-											(value,
-											 HEX_BASE,
-											 &buf,
-											 nlen);
+					  /* Treat "long long" cases */
+					  if ( *( fmt + 1 ) == 'l' )
+					  {
+						  /* We just advanced 1 */
+						  fmt++;
+						  switch ( *( fmt + 1 ) )
+						  {
 
-										fmt++;
-										break;
-									}
+							    /* Decimal unsigned long long */
+						    case 'u':
+							    {
+								    ul64 value =
+								            ( ul64 )
+								            va_arg
+								            ( args,
+								              ul64 );
+								    nlength nlen
+								            =
+								            numlen
+								            ( value,
+								              DEC_BASE );
+								    __buf_putnumber
+								            ( value,
+								              DEC_BASE,
+								              &buf,
+								              nlen );
 
-								default:
-									{
-										fmt--;
-										break;
-									}
-							}
-						}
+								    fmt++;
+								    break;
+							    }
 
-						/* Decimal unsigned long */
-						else if (*(fmt + 1) == 'u')
-						{
-							u64 value =
-								(u64)
-								va_arg (args,
-									u64);
-							nlength nlen =
-								numlen (value,
-									DEC_BASE);
-							__buf_putnumber
-								(value,
-								 DEC_BASE,
-								 &buf, nlen);
-							fmt++;
-						}
+							    /* Hexdecimal unsigned long long */
+						    case 'x':
+							    {
+								    ul64 value =
+								            ( ul64 )
+								            va_arg
+								            ( args,
+								              ul64 );
+								    nlength nlen
+								            =
+								            numlen
+								            ( value,
+								              HEX_BASE );
+								    __buf_putnumber
+								            ( value,
+								              HEX_BASE,
+								              &buf,
+								              nlen );
 
-						/* Hex unsigned long */
-						else if (*(fmt + 1) == 'x')
-						{
+								    fmt++;
+								    break;
+							    }
 
-							u64 value =
-								(u64)
-								va_arg (args,
-									u64);
-							nlength nlen =
-								numlen (value,
-									HEX_BASE);
-							__buf_putnumber
-								(value,
-								 HEX_BASE,
-								 &buf, nlen);
-							fmt++;
-						}
-						break;
-					}
+						    default:
+							    {
+								    fmt--;
+								    break;
+							    }
+						  }
+					  }
 
-				case 'p':	/* Pointer */
-					{
-						ul64 value =
-							(ul64) va_arg (args,
-								       ul64);
-						nlength nlen = numlen (value,
-								       HEX_BASE);
-						__buf_putnumber (value,
-								 HEX_BASE,
-								 &buf, nlen);
-						break;
+					  /* Decimal unsigned long */
+					  else if ( *( fmt + 1 ) == 'u' )
+					  {
+						  u64 value =
+						          ( u64 ) va_arg ( args,
+						                           u64 );
+						  nlength nlen = numlen ( value,
+						                          DEC_BASE );
 
-					}
+						  __buf_putnumber
+						          ( value,
+						            DEC_BASE,
+						            &buf, nlen );
+						  fmt++;
+					  }
 
-				case 'x':	/* Hexadecimal */
-					{
-						u32 value =
-							(u32) va_arg (args,
-								      u32);
-						nlength nlen = numlen (value,
-								       HEX_BASE);
-						__buf_putnumber (value,
-								 HEX_BASE,
-								 &buf, nlen);
-						break;
-					}
+					  /* Hex unsigned long */
+					  else if ( *( fmt + 1 ) == 'x' )
+					  {
 
-				case 'c':	/* Character */
-					{
-						char c = (char) va_arg (args,
-									int);
-						*buf++ = c;
-						break;
-					}
+						  u64 value =
+						          ( u64 ) va_arg ( args,
+						                           u64 );
+						  nlength nlen = numlen ( value,
+						                          HEX_BASE );
 
-				case 's':	/* String */
-					{
-						const char* str =
-							(const char *)
-							va_arg (args, long);
+						  __buf_putnumber
+						          ( value,
+						            HEX_BASE,
+						            &buf, nlen );
+						  fmt++;
+					  }
+					  break;
+				  }
 
-						/* While it's not the final of string, copy its characters to the buffer */
-						for (; *str != '\0';
-						     str++, buf++)
-							*buf = *str;
-						break;
-					}
+			  case 'p':    /* Pointer */
+				  {
+					  ul64 value = ( ul64 ) va_arg ( args,
+					                                 ul64 );
+					  nlength nlen = numlen ( value,
+					                          HEX_BASE );
 
-				case '%':	/* Literal % */
-					{
-						*buf++ = *fmt;
-						break;
-					}
+					  __buf_putnumber ( value,
+					                    HEX_BASE,
+					                    &buf, nlen );
+					  break;
 
-				default:
-					{
-						*buf++ = (const char) '%';
-						*buf++ = *fmt;
-						break;
-					}
+				  }
+
+			  case 'x':    /* Hexadecimal */
+				  {
+					  u32 value = ( u32 ) va_arg ( args,
+					                               u32 );
+					  nlength nlen = numlen ( value,
+					                          HEX_BASE );
+
+					  __buf_putnumber ( value,
+					                    HEX_BASE,
+					                    &buf, nlen );
+					  break;
+				  }
+
+			  case 'c':    /* Character */
+				  {
+					  char c = ( char ) va_arg ( args,
+					                             int );
+
+					  *buf++ = c;
+					  break;
+				  }
+
+			  case 's':    /* String */
+				  {
+					  const char* str =
+					          ( const char * )
+					          va_arg ( args, long );
+
+					  /* While it's not the final of string, copy its characters to the buffer */
+					  for ( ; *str != '\0'; str++, buf++ )
+						  *buf = *str;
+					  break;
+				  }
+
+			  case '%':    /* Literal % */
+				  {
+					  *buf++ = *fmt;
+					  break;
+				  }
+
+			  default:
+				  {
+					  *buf++ = ( const char ) '%';
+					  *buf++ = *fmt;
+					  break;
+				  }
 			}
 
 			fmt++;
@@ -285,7 +300,7 @@ _fmt (buf_t* buf, size_t size, const char* fmt, va_list args)
 
 		/* Not a % */
 		*buf++ = *fmt++;
-	} while (*fmt);
+	} while ( *fmt );
 	*buf = '\0';
 }
 
@@ -299,7 +314,7 @@ _fmt (buf_t* buf, size_t size, const char* fmt, va_list args)
  * @nlen: Number length
  */
 void
-__buf_putnumber (ul64 value, size_t base, buf_t** buf, nlength nlen)
+__buf_putnumber ( ul64 value, size_t base, buf_t** buf, nlength nlen )
 {
 	/* For decimal values, do not put the base indicator (0d) */
 	nlength final_nlen = base == DEC_BASE ? nlen + 1 : nlen + 3;
@@ -315,10 +330,10 @@ __buf_putnumber (ul64 value, size_t base, buf_t** buf, nlength nlen)
 	/* Format number adding '0_' at start */
 	buf_n[0] = '0';
 	buf_n[1] = base == BIN_BASE ? 'b'
-		: base == OCT_BASE ? 'o' : base == HEX_BASE ? 'x' : '?';
+	        : base == OCT_BASE ? 'o' : base == HEX_BASE ? 'x' : '?';
 
 	/* Convert the value to string and copy it to given buffer */
-	itoa (value, base, buf_n, final_nlen);
-	for (__u32 i = 0; buf_n[i] != '\0'; i++, (*buf)++)
+	itoa ( value, base, buf_n, final_nlen );
+	for ( u32 i = 0; buf_n[i] != '\0'; i++, ( *buf )++ )
 		**buf = buf_n[i];
 }

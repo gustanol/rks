@@ -2,28 +2,39 @@
 #define TYPES_H
 
 #define NULL (void*)0
+#define true 1;
+#define false 0;
 
-typedef unsigned char __u8;
-typedef unsigned short __u16;
-typedef unsigned int __u32;
-typedef unsigned long __u64;
+typedef _Bool bool;
 
+/* Unsigned common types */
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 typedef unsigned long u64;
 typedef unsigned long long ul64;
 
-typedef signed char __s8;
-typedef signed short __s16;
-typedef signed int __s32;
-typedef signed long __s64;
+/* If needed, explicit signed types */
+typedef signed char s8;
+typedef signed short s16;
+typedef signed int s32;
+typedef signed long s64;
+typedef signed long long sl64;
 
-typedef _Bool bool;
-#define true  1;
-#define false 0;
+typedef s8 byte_t;
+typedef u8 ubyte_t;
 
-typedef __u64 size_t;
-typedef __s64 ssize_t;
+/* Type used for addresses */
+typedef u64 addr_t;
+
+/*
+ * 16-bit padding type
+ *
+ * Can be used as an array
+ */
+typedef u16 pad_t;
+
+typedef u64 size_t;
+typedef s64 ssize_t;
 
 #endif /* TYPES_H */

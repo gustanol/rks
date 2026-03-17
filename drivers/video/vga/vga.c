@@ -13,10 +13,10 @@
 #define VGA_WIDTH 80
 #define VGA_BUFFER_SIZE (VGA_HEIGHT * VGA_WIDTH)
 
-static void vga_flush_buffer (const struct screen_cell* buffer);
-static volatile char* vga_mem = (volatile char *) VGA_BUFFER_ADDRESS;
+static void vga_flush_buffer ( const screen_cell_t * buffer );
+static volatile char* vga_mem = ( volatile char * ) VGA_BUFFER_ADDRESS;
 
-struct console_driver vga_drv = {
+console_driver_t vga_drv = {
 	.name = "vga",
 	.flush = vga_flush_buffer,
 };
@@ -27,14 +27,14 @@ struct console_driver vga_drv = {
  * -> void
  */
 void
-vga_init_context (void)
+vga_init_context ( void )
 {
 	/* Register this driver to start using it */
-	console_register (&vga_drv);
+	console_register ( &vga_drv );
 }
 
 /* Declare driver to be initialized */
-DECLARE_DRIVER_INIT (vga_init_context);
+DECLARE_DRIVER_INIT ( vga_init_context );
 
 /*
  * Framebuffer flusher helper
@@ -43,9 +43,9 @@ DECLARE_DRIVER_INIT (vga_init_context);
  * -> void
  */
 void
-vga_flush_buffer (const struct screen_cell* buffer)
+vga_flush_buffer ( const screen_cell_t* buffer )
 {
-	for (__u16 i = 0; i < VGA_BUFFER_SIZE; i++)
+	for ( u16 i = 0; i < VGA_BUFFER_SIZE; i++ )
 	{
 		vga_mem[i * 2] = buffer[i].character;
 		vga_mem[i * 2 + 1] = buffer[i].color;
