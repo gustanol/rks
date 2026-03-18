@@ -1,6 +1,6 @@
 # x64 entry
 
-The initial execution mode, usually right after the bootloader jump, is restricted and does not provide full 64-bit capabilities. The most of modern bootloaders load kernels in 32-bit **protected mode**, what means, for a full 64-bit kernel, it must set by itself.
+The initial execution mode, usually right after the bootloader jump, is restricted and does not provide full 64-bit capabilities. The most of modern bootloaders load kernels in 32-bit **protected mode**, what means, for a full 64-bit kernel, it must be set by itself.
 
 > [!WARNING]
 > Be aware that, for any reason, you try to load this kernel (at least, for now) using a bootloader that does not provide a 32-bit x86 environment, this kernel simply won't load.

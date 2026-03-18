@@ -1,0 +1,53 @@
+= Boot Sequence
+
+.Phase 0 - Initialization
+[#phase0]
+****
+The essential function of a bootloader is to find the kernel binary at the physical disk, *load it to a known memory address* and jump to the defined start point.
+
+We define the memory address to be loaded and the start point label at a *linker script*, which is something similar to it:
+[source,ld]
+----
+ENTRY(__rks_start)
+SECTIONS
+{
+	. = Virtual Memory
+}
+----
+
+Reading it, the `linker` will group this information at `ELF (Executable and Linkable Format)` header.
+
+[NOTE]
+====
+The entry name `__rks_start` is not strictly necessary.
+Each architecture could have its own entry name. It's all about standardization.
+
+As only one architecure code will be compiled at once, there'll exist only one entry as well.
+====
+
+What matters in here is where the bootloader header will be placed, allowing the loader to properly pass the correct information the kernel has requested.
+
+For example: As described in https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html[Multiboot2 manual], its header must be placed at the first 32 KiB of kernel binary, differently from https://www.gnu.org/software/grub/manual/multiboot/multiboot.html[Multiboot manual], which requires its header to be placed at the first 8 KiB of binary.
+****
+
+.Phase 1 - Transfer of control
+[#phase1]
+****
+From here, after the loader's jump, this kernel can assume the control. This phase, before independent-architectural code, is usually intentionally kept small, with a minimal execution environment.
+
+It usually does not guarantee a safe execution under any unexpected/unsupported result.
+****
+
+.Phase 2 - Establish execution invariants
+[#phase2]
+****
+This phase exists at all to set, usually properties, that are going to remain unchanged through kernel operation.
+
+It includes architecture-specific boot code to get things work properly before generic kernel code.
+****
+
+.Phase 3 - Transition to independent-architecture code
+[#phase3]
+****
+Finally, after those phases, the transition can happen. It's a phase to initialize subsystems, introduce new features and all the kernel must have to work.
+****
