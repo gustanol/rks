@@ -1,0 +1,50 @@
+#ifndef PAGING_H
+#define PAGING_H
+
+#include <rks/kernel/mem/vmm.h>
+
+/* Page Table Entry bits */
+#define PTE_PRESENT ( 1ULL << 0 )       /* Is present */
+#define PTE_RW ( 1ULL << 1 )    /* Read/Write */
+#define PTE_USER ( 1ULL << 2 )
+#define PTE_ACCESSED ( 1ULL << 5 )
+#define PTE_DIRTY ( 1ULL << 6 )
+#define PTE_HUGE ( 1ULL << 7 )  /* 2 MiB pages */
+#define PTE_XD ( 1ULL << 63 )   /* Execution disabled */
+
+#define PML4_INDEX(vaddr) \
+        ( ( ( vaddr ) >> 39 ) & 0x1FF)
+
+#define PDPT_INDEX(vaddr) \
+        ( ( ( vaddr ) >> 30 ) & 0x1FF)
+
+#define PD_INDEX(vaddr) \
+        ( ( ( vaddr ) >> 21 ) & 0x1FF)
+
+#define PT_INDEX(vaddr) \
+        ( ( ( vaddr ) >> 12 ) & 0x1FF)
+
+#define PT_ENTRIES 512
+
+typedef addr_t pte_t;
+
+typedef struct
+{
+	pte_t entries[PT_ENTRIES];
+} __attribute__ ( ( aligned ( 4096 ) ) ) page_table_t;
+
+typedef struct
+{
+	page_table_t* pml4;
+	addr_t phys_pml4;
+} paging_t;
+
+typedef enum
+{
+	PPRESENT = 1 << 0,
+	PRW = 1 << 1,
+	PUS = 1 << 2,
+	PCD = 1 << 3,
+} paging_flags_t;
+
+#endif /* PAGING_H */
