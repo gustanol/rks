@@ -1,4 +1,4 @@
-#include <tss.h>
+#include <cpu/tss.h>
 
 #define LOAD_TSS(DESCRIPTOR) \
         __asm__ volatile ( \

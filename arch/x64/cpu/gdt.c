@@ -1,5 +1,5 @@
-#include <gdt.h>
-#include <tss.h>
+#include <cpu/gdt.h>
+#include <cpu/tss.h>
 
 /* Just the necessary */
 #define GDT_ENTRIES 7

@@ -1,4 +1,4 @@
-#include <idt.h>
+#include <cpu/idt.h>
 
 #define IDT_ENTRIES 256
 #define LOAD_IDT(DESCRIPTOR) \
