@@ -12,6 +12,7 @@
 #include <rks/kernel/klog/print.h>
 #include <rks/kernel/init.h>
 #include <rks/kernel/mem/pmm.h>
+#include <rks/kernel/mem/vmm.h>
 #include <rks/kernel/mem/heap.h>
 #include <rks/boot.h>
 
@@ -27,11 +28,11 @@ static boot_info_t boot_info;
  * -> void
  */
 static void
-init_drivers (void)
+init_drivers ( void )
 {
-	for (init_fn_t * ptr = &__drivers_init_start;
-	     ptr < &__drivers_init_end; ptr++)
-		(*ptr) ();	/* Init function */
+	for ( init_fn_t * ptr = &__drivers_init_start;
+	      ptr < &__drivers_init_end; ptr++ )
+		( *ptr ) (  );  /* Init function */
 }
 
 /*
@@ -42,26 +43,29 @@ init_drivers (void)
  *   - Only its `magic number` and a pointer to its `info struct`
  */
 void
-rks_main (loader_info_t* loader_info)
+rks_main ( loader_info_t* loader_info )
 {
 	/* Call architecture-dependent code right here */
-	arch_early_init ();
+	arch_early_init (  );
 
 	/* Init all self-registered drivers */
-	init_drivers ();
+	init_drivers (  );
 
-	console_init ();
-	_log_init ();
+	console_init (  );
+	_log_init (  );
 
 	/* Generic layer to parse any info structure */
-	parse_boot (loader_info, &boot_info);
+	parse_boot ( loader_info, &boot_info );
 
 	/* Physical Memory Manager */
-	pmm_init (boot_info.mmap);
-	heap_init ();
+	pmm_init ( boot_info.mmap );
+	heap_init (  );
+
+	/* Virtual Memory Manager */
+	vmm_init (  );
 
 	do
 	{
-		__asm__ volatile ("hlt");
-	} while (1);
+		__asm__ volatile ( "hlt" );
+	} while ( true );
 }

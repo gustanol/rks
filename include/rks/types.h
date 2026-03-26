@@ -2,8 +2,11 @@
 #define TYPES_H
 
 #define NULL (void*)0
-#define true 1;
-#define false 0;
+#define true 1
+#define false 0
+
+#define IS_NULL(OBJ) \
+        ( ( OBJ ) == ( NULL ) ? ( true ) : ( false ) )
 
 typedef _Bool bool;
 
