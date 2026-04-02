@@ -2,7 +2,7 @@
 #include <rks/lib/string.h>
 
 /* Invalidate the Translation Lookaside Buffer (TLB) */
-#define INVL_TLB(ADDR) \
+#define INVLPG(ADDR) \
 	__asm__ volatile ( \
                 "invlpg (%0)" \
                 : \
@@ -134,7 +134,114 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 	*pt_entry = paddr | flags;
 
 	/* Invalidate any cache for this page */
-	INVL_TLB ( vaddr );
+	INVLPG ( vaddr );
 
 	return true;
+}
+
+/*
+ * Unmap a page
+ *
+ * -> bool: 1 on success
+ * @vaddr: Virtual address
+ * @paging_ctx: Struct pointer containing a pointer to PML4
+ */
+bool
+unmap_page ( vaddr_t vaddr, paging_t* paging_ctx )
+{
+	/* Indexes from the virtual address */
+	u16 pml4_idx = PML4_INDEX ( vaddr );
+	u16 pdpt_idx = PDPT_INDEX ( vaddr );
+	u16 pd_idx = PD_INDEX ( vaddr );
+	u16 pt_idx = PT_INDEX ( vaddr );
+
+	/* Each page table */
+	page_table_t* pdpt,
+	 *pd,
+	 *pt;
+
+	/* Entry offsets gotten from the virtual address */
+	pte_t* pml4_entry,
+	 *pdpt_entry,
+	 *pd_entry,
+	 *pt_entry;
+
+	/* Pass through each hierarchy layer 'til reach the PT */
+	pml4_entry = &paging_ctx->pml4->entries[pml4_idx];
+	if ( !( *pml4_entry & PPRESENT ) )
+		return false;
+
+	pdpt = ( page_table_t * ) ( *pml4_entry );
+	pdpt_entry = &pdpt->entries[pdpt_idx];
+
+	if ( !( *pdpt_entry & PPRESENT ) )
+		return false;
+
+	pd = ( page_table_t * ) ( *pdpt_entry );
+	pd_entry = &pd->entries[pd_idx];
+
+	if ( !( *pd_entry & PPRESENT ) )
+		return false;
+
+	pt = ( page_table_t * ) ( *pd_entry );
+	pt_entry = &pt->entries[pt_idx];
+
+	if ( !( *pt_entry & PPRESENT ) )
+		return false;
+
+	/* Zero it */
+	memset ( pt_entry, 0, PAGE_SIZE );
+
+	/* Invalidate cache */
+	INVLPG ( vaddr );
+
+	return 1;
+}
+
+addr_t
+get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
+{
+	/* Indexes from the virtual address */
+	u16 pml4_idx = PML4_INDEX ( vaddr );
+	u16 pdpt_idx = PDPT_INDEX ( vaddr );
+	u16 pd_idx = PD_INDEX ( vaddr );
+	u16 pt_idx = PT_INDEX ( vaddr );
+
+	//u16 offset_idx = OFFSET_INDEX ( vaddr );
+
+	/* Each page table */
+	page_table_t* pdpt,
+	 *pd,
+	 *pt;
+
+	pte_t* pml4_entry,
+	 *pdpt_entry,
+	 *pd_entry,
+	 *pt_entry;
+
+	/* Pass through each hierarchy layer 'til reach the PT */
+	pml4_entry = &paging_ctx->pml4->entries[pml4_idx];
+	if ( !( *pml4_entry & PPRESENT ) )
+		return false;
+
+	pdpt = ( page_table_t * ) ( *pml4_entry );
+	pdpt_entry = &pdpt->entries[pdpt_idx];
+
+	if ( !( *pdpt_entry & PPRESENT ) )
+		return false;
+
+	pd = ( page_table_t * ) ( *pdpt_entry );
+	pd_entry = &pd->entries[pd_idx];
+
+	if ( !( *pd_entry & PPRESENT ) )
+		return false;
+
+	pt = ( page_table_t * ) ( *pd_entry );
+	pt_entry = &pt->entries[pt_idx];
+
+	if ( !( *pt_entry & PPRESENT ) )
+		return false;
+
+	return 0;               // for now
+
 }

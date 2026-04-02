@@ -24,6 +24,9 @@
 #define PT_INDEX(vaddr) \
         ( ( ( vaddr ) >> 12 ) & 0x1FF)
 
+#define OFFSET_INDEX(vaddr) \
+        ( ( vaddr ) & 0xFFF )
+
 #define PT_ENTRIES 512
 
 typedef addr_t pte_t;
@@ -49,5 +52,8 @@ typedef enum
 
 bool map_page ( vaddr_t vaddr, paddr_t paddr, paging_t * paging_ctx,
                 u64 flags );
+
+bool unmap_page ( vaddr_t vaddr, paging_t * paging_ctx );
+addr_t get_phys ( vaddr_t vaddr, paging_t * paging_ctx );
 
 #endif /* PAGING_H */

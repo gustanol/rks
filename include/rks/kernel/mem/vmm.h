@@ -18,5 +18,9 @@ typedef enum
 typedef addr_t vaddr_t;
 
 void vmm_init ( void );
+bool vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags );
+bool vmm_map_range ( vaddr_t vaddr, paddr_t paddr,
+                     size_t size, vmm_map_flags_t flags );
+bool vmm_unmap ( vaddr_t vaddr );
 
 #endif /* VMM_H */

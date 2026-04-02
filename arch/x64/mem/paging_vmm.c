@@ -27,7 +27,7 @@ arch_vmm_init ( void )
 }
 
 /*
- * x86-64 implementation of the generic architecture map layer
+ * x86-64 implementation of the generic architecture page mapping layer
  *
  * -> bool: Were the page mapped?
  * @vaddr: Virtual address to be mapped
@@ -41,6 +41,18 @@ arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
 	/* Try to map the page */
 	return map_page ( vaddr, paddr, &paging_ctx,
 	                  translate_flags ( flags ) );
+}
+
+/*
+ * x86-64 implementation used to unmap virtual pages
+ *
+ * -> bool: True if everything gone fine
+ * @vaddr: The virtual address
+ */
+bool
+arch_vmm_unmap ( vaddr_t vaddr )
+{
+	return unmap_page ( vaddr, &paging_ctx );
 }
 
 /*

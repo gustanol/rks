@@ -5,6 +5,6 @@
 
 void arch_vmm_init ( void );
 bool arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags );
-void arch_vmm_unmap ( vaddr_t vaddr );
+bool arch_vmm_unmap ( vaddr_t vaddr );
 
 #endif /* ARCH_VMM_H */
