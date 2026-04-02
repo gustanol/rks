@@ -156,6 +156,7 @@ _fmt ( buf_t* buf, size_t size, const char* fmt, va_list args )
 								            numlen
 								            ( value,
 								              DEC_BASE );
+
 								    __buf_putnumber
 								            ( value,
 								              DEC_BASE,
@@ -179,6 +180,7 @@ _fmt ( buf_t* buf, size_t size, const char* fmt, va_list args )
 								            numlen
 								            ( value,
 								              HEX_BASE );
+
 								    __buf_putnumber
 								            ( value,
 								              HEX_BASE,
@@ -336,4 +338,25 @@ __buf_putnumber ( ul64 value, size_t base, buf_t** buf, nlength nlen )
 	itoa ( value, base, buf_n, final_nlen );
 	for ( u32 i = 0; buf_n[i] != '\0'; i++, ( *buf )++ )
 		**buf = buf_n[i];
+}
+
+/*
+ * Set a value in a range of a memory region
+ *
+ * -> void*: The original pointer
+ * @ptr: Memory pointer
+ * @c: Value to be set
+ * @size: Range
+ */
+void*
+memset ( void* ptr, ubyte_t c, size_t size )
+{
+	/* Unsigned char original pointer */
+	u8* ucop = ptr;
+
+	for ( ; size > 0; size-- )
+		*ucop++ = c;
+
+	/* Return it */
+	return ucop;
 }
