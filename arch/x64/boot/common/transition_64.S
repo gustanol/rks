@@ -3,6 +3,7 @@
 
 .globl kernel_stack_top
 
+/* Kernel stack memory */
 kernel_stack_bottom:
 	.skip 16384
 kernel_stack_top:
@@ -10,6 +11,9 @@ kernel_stack_top:
 .section .data
 .align 4096
 
+.globl pml4
+
+/* Page Map Level 4 */
 pml4:
 	.fill 4096, 1, 0
 

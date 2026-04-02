@@ -47,4 +47,7 @@ typedef enum
 	PCD = 1 << 3,
 } paging_flags_t;
 
+bool map_page ( vaddr_t vaddr, paddr_t paddr, paging_t * paging_ctx,
+                u64 flags );
+
 #endif /* PAGING_H */

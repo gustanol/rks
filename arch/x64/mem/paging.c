@@ -1,36 +1,29 @@
 #include <mem/paging.h>
-#include <rks/kernel/mem/arch_vmm.h>
+#include <rks/lib/string.h>
 
-extern char pml4[];
+/* Invalidate the Translation Lookaside Buffer (TLB) */
+#define INVL_TLB(ADDR) \
+	__asm__ volatile ( \
+                "invlpg (%0)" \
+                : \
+                : "r" ( ADDR ) \
+                : "memory" \
+        );
 
-static paging_t paging_ctx;
-static u64 translate_flags ( vmm_map_flags_t flags );
-
-void
-arch_vmm_init (  )
-{
-	/* Defining context for paging */
-	paging_ctx = ( paging_ctx_t )
-	{
-		.pml4 = ( page_table_t * ) pml4;
-		.phys_pml4 = ( addr_t ) pml4;
-	};
-}
 
 /*
- * x86-64 implementation of the generic architecure map layer
+ * Map a new page
  *
- * -> bool: Were the page mapped?
- * @vaddr: Virtual address to be mapped
+ * -> bool: True if everything gone right
+ *
+ * @vaddr: Virtual address
  * @paddr: Physical address
- * @flags: Just flags
- *   Refer them at `rks/kernel/mem/vmm.h`
+ * @paging_ctx: Useful struct containing PML4 context
+ * @flags: Translated flags
  */
 bool
-arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
+map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 {
-	u64 paging_flags = translate_flags ( flags );
-
 	/* Index of each Page Table */
 	u16 pml4_idx = PML4_INDEX ( vaddr );
 	u16 pdpt_idx = PDPT_INDEX ( vaddr );
@@ -38,22 +31,22 @@ arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
 	u16 pt_idx = PT_INDEX ( vaddr );
 
 	/* Each page table */
-	page_table* pdpt,
-	  pd,
-	  pt;
+	page_table_t* pdpt,
+	 *pd,
+	 *pt;
 
 	/* Entry offsets gotten from the virtual address */
 	pte_t* pml4_entry,
-	  pdpt_entry,
-	  pd_entry,
-	  pt_entry;
+	 *pdpt_entry,
+	 *pd_entry,
+	 *pt_entry;
 
 	/*
-	 * Get the current PML4 entry
+	 * Get the PML4 entry from the virtual address
 	 *
 	 * It points (or not) to a PDPT table
 	 */
-	pml4_entry = &paging_ctx.pml4->entries[pml4_idx];
+	pml4_entry = &paging_ctx->pml4->entries[pml4_idx];
 
 	/* PDPT not mapped */
 	if ( !( *pml4_entry & PPRESENT ) )
@@ -62,19 +55,21 @@ arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
 		addr_t pdpt_phys = pmm_alloc_frames ( 1 );
 
 		/* PDPT not mapped */
-		if ( IS_NULL ( pdpt_phys ) )
+		if ( !pdpt_phys )
 			return false;
 
 		/* Initialize it with zero */
 		pdpt = ( page_table_t * ) pdpt_phys;
 		memset ( pdpt, 0, sizeof ( page_table_t ) );
 
-		pml4_entry = pdpt_phys | PPRESENT | PRW | PUS;
+		/* Set the PDPT physical address and the specified flags */
+		*pml4_entry = pdpt_phys | PPRESENT | PRW | PUS;
 	}
 
 	/* PDPT already mapped */
 	else
 	{
+		/* PDPT = &PML4[INDEX] */
 		pdpt = ( page_table_t * ) ( *pml4_entry );
 	}
 
@@ -84,15 +79,19 @@ arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
 	/* PD not mapped yet */
 	if ( !( *pdpt_entry & PPRESENT ) )
 	{
+		/* Map it */
 		addr_t pd_phys = pmm_alloc_frames ( 1 );
 
-		if ( IS_NULL ( pd_phys ) )
+		/* Mapping gone wrong */
+		if ( !pd_phys )
 			return false;
 
+		/* Get the physical address and set it with zeros */
 		pd = ( page_table_t * ) pd_phys;
 		memset ( pd, 0, sizeof ( page_table_t ) );
 
-		pd_entry = pd_phys | PPRESENT | PRW | PUS;
+		/* Set the physical address of PD */
+		*pdpt_entry = pd_phys | PPRESENT | PRW | PUS;
 	}
 
 	/* PD already mapped */
@@ -101,54 +100,41 @@ arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
 		pd = ( page_table_t * ) ( *pdpt_entry );
 	}
 
+	/* PD[i] -> PT */
 	pd_entry = &pd->entries[pd_idx];
 
+	/* PT not mapped yet */
 	if ( !( *pd_entry & PPRESENT ) )
 	{
+		/* Map it */
 		addr_t pt_phys = pmm_alloc_frames ( 1 );
 
-		if ( IS_NULL ( pt_phys ) )
+		/* Not mapped */
+		if ( !pt_phys )
 			return false;
 
+		/* Initialize this PT and set it with zeros */
 		pt = ( page_table_t * ) pt_phys;
 		memset ( pt, 0, sizeof ( page_table_t ) );
 
-		pt_entry = pt_phys | PPRESENT | PRW | PUS;
+		/* Set the physical address of this PT */
+		*pd_entry = pt_phys | PPRESENT | PRW | PUS;
 	}
 
+	/* PT already mapped */
 	else
 	{
 		pt = ( page_table_t * ) ( *pd_entry );
 	}
 
+	/* Finally, the page */
 	pt_entry = &pt->entries[pt_idx];
-	pt_entry = paddr | paging_flags;
 
-	__asm__ volatile ( "invlpg (%0)"::"r" ( vaddr ):"memory" );
+	/* Pass the physical address */
+	*pt_entry = paddr | flags;
+
+	/* Invalidate any cache for this page */
+	INVL_TLB ( vaddr );
 
 	return true;
-}
-
-static u64
-translate_flags ( vmm_map_flags_t flags )
-{
-	u64 paging_flags = 0;
-
-	/* Page present */
-	if ( flags & VMM_PRESENT )
-		paging_flags |= PPRESENT;
-
-	/* Read-write */
-	if ( flags & VMM_RW )
-		paging_flags |= PRW;
-
-	/* Read/Write permissions */
-	if ( flags & VMM_USER )
-		paging_flags |= PUS;
-
-	/* Cacheable page */
-	if ( flags & VMM_NOCACHE )
-		paging_falgs |= PCD;
-
-	return paging_flags;
 }
