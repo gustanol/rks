@@ -1,9 +1,3 @@
-video_drivers_dir := drivers/video
-video_drivers_build_dir:= $(root_build_dir)/$(video_drivers_dir)
+VIDEO_DRIVER_BUILD_DIR := $(DRIVERS_BUILD_DIR)/video
 
-obj-$(CFG_CONSOLE_VGA) += $(video_drivers_build_dir)/vga/vga.o
-
-$(video_drivers_build_dir)/%.o: $(video_drivers_dir)/%.c
-	@mkdir -p $(dir $@)
-	@echo "CC  $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
+OBJ-$(CFG_CONSOLE_VGA) += $(VIDEO_DRIVER_BUILD_DIR)/vga/vga.o

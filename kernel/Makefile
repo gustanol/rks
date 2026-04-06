@@ -1,18 +1,10 @@
-kernel_dir := kernel
-kernel_build_dir := $(root_build_dir)/$(kernel_dir)
-
 # Kernel objects
-obj-1 += $(kernel_build_dir)/init/main.o
-obj-1 += $(kernel_build_dir)/console/console.o
-obj-$(CFG_KLOG) += $(kernel_build_dir)/klog/log.o
-obj-$(CFG_KLOG) += $(kernel_build_dir)/klog/print.o
+OBJ-1 += $(KERNEL_BUILD_DIR)/init/main.o
+OBJ-1 += $(KERNEL_BUILD_DIR)/console/console.o
+OBJ-$(CFG_KLOG) += $(KERNEL_BUILD_DIR)/klog/log.o
+OBJ-$(CFG_KLOG) += $(KERNEL_BUILD_DIR)/klog/print.o
 
 # Memory
-obj-1 += $(kernel_build_dir)/mem/pmm.o
-obj-1 += $(kernel_build_dir)/mem/vmm.o
-obj-1 += $(kernel_build_dir)/mem/heap.o
-
-$(kernel_build_dir)/%.o: $(kernel_dir)/%.c
-	@mkdir -p $(dir $@)
-	@echo "CC  $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
+OBJ-1 += $(KERNEL_BUILD_DIR)/mem/pmm.o
+OBJ-1 += $(KERNEL_BUILD_DIR)/mem/vmm.o
+OBJ-1 += $(KERNEL_BUILD_DIR)/mem/heap.o

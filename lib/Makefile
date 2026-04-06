@@ -1,13 +1,5 @@
-lib_dir := lib
-lib_build_dir := $(root_build_dir)/$(lib_dir)
-
 # Objects
-obj-1 += $(lib_build_dir)/math.o
-obj-1 += $(lib_build_dir)/string.o
-obj-1 += $(lib_build_dir)/bitwise.o
-obj-1 += $(lib_build_dir)/boot/multiboot2.o
-
-$(lib_build_dir)/%.o: $(lib_dir)/%.c
-	@mkdir -p $(dir $@)
-	@echo "CC  $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
+OBJ-1 += $(LIB_BUILD_DIR)/math.o
+OBJ-1 += $(LIB_BUILD_DIR)/string.o
+OBJ-1 += $(LIB_BUILD_DIR)/bitwise.o
+OBJ-$(CFG_MULTIBOOT2_LOADER) += $(LIB_BUILD_DIR)/boot/multiboot2.o
