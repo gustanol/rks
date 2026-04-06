@@ -1,0 +1,58 @@
+:toc: left
+:toc-title: Table of Contents
+:toclevels: 3
+:icons: font
+:linkattrs:
+
+= Build
+
+Although some binaries are available to be downloaded, in most of cases, they will not fill all what we need (or just what you need). The most reasonable path is building it by yourself.
+
+== Make
+Happily, the **Makefile** at project root defines everything we need to build the project. You can visualize all commands by running:
+
+[source,bash]
+----
+# Make sure you are at RKS root
+[host@me ~/rks] make help
+----
+
+There will be a quick overview of some of them right here as well.
+
+=== Building
+While triggering the build process, you need to 'tell' Make which architecture it should build. You can view all available architectures by running:
+
+[source,bash]
+----
+[host@me ~/rks] make archs
+Available architectures
+  - x86_64
+  - ...
+----
+
+You pass a value to the variable `ARCH` choosing your target architecture when trigger the `all` rule:
+
+[source,bash]
+----
+[host@me ~/rks] make ARCH=x86_64
+# Building starts
+----
+
+If you pass an unsupported architecture, that will trigger an error:
+
+[source,bash]
+----
+[host@me ~/rks] make ARCH=risc-v # (at least for now)
+Makefile:14: *** Unsupported architecture: risc-v. Run make archs.  Stop.
+----
+
+Otherwise, if you don't pass a target architecture, `ARCH` will get the default value of `x86_64`.
+
+NOTE: While there's just one available architecture target, it's not too relevant.
+
+=== Structure
+After knowing how to build the project, a quick review of what it causes.
+
+Every compiled/assembled object is put at `/build`, following the project structure. Storing them helps to avoid unnecessary future builds with no changes.
+
+The linked binary is put at root of `/build`, as its symlink is put at project root.

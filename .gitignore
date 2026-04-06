@@ -1,14 +1,20 @@
 build/
 *.o
 *.elf
+*.bin
+
+# Binary symlink
+rks
+
 *.swp
 *.swo
 *~
 iso/
 
+# Documentation HTML built objects
+*.html
+
 # Local-project config files
-.nvim-project.json
-.ccls
 cscope.*
 tags
 .string*
