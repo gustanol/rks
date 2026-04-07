@@ -6,6 +6,10 @@
 
 #define PAGE_SIZE 4096
 
+/* Virtual bases */
+#define KERNEL_VIRTUAL_BASE 0xFFFFFFFF80000000
+#define KERNEL_PHYSMAP_BASE 0xFFFFFFFFC0000000
+
 /* Flags for mapping */
 typedef enum
 {

@@ -7,53 +7,59 @@ extern char kernel_start[];
 extern char kernel_end[];
 
 /* Prototypes */
-static void mark_region_free (ul64 addr, u64 len);
-static void mark_region_used (ul64 addr, u64 len);
+static void mark_region_free ( ul64 addr, u64 len );
+static void mark_region_used ( ul64 addr, u64 len );
 
+/*
+ * Physical Memory Allocation initializer
+ *
+ * -> void
+ * @mmap: Pointer to the generic MMAP tage
+ */
 void
-pmm_init (mmap_tag_t* mmap)
+pmm_init ( mmap_tag_t* mmap )
 {
 	/* We can't continue if it's NULL */
-	if (mmap == NULL)
-		return;		/* Treat error */
+	if ( mmap == NULL )
+		return;         /* Treat error */
 
 	/* Define the base address of bitmap as being the end of kernel */
-	pmm.bitmap = (char *) kernel_end;
+	pmm.bitmap = ( char * ) kernel_end;
 
 	/* Total memory size in bytes */
-	ul64 total_memory = 0;
+	pmm.total_memory = 0;
 
 	/* Iterate for each entry, incrementing the total_memory by the current entry length */
-	for (u32 i = 0; i < mmap->entry_count; i++)
+	for ( u32 i = 0; i < mmap->entry_count; i++ )
 	{
 		/* Only get available memory */
-		if (mmap->entries[i].type == MEM_AVAILABLE)
+		if ( mmap->entries[i].type == MEM_AVAILABLE )
 		{
 			/* Increment the total memory */
-			total_memory += mmap->entries[i].len;
+			pmm.total_memory += mmap->entries[i].len;
 
 			/* Mark this region as free */
-			mark_region_free (mmap->entries[i].addr,
-					  mmap->entries[i].len);
+			mark_region_free ( mmap->entries[i].addr,
+			                   mmap->entries[i].len );
 		}
 	}
 
 	/* How many frames does the physical memory has */
-	pmm.total_frames = total_memory / FRAME_SIZE;
+	pmm.total_frames = pmm.total_memory / FRAME_SIZE;
 
 	/* Divide by 8 to get the size in bytes */
-	pmm.bitmap_size = (pmm.total_frames + 7) / 8;
+	pmm.bitmap_size = ( pmm.total_frames + 7 ) / 8;
 	pmm.used_frames = 0;
 
 	/* Mark regions we're using */
-	mark_region_used ((ul64) kernel_start,
-			  (ul64) (kernel_end - kernel_start));
-	mark_region_used ((ul64) pmm.bitmap, pmm.bitmap_size);
+	mark_region_used ( ( ul64 ) kernel_start,
+	                   ( ul64 ) ( kernel_end - kernel_start ) );
+	mark_region_used ( ( ul64 ) pmm.bitmap, pmm.bitmap_size );
 
-	kprintf ("PMM: Available memory = %llu MiB\n",
-		 total_memory / 1024 / 1024);
-	kprintf ("PMM: Total frames = %lu\n", pmm.total_frames);
-	kprintf ("PMM: Used frames = %lu\n", pmm.used_frames);
+	kprintf ( "PMM: Available memory = %llu MiB\n",
+	          pmm.total_memory / 1024 / 1024 );
+	kprintf ( "PMM: Total frames = %lu\n", pmm.total_frames );
+	kprintf ( "PMM: Used frames = %lu\n", pmm.used_frames );
 }
 
 /*
@@ -62,30 +68,30 @@ pmm_init (mmap_tag_t* mmap)
  * -> u64: Frame address
  */
 u64
-pmm_alloc_frames (u64 frames_needed)
+pmm_alloc_frames ( u64 frames_needed )
 {
-	long bit;		/* The bit can return -1 in errors */
-	u64 first_bit;		/* For multiple allocations, we must return the address for the first frame */
+	long bit;               /* The bit can return -1 in errors */
+	u64 first_bit;          /* For multiple allocations, we must return the address for the first frame */
 
 	/* Repeat the operation as the value of `frames_needed` */
-	for (u64 i = 0; i < frames_needed; i++, pmm.used_frames++)
+	for ( u64 i = 0; i < frames_needed; i++, pmm.used_frames++ )
 	{
 		/* Find the first available frame by looking at the bitmap */
-		bit = FIND_FIRST_ZERO_BIT (pmm.bitmap, pmm.bitmap_size);
+		bit = FIND_FIRST_ZERO_BIT ( pmm.bitmap, pmm.bitmap_size );
 
 		/*
 		 * In errors, bit can be -1
 		 */
-		if (bit == -1)
+		if ( bit == -1 )
 		{
 			/* Clean already set bits soon */
-			return 0;	/* No available memory */
+			return 0;       /* No available memory */
 		}
 
-		BITMAP_SET_BIT (pmm.bitmap, bit);
+		BITMAP_SET_BIT ( pmm.bitmap, bit );
 
 		/* Only get it at the first iteration */
-		if (!i)
+		if ( !i )
 			first_bit = bit;
 	}
 
@@ -100,13 +106,13 @@ pmm_alloc_frames (u64 frames_needed)
  * @phys_addr: Frame physical address
  */
 void
-pmm_free_frame (u64 phys_addr)
+pmm_free_frame ( u64 phys_addr )
 {
 	/* Physical frame */
 	u64 frame = phys_addr / FRAME_SIZE;
 
 	/* Zero this index in bitmap */
-	BITMAP_CLEAR_BIT (pmm.bitmap, frame);
+	BITMAP_CLEAR_BIT ( pmm.bitmap, frame );
 	pmm.used_frames--;
 }
 
@@ -118,7 +124,7 @@ pmm_free_frame (u64 phys_addr)
  * @len: Limit to be marked
  */
 void
-mark_region_free (ul64 addr, u64 len)
+mark_region_free ( ul64 addr, u64 len )
 {
 	/* To select a bit from the bitmap, we need to get the physical frame first */
 	u64 start = addr / FRAME_SIZE;
@@ -127,8 +133,8 @@ mark_region_free (ul64 addr, u64 len)
 	u64 count = len / FRAME_SIZE;
 
 	/* Clear all bits in this interval */
-	for (u64 i = 0; i < count; i++)
-		BITMAP_CLEAR_BIT (pmm.bitmap, start + i);
+	for ( u64 i = 0; i < count; i++ )
+		BITMAP_CLEAR_BIT ( pmm.bitmap, start + i );
 
 	pmm.used_frames -= count;
 }
@@ -141,14 +147,26 @@ mark_region_free (ul64 addr, u64 len)
  * @len: Limit of marking
  */
 void
-mark_region_used (ul64 addr, u64 len)
+mark_region_used ( ul64 addr, u64 len )
 {
 	u64 start = addr / FRAME_SIZE;
 	u64 count = len / FRAME_SIZE;
 
 	/* Set all bits in this interval */
-	for (u64 i = 0; i < count; i++)
-		BITMAP_SET_BIT (pmm.bitmap, start + i);
+	for ( u64 i = 0; i < count; i++ )
+		BITMAP_SET_BIT ( pmm.bitmap, start + i );
 
 	pmm.used_frames += count;
+}
+
+/*
+ * Helper function to return the total avilable memory
+ *
+ * -> size_t: The memory
+ */
+size_t
+pmm_get_total_memory ( void )
+{
+	return pmm.total_memory;
+
 }
