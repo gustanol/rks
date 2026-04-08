@@ -33,6 +33,21 @@ typedef struct
 	mmap_entry_t* entries;
 } mmap_tag_t;
 
+typedef struct __attribute__ ( ( packed ) )
+{
+	char signature[8];
+	ubyte_t checksum;
+	char oemid[6];
+	ubyte_t revision;
+	addr32_t rsdt_address;
+
+	/* ACPI 2.0+ */
+	u32 length;
+	addr_t xsdt_address;
+	ubyte_t extended_checksum;
+	ubyte_t reserved[3];
+} rsdp_t;
+
 typedef struct
 {
 	mmap_tag_t* mmap;
@@ -44,7 +59,7 @@ typedef struct
 		u32 height;
 	} fb;                   /* Framebuffer */
 
-	void* rsdp;
+	rsdp_t* rsdp;
 	const char* cmdline;
 } boot_info_t;
 

@@ -21,10 +21,10 @@ parse_mbi2 ( u64 info_ptr, boot_info_t* boot_info )
 	                                                          info_ptr,
 	                                                          MULTIBOOT2_TAG_TYPE_MMAP );
 
-	multiboot2_tag_new_rsdp_t* mb2_acpi =
-	        ( multiboot2_tag_new_rsdp_t * ) find_multiboot2_tag ( ( void * )
+	multiboot2_tag_old_rsdp_t* mb2_acpi_old =
+	        ( multiboot2_tag_old_rsdp_t * ) find_multiboot2_tag ( ( void * )
 	                                                              info_ptr,
-	                                                              MULTIBOOT2_TAG_TYPE_ACPI_NEW );
+	                                                              MULTIBOOT2_TAG_TYPE_ACPI_OLD );
 
 	multiboot2_tag_cmdline_t* mb2_cmdline =
 	        ( multiboot2_tag_cmdline_t * ) find_multiboot2_tag ( ( void * )
@@ -35,10 +35,10 @@ parse_mbi2 ( u64 info_ptr, boot_info_t* boot_info )
 	boot_info->mmap =
 	        ( mmap_tag_t * ) early_alloc ( sizeof ( mmap_tag_t ) );
 	boot_info->cmdline = mb2_cmdline->string;
-	boot_info->rsdp = mb2_acpi->rsdp;
+	boot_info->rsdp = ( rsdp_t * ) mb2_acpi_old->rsdp;
 
 	parse_mmap ( mb2_mmap, boot_info->mmap );
-	kprintf ( "rsdp=%llx\n", boot_info->rsdp );
+	kprintf ( "rsdp=%p\n", boot_info->rsdp );
 	kprintf ( "cmdline=%s\n", boot_info->cmdline );
 }
 

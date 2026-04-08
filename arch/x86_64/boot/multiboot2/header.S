@@ -26,11 +26,12 @@ multiboot_header_start:
 	.balign 8
 	.short 1 /* Type 1: Information request */
     	.short 0 /* Flags */
-    	.long 24 /* Size: 8 (header) + 4 (one request) */
+    	.long 28 /* Size: 8 (header) + 16 */
 
 	.long 1 /* Boot command line */
 	.long 6 /* Memory map */
 	.long 8 /* Framebuffer info */
+	.long 14
 	.long 15 /* ACPI new */
 
     	.balign 8

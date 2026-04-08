@@ -42,7 +42,7 @@ typedef struct
 {
 	u32 type;
 	u32 size;
-	char* string;
+	char string[];
 } multiboot2_tag_cmdline_t;
 
 typedef struct
@@ -66,8 +66,10 @@ typedef struct
 {
 	u32 type;
 	u32 size;
-	void* rsdp;
-} multiboot2_tag_new_rsdp_t;
+	ubyte_t rsdp[];
+} multiboot2_tag_old_rsdp_t;
+
+typedef multiboot2_tag_old_rsdp_t multiboot2_tag_new_rsdp_t;
 
 void* find_multiboot2_tag ( void* mbi, u32 type );
 

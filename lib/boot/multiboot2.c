@@ -1,8 +1,10 @@
 #include <rks/lib/boot/multiboot2.h>
+#include <rks/kernel/klog/print.h>
 
 void*
 find_multiboot2_tag ( void* mbi, u32 type )
 {
+	kprintf ( "mbi=%p total_size=%lu\n", mbi, *( u32 * ) mbi );
 	/* Skip the Multiboot2 header, which has 8 bytes */
 	multiboot2_tag_t* tag =
 	        ( multiboot2_tag_t * ) ( ( ubyte_t * ) mbi + 8 );

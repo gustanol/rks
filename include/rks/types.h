@@ -1,9 +1,21 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define NULL (void*)0
+#define NULL ( void* ) 0
 #define true 1
 #define false 0
+
+/*
+ * Align a value by an amound of bits
+ *
+ * Basically, the value is shifted 'BITS' times to the right (/ 2 ^ BITS)
+ *   Minux one
+ *
+ * Zeroing the 'BITS' LSB (least significant bits), we can undone the shift
+ *   We make this by shifting to the left 'BITS' times
+ */
+#define ALIGN(VALUE, BITS) \
+        ( ( ( ( VALUE ) >> ( BITS ) ) - 1 ) << ( BITS )  )
 
 typedef _Bool bool;
 
@@ -26,6 +38,10 @@ typedef u8 ubyte_t;
 
 /* Type used for addresses */
 typedef u64 addr_t;
+typedef u32 addr32_t;
+
+/* Type for registers */
+typedef u64 reg_t;
 
 /*
  * 16-bit padding type

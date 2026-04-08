@@ -152,7 +152,7 @@ isr14:
 	call isr_common_stub
 
 isr_common_stub:
-.extern _isr_handler
+.extern _isr_generic_handler
 
 	/*
 	 * Save all registers
@@ -176,7 +176,7 @@ isr_common_stub:
 
 	/* Pass the stack frame as argument */
 	movq %rsp, %rdi
-	call _isr_handler
+	call _isr_generic_handler
 
 	/* Restore all registers */
 	popq %r15

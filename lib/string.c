@@ -352,11 +352,11 @@ void*
 memset ( void* ptr, ubyte_t c, size_t size )
 {
 	/* Unsigned char original pointer */
-	u8* ucop = ptr;
+	u8* ptr_cpy = ptr;
 
 	for ( ; size > 0; size-- )
-		*ucop++ = c;
+		*ptr_cpy++ = c;
 
 	/* Return it */
-	return ucop;
+	return ptr_cpy;
 }

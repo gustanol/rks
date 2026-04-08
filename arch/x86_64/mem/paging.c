@@ -1,5 +1,6 @@
 #include <mem/paging.h>
 #include <rks/lib/string.h>
+#include <rks/kernel/klog/print.h>
 
 /* Invalidate the Translation Lookaside Buffer (TLB) */
 #define INVLPG(ADDR) \
@@ -171,23 +172,29 @@ unmap_page ( vaddr_t vaddr, paging_t* paging_ctx )
 	if ( !( *pml4_entry & PPRESENT ) )
 		return false;
 
+	/* PDPT table */
 	pdpt = ( page_table_t * ) ( *pml4_entry );
 	pdpt_entry = &pdpt->entries[pdpt_idx];
 
 	if ( !( *pdpt_entry & PPRESENT ) )
 		return false;
+	/* PDPT table */
 
+	/* PD table */
 	pd = ( page_table_t * ) ( *pdpt_entry );
 	pd_entry = &pd->entries[pd_idx];
 
 	if ( !( *pd_entry & PPRESENT ) )
 		return false;
+	/* PD table */
 
+	/* PT table */
 	pt = ( page_table_t * ) ( *pd_entry );
 	pt_entry = &pt->entries[pt_idx];
 
 	if ( !( *pt_entry & PPRESENT ) )
 		return false;
+	/* PT table */
 
 	/* Zero it */
 	memset ( pt_entry, 0, PAGE_SIZE );
@@ -198,7 +205,14 @@ unmap_page ( vaddr_t vaddr, paging_t* paging_ctx )
 	return 1;
 }
 
-addr_t
+/*
+ * Helper to translate virtual addresses to physical ones
+ *
+ * -> paddr_t: The physical translated address
+ * @vaddr: The virtual address
+ * @paging_ctx: Pointer to the useful paging context structure
+ */
+paddr_t
 get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
 {
 	/* Indexes from the virtual address */
@@ -206,42 +220,114 @@ get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
 	u16 pdpt_idx = PDPT_INDEX ( vaddr );
 	u16 pd_idx = PD_INDEX ( vaddr );
 	u16 pt_idx = PT_INDEX ( vaddr );
-
-	//u16 offset_idx = OFFSET_INDEX ( vaddr );
+	u16 offset = ADDR_OFFSET ( vaddr );
 
 	/* Each page table */
 	page_table_t* pdpt,
 	 *pd,
 	 *pt;
 
+	/* Entries */
 	pte_t* pml4_entry,
 	 *pdpt_entry,
 	 *pd_entry,
 	 *pt_entry;
 
-	/* Pass through each hierarchy layer 'til reach the PT */
+	/* Go through each hierarchy layer 'til reach the PT */
 	pml4_entry = &paging_ctx->pml4->entries[pml4_idx];
 	if ( !( *pml4_entry & PPRESENT ) )
 		return false;
 
+	/* PDPT */
 	pdpt = ( page_table_t * ) ( *pml4_entry );
 	pdpt_entry = &pdpt->entries[pdpt_idx];
 
 	if ( !( *pdpt_entry & PPRESENT ) )
 		return false;
+	/* PDPT */
 
+	/* PD */
 	pd = ( page_table_t * ) ( *pdpt_entry );
 	pd_entry = &pd->entries[pd_idx];
 
 	if ( !( *pd_entry & PPRESENT ) )
 		return false;
+	/* PD */
 
+	/* PT */
 	pt = ( page_table_t * ) ( *pd_entry );
 	pt_entry = &pt->entries[pt_idx];
 
 	if ( !( *pt_entry & PPRESENT ) )
 		return false;
+	/* PT */
 
-	return 0;               // for now
+	/* Align the address by 4096 to remove the flags */
+	return ( ( ALIGN ( *pt_entry, 0xC ) ) + offset );
 
+}
+
+/*
+ * Debug function to list the page hierarchy of the passed virtual address
+ *
+ * -> void
+ * @vaddr: The virtual address
+ * @paging_ctx: Pointer to paging context struct
+ */
+void
+dump_tables ( vaddr_t vaddr, paging_t* paging_ctx )
+{
+	kprintf ( "Page tables for %llx:\n[ P = Present | NP = Not Present ]\n",
+	          vaddr );
+
+	/* PML4 */
+	u16 pml4_idx = PML4_INDEX ( vaddr );
+	pte_t pml4_entry = paging_ctx->pml4->entries[pml4_idx];
+
+	kprintf ( "  PML4[%d] = %llx [%s]\n", pml4_idx, pml4_entry,
+	          pml4_entry & PPRESENT ? "P" : "NP" );
+
+	if ( !( pml4_entry & PPRESENT ) )
+		goto print_offset;
+	/* PML4 */
+
+	/* PDPT table */
+	u16 pdpt_idx = PDPT_INDEX ( vaddr );
+	page_table_t* pdpt = ( page_table_t * ) ( pml4_entry );
+	pte_t pdpt_entry = pdpt->entries[pdpt_idx];
+
+	kprintf ( "  PDPT[%d] = %llx [%s]\n", pdpt_idx, pdpt_entry,
+	          pdpt_entry & PPRESENT ? "P" : "NP" );
+
+	if ( !( pdpt_entry & PPRESENT ) )
+		goto print_offset;
+	/* PDPT table */
+
+	/* PD table */
+	u16 pd_idx = PD_INDEX ( vaddr );
+	page_table_t* pd = ( page_table_t * ) ( pdpt_entry );
+	pte_t pd_entry = pd->entries[pd_idx];
+
+	kprintf ( "  PD[%d] = %llx [%s]\n", pd_idx, pd_entry,
+	          pd_entry & PPRESENT ? "P" : "NP" );
+
+	if ( !( pd_entry & PPRESENT ) )
+		goto print_offset;
+	/* PD table */
+
+	/* PT table */
+	u16 pt_idx = PT_INDEX ( vaddr );
+	page_table_t* pt = ( page_table_t * ) ( pd_entry );
+	pte_t pt_entry = pt->entries[pt_idx];
+
+	kprintf ( "  PT[%d] = %llx [%s]\n", pt_idx, pt_entry,
+	          pt_entry & PPRESENT ? "P" : "NP" );
+	/* PT table */
+
+      print_offset:
+	{
+		u16 offset = ADDR_OFFSET ( vaddr );
+
+		kprintf ( "  Offset = %llx\n", offset );
+	}
 }

@@ -20,7 +20,8 @@ OBJ-1 += $(ARCH_BUILD_DIR)/cpu/idt.o
 
 # Interrupts
 OBJ-1 += $(ARCH_BUILD_DIR)/interrupt/isr.o
-OBJ-1 += $(ARCH_BUILD_DIR)/interrupt/handler.o
+OBJ-1 += $(ARCH_BUILD_DIR)/interrupt/handlers/generic.o
+OBJ-1 += $(ARCH_BUILD_DIR)/interrupt/handlers/page_fault.o
 
 OBJ-1 += $(ARCH_BUILD_DIR)/mem/paging_vmm.o
 OBJ-1 += $(ARCH_BUILD_DIR)/mem/paging.o

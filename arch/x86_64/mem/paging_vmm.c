@@ -12,7 +12,7 @@ static u64 translate_flags ( vmm_map_flags_t flags );
  * -> void
  */
 void
-arch_vmm_init ( void )
+_arch_vmm_init ( void )
 {
         /* *INDENT-OFF* */
 
@@ -36,7 +36,7 @@ arch_vmm_init ( void )
  *   Refer them at `rks/kernel/mem/vmm.h`
  */
 bool
-arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
+_arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
 {
 	/* Try to map the page */
 	return map_page ( vaddr, paddr, &paging_ctx,
@@ -50,9 +50,21 @@ arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
  * @vaddr: The virtual address
  */
 bool
-arch_vmm_unmap ( vaddr_t vaddr )
+_arch_vmm_unmap ( vaddr_t vaddr )
 {
 	return unmap_page ( vaddr, &paging_ctx );
+}
+
+/*
+ * Wrapper to call the x86-64 specific dump tables function
+ *
+ * -> Void
+ * @vaddr: The virtual address
+ */
+void
+_arch_vmm_dump_tables ( vaddr_t vaddr )
+{
+	dump_tables ( vaddr, &paging_ctx );
 }
 
 /*

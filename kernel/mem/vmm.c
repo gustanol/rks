@@ -14,14 +14,14 @@ void
 vmm_init ( void )
 {
 	/* Achitecture-specific context defining */
-	arch_vmm_init (  );
+	_arch_vmm_init (  );
 
 	/* The kernel size to be used to map it entirely */
 	u64 kernel_size = ( u64 ) & kernel_end - ( u64 ) & kernel_start;
 
 	/* Map all the kernel code to its virtual base */
-	vmm_map_range ( KERNEL_VIRTUAL_BASE, kernel_start, kernel_size,
-	                VMM_RW | VMM_PRESENT );
+	vmm_map_range ( KERNEL_VIRTUAL_BASE, ( paddr_t ) kernel_start,
+	                kernel_size, VMM_RW | VMM_PRESENT );
 
 	size_t total_memory = pmm_get_total_memory (  );
 
@@ -42,7 +42,7 @@ vmm_init ( void )
 bool
 vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
 {
-	return arch_vmm_map ( vaddr, paddr, flags );
+	return _arch_vmm_map ( vaddr, paddr, flags );
 }
 
 /*
@@ -88,5 +88,17 @@ vmm_map_range ( vaddr_t vaddr, paddr_t paddr, size_t size,
 bool
 vmm_unmap ( vaddr_t vaddr )
 {
-	return arch_vmm_unmap ( vaddr );
+	return _arch_vmm_unmap ( vaddr );
+}
+
+/*
+ * Helper used to print the tables of a virtual address
+ *
+ * -> void
+ * @vaddr: Virtual address
+ */
+void
+vmm_dump_tables ( vaddr_t vaddr )
+{
+	_arch_vmm_dump_tables ( vaddr );
 }
