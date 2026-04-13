@@ -1,7 +1,8 @@
 #include <boot/loader_parser.h>
-#include <boot/early_alloc.h>
+#include <mem/early_alloc.h>
 #include <rks/lib/boot/multiboot2.h>
 #include <rks/kernel/klog/print.h>
+#include <rks/kernel/klog/log.h>
 
 static void parse_mmap ( multiboot2_tag_mmap_t * tag, mmap_tag_t * mmap );
 
@@ -15,31 +16,48 @@ static void parse_mmap ( multiboot2_tag_mmap_t * tag, mmap_tag_t * mmap );
 void
 parse_mbi2 ( u64 info_ptr, boot_info_t* boot_info )
 {
+	multiboot2_tag_old_rsdp_t* mb2_acpi_old;
+	multiboot2_tag_new_rsdp_t* mb2_acpi_new;
+
 	/* Get the MB2 MMAP tag from the info pointer */
 	multiboot2_tag_mmap_t* mb2_mmap =
 	        ( multiboot2_tag_mmap_t * ) find_multiboot2_tag ( ( void * )
 	                                                          info_ptr,
 	                                                          MULTIBOOT2_TAG_TYPE_MMAP );
 
-	multiboot2_tag_old_rsdp_t* mb2_acpi_old =
-	        ( multiboot2_tag_old_rsdp_t * ) find_multiboot2_tag ( ( void * )
-	                                                              info_ptr,
-	                                                              MULTIBOOT2_TAG_TYPE_ACPI_OLD );
-
+	/* Get the passed command line */
 	multiboot2_tag_cmdline_t* mb2_cmdline =
 	        ( multiboot2_tag_cmdline_t * ) find_multiboot2_tag ( ( void * )
 	                                                             info_ptr,
 	                                                             MULTIBOOT2_TAG_TYPE_CMDLINE );
 
+	/* Try with the new version of ACPI first */
+	mb2_acpi_new =
+	        ( multiboot2_tag_new_rsdp_t * ) find_multiboot2_tag ( ( void * )
+	                                                              info_ptr,
+	                                                              MULTIBOOT2_TAG_TYPE_ACPI_NEW );
+
+	/* It it's NULL, the new version is not available */
+	if ( mb2_acpi_new == NULL )
+		mb2_acpi_old =
+	                ( multiboot2_tag_old_rsdp_t * )
+	                find_multiboot2_tag ( ( void * ) info_ptr,
+	                                      MULTIBOOT2_TAG_TYPE_ACPI_OLD );
+
 	/* Allocate memory for the MMAP tag */
 	boot_info->mmap =
 	        ( mmap_tag_t * ) early_alloc ( sizeof ( mmap_tag_t ) );
 	boot_info->cmdline = mb2_cmdline->string;
-	boot_info->rsdp = ( rsdp_t * ) mb2_acpi_old->rsdp;
+	boot_info->rsdp =
+	        mb2_acpi_new ==
+	        NULL ? ( rsdp_t * ) mb2_acpi_old : ( rsdp_t * ) mb2_acpi_new;
 
 	parse_mmap ( mb2_mmap, boot_info->mmap );
-	kprintf ( "rsdp=%p\n", boot_info->rsdp );
-	kprintf ( "cmdline=%s\n", boot_info->cmdline );
+
+	/* Loggings */
+	kprintf ( "[ MB2 ] Memory mapping gotten from the Multiboot2 info struct\n" );
+	kprintf ( "[ MB2 ] Cmdline received: \"%s\"\n", boot_info->cmdline );
+	kprintf ( "[ MB2 ] RSDP pointer: %p\n", boot_info->rsdp );
 }
 
 /*

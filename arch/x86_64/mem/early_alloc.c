@@ -1,4 +1,4 @@
-#include <boot/early_alloc.h>
+#include <mem/early_alloc.h>
 
 static u8 early_heap[EARLY_HEAP_SIZE];
 static size_t early_ptr = 0;

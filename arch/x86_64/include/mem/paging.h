@@ -3,14 +3,28 @@
 
 #include <rks/kernel/mem/vmm.h>
 
-/* Page Table Entry bits */
-#define PTE_PRESENT ( 1ULL << 0 )       /* Is present */
-#define PTE_RW ( 1ULL << 1 )    /* Read/Write */
+#define PAGING_PS PAGE_SIZE
+#define PT_ENTRIES 512
+
+#ifndef __ASSEMBLY__
+
+/* Page table entry bits */
+
+/* Is present */
+#define PTE_PRESENT ( 1ULL << 0 )
+
+/* Read/Write */
+#define PTE_RW ( 1ULL << 1 )
+
 #define PTE_USER ( 1ULL << 2 )
 #define PTE_ACCESSED ( 1ULL << 5 )
 #define PTE_DIRTY ( 1ULL << 6 )
-#define PTE_HUGE ( 1ULL << 7 )  /* 2 MiB pages */
-#define PTE_XD ( 1ULL << 63 )   /* Execution disabled */
+
+/* 2-MiB pages */
+#define PTE_HUGE ( 1ULL << 7 )
+
+/* Execution disabled */
+#define PTE_XD ( 1ULL << 63 )
 
 #define PML4_INDEX(vaddr) \
         ( ( ( vaddr ) >> 39 ) & 0x1FF)
@@ -26,8 +40,6 @@
 
 #define ADDR_OFFSET(vaddr) \
         ( ( vaddr ) & 0xFFF )
-
-#define PT_ENTRIES 512
 
 /* Page table entries */
 typedef addr_t pte_t;
@@ -60,4 +72,5 @@ paddr_t get_phys ( vaddr_t vaddr, paging_t * paging_ctx );
 /* Testings */
 void dump_tables ( vaddr_t vaddr, paging_t * paging_ctx );
 
+#endif
 #endif /* PAGING_H */

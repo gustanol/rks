@@ -1,8 +1,11 @@
-ENTRY(__rks_start) /* x64 entry point */
+ENTRY(__rks_start)
+
+KERNEL_VIRT_BASE = 0xFFFFFFFF80000000;
+KERNEL_PHYS_BASE = 0x100000;
 
 SECTIONS
 {
-    . = 0x100000;  /* 1MB */
+    . = KERNEL_PHYS_BASE;
     kernel_start = .;
     
     .text : ALIGN(4096)

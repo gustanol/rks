@@ -4,7 +4,7 @@ build/
 *.bin
 
 # Binary symlink
-./rks
+./rks.*
 
 *.swp
 *.swo

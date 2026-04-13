@@ -1,27 +1,48 @@
-# Bootloader-specific code
-OBJ-$(CFG_MULTIBOOT2_LOADER) += $(ARCH_BUILD_DIR)/boot/multiboot2/header.o
-OBJ-$(CFG_MULTIBOOT2_LOADER) += $(ARCH_BUILD_DIR)/boot/multiboot2/parser.o
+KERNEL_LINKER_SCRIPT = $(ARCH_DIR)/boot/kernel.ld
 
-# 32-bit generic code
-OBJ-1 += $(ARCH_BUILD_DIR)/boot/common/gdt.o
-OBJ-1 += $(ARCH_BUILD_DIR)/boot/common/setup32.o
+# Boot objects ==================================================
+# Protocols --------------------------------------------------
+# Multiboot2
+OBJ-$(CFG_MULTIBOOT2_LOADER) += \
+	$(ARCH_BUILD_DIR)/boot/protocols/multiboot2/header.o \
+	$(ARCH_BUILD_DIR)/boot/protocols/multiboot2/parser.o
 
-# 64-bit early boot long mode objects
-OBJ-1 += $(ARCH_BUILD_DIR)/boot/common/transition_64.o
-OBJ-1 += $(ARCH_BUILD_DIR)/boot/loader_parser.o
-OBJ-1 += $(ARCH_BUILD_DIR)/boot/early_alloc.o
-OBJ-1 += $(ARCH_BUILD_DIR)/boot/entry.o
-OBJ-1 += $(ARCH_BUILD_DIR)/init.o
+# Generic parser
+OBJ-1 += $(ARCH_BUILD_DIR)/boot/protocols/loader_parser.o
+# ------------------------------------------------------------
 
-# Descriptors
-OBJ-1 += $(ARCH_BUILD_DIR)/cpu/gdt.o
-OBJ-1 += $(ARCH_BUILD_DIR)/cpu/tss.o
-OBJ-1 += $(ARCH_BUILD_DIR)/cpu/idt.o
+# Common bootloader-independant objects ---------------
+OBJ-1 += \
+	$(ARCH_BUILD_DIR)/boot/common/boot_gdt.o \
+	$(ARCH_BUILD_DIR)/boot/common/cpu_preflight.o \
+	$(ARCH_BUILD_DIR)/boot/common/transition_long.o \
+	$(ARCH_BUILD_DIR)/boot/common/higher_half.o
+# -----------------------------------------------------
 
-# Interrupts
-OBJ-1 += $(ARCH_BUILD_DIR)/interrupt/isr.o
-OBJ-1 += $(ARCH_BUILD_DIR)/interrupt/handlers/generic.o
-OBJ-1 += $(ARCH_BUILD_DIR)/interrupt/handlers/page_fault.o
+# Generic early objects ------------------
+OBJ-1 += \
+	$(ARCH_BUILD_DIR)/boot/entry.o \
+	$(ARCH_BUILD_DIR)/boot/arch_init.o
+# ----------------------------------------
+# ==============================================================
 
-OBJ-1 += $(ARCH_BUILD_DIR)/mem/paging_vmm.o
-OBJ-1 += $(ARCH_BUILD_DIR)/mem/paging.o
+# CPU-specific objects ==============
+OBJ-1 += \
+	$(ARCH_BUILD_DIR)/cpu/gdt.o \
+	$(ARCH_BUILD_DIR)/cpu/tss.o \
+	$(ARCH_BUILD_DIR)/cpu/idt.o
+# ===================================
+
+# Interrupts ============================================
+OBJ-1 += \
+	$(ARCH_BUILD_DIR)/interrupt/isr.o \
+	$(ARCH_BUILD_DIR)/interrupt/handlers/generic.o \
+	$(ARCH_BUILD_DIR)/interrupt/handlers/page_fault.o
+# =======================================================
+
+# Memory ===================================
+OBJ-1 += \
+	$(ARCH_BUILD_DIR)/mem/early_alloc.o \
+	$(ARCH_BUILD_DIR)/mem/paging_vmm.o \
+	$(ARCH_BUILD_DIR)/mem/paging.o
+# ==========================================

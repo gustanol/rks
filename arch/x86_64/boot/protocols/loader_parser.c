@@ -1,4 +1,5 @@
 #include <rks/boot.h>
+#include <rks/lib/boot/multiboot2.h>
 #include <boot/loader_parser.h>
 
 /*

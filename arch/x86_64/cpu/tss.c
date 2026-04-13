@@ -8,7 +8,6 @@
                 : "memory" \
         )
 
-
 /* Task State Segment */
 tss_t tss;
 extern void kernel_stack_top ( void );
@@ -41,6 +40,7 @@ _setup_tss ( void )
                 .reserved2 = { 0 },
                 .reserved3 = { 0 },
         };
+
         /* *INDENT-ON* */
 
 	LOAD_TSS ( 0x28 );

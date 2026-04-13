@@ -1,21 +1,30 @@
 .section .bss
-.align 16
-
-/* Boot stack reserved memory */
-boot_stack_bottom:
-	.skip 16384
-boot_stack_top:
-
-loader_info:
-	.long 0
-	.long 0
-
-/* Start of code */
-.section .data
 .globl loader_info
 
+.align 16
+
+/* Boot temporary stack memory */
+/* ============ */
+boot_stack_bottom:
+	.skip 4096
+boot_stack_top:
+/* ============ */
+
+/* Structure to keep information about the bootloader */
+/* ========================================== */
+loader_info:
+	.long 0 /* Magic number */
+	.long 0 /* Pointer to its info struct */
+/* ========================================== */
+
+.section .data
+
+.globl __rks_start
+
+.extern _setup_gdt
+
 /*
- * Defines a new section and declares the starter point in there
+ * ".text.init" defines a new section and declares the starter point in there
  *
  * Paranoid consistency:
  *
@@ -27,21 +36,27 @@ loader_info:
  */
 .section .text.init, "ax"
 
-.globl __rks_start
-
-.extern _setup_gdt
-
 .code32
+
+/* x86-64 entry */
 __rks_start:
-	/* %eax = Bootloader magic number */
-	/* %ebx = Physical address of bootloader info struct */
+	/* EAX = Bootloader magic number */
+	/* EBX = Physical address of bootloader info struct */
 
-	movl %eax, loader_info /* Store the magic number */
-	movl %ebx, loader_info + 4 /* Store the Multiboot2 info struct pointer */
+	/* Bootloader information */
+	/* ======================================== */
+	
+	/* Store the magic number */
+	movl %eax, loader_info
 
-	movl $boot_stack_top, %esp /* Set a boot stack for protected mode */
+	/* Store the Bootloader info struct pointer */
+	movl %ebx, loader_info + 4
+	/* ======================================== */
 
-	/* Jump to next stage (GDT setup) */
+	/* Set a boot stack for protected mode */
+	movl $boot_stack_top, %esp
+
+	/* Jump to next stage */
 	jmp _setup_gdt
 
 /* On error */
