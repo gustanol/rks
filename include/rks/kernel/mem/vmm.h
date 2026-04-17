@@ -1,14 +1,21 @@
 #ifndef VMM_H
 #define VMM_H
 
-#include <rks/types.h>
-#include "pmm.h"
-
+/*
+ * Global page size
+ *
+ * Should be followed by every architecture
+ */
 #define PAGE_SIZE 4096
 
 /* Virtual bases */
 #define KERNEL_VIRTUAL_BASE 0xFFFFFFFF80000000
 #define KERNEL_PHYSMAP_BASE 0xFFFFFFFFC0000000
+
+#ifndef __ASSEMBLY__
+
+#include <rks/types.h>
+#include "pmm.h"
 
 /* Flags for mapping */
 typedef enum
@@ -30,4 +37,5 @@ bool vmm_unmap ( vaddr_t vaddr );
 /* Debug/testing */
 void vmm_dump_tables ( vaddr_t vaddr );
 
+#endif
 #endif /* VMM_H */

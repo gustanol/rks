@@ -5,16 +5,28 @@
 
 int first_bitmap_bit (char* bitmap, u32 size, int bit);
 
-#define FIND_FIRST_ZERO_BIT(bitmap, size) \
-        first_bitmap_bit(bitmap, size, 0)
+/* Bitmap operations */
+/* ========================================================= */
+#define FIND_FIRST_ZERO_BIT(BITMAP, SIZE) \
+        first_bitmap_bit ( ( BITMAP ), ( SIZE ), 0)
 
-#define FIND_FIRST_SET_BIT(bitmap, size) \
-        first_bitmap_bit(bitmap, size, 1)
+#define FIND_FIRST_SET_BIT(BITMAP, SIZE) \
+        first_bitmap_bit ( ( BITMAP ), ( SIZE ), 1)
 
-#define BITMAP_SET_BIT(bitmap, bit) \
-        bitmap[(bit) / 8] |= (1ULL << ((bit) % 8))
+#define BITMAP_SET_BIT(BITMAP, BIT) \
+        ( BITMAP )[( BIT ) / 8] |= ( 1ULL << ( ( BIT ) % 8 ) )
 
-#define BITMAP_CLEAR_BIT(bitmap, bit) \
-        bitmap[(bit) / 8] &= ~(1ULL << ((bit) % 8))
+#define BITMAP_CLEAR_BIT(BITMAP, BIT) \
+        ( BITMAP )[( BIT ) / 8] &= ~( 1ULL << ( ( BIT ) % 8 ) )
+/* ========================================================= */
+
+/* Alignment */
+/* ======================================================== */
+#define ALIGN_UP(VALUE, ALIGN) \
+        ( ( ( VALUE ) - ( ALIGN ) - 1 ) & ~( ( ALIGN ) - 1 ) )
+
+#define ALIGN_DOWN(VALUE, ALIGN) \
+        ( ( VALUE ) & ~( ( ALIGN ) - 1 ) )
+/* ======================================================== */
 
 #endif /* BITWISE_H */

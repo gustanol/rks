@@ -45,12 +45,12 @@ __rks_start:
 
 	/* Bootloader information */
 	/* ======================================== */
-	
+
 	/* Store the magic number */
 	movl %eax, loader_info
 
 	/* Store the Bootloader info struct pointer */
-	movl %ebx, loader_info + 4
+	movl %ebx, loader_info
 	/* ======================================== */
 
 	/* Set a boot stack for protected mode */

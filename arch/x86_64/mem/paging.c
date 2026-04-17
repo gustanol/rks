@@ -1,6 +1,7 @@
 #include <mem/paging.h>
 #include <rks/lib/string.h>
 #include <rks/kernel/klog/print.h>
+#include <rks/lib/bitwise.h>
 
 /* Invalidate the Translation Lookaside Buffer (TLB) */
 #define INVLPG(ADDR) \
@@ -263,7 +264,7 @@ get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
 	/* PT */
 
 	/* Align the address by 4096 to remove the flags */
-	return ( ( ALIGN ( *pt_entry, 0xC ) ) + offset );
+	return ( ( ALIGN_DOWN ( *pt_entry, 0xC ) ) + offset );
 
 }
 

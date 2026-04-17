@@ -14,8 +14,6 @@
  * Zeroing the 'BITS' LSB (least significant bits), we can undone the shift
  *   We make this by shifting to the left 'BITS' times
  */
-#define ALIGN(VALUE, BITS) \
-        ( ( ( ( VALUE ) >> ( BITS ) ) - 1 ) << ( BITS )  )
 
 typedef _Bool bool;
 

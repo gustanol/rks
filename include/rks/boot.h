@@ -3,8 +3,6 @@
 
 #include <rks/types.h>
 
-#define MULTIBOOT2_BOOTLOADER_MAGIC 0x36D76289
-
 /* Information about the bootloader */
 typedef struct
 {

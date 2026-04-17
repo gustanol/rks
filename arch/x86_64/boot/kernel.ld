@@ -1,6 +1,5 @@
 ENTRY(__rks_start)
 
-KERNEL_VIRT_BASE = 0xFFFFFFFF80000000;
 KERNEL_PHYS_BASE = 0x100000;
 
 SECTIONS
@@ -41,6 +40,5 @@ SECTIONS
 	    __drivers_init_end = .;
     }
 
-    . = ALIGN(4096);
     kernel_end = .;
 }

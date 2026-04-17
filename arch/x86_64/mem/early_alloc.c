@@ -1,26 +1,31 @@
 #include <mem/early_alloc.h>
+#include <rks/kernel/mem/vmm.h>
 
-static u8 early_heap[EARLY_HEAP_SIZE];
-static size_t early_ptr = 0;
+/* From linker */
+extern u8 kernel_end[];
+
+/* Next available address */
+vaddr_t next_addr = ( vaddr_t ) kernel_end;
 
 /*
  * Early boot allocator
- * Used to allocate some structures before the PMM is enabled
+ * Used to allocate structures before the PMM is enabled
  *
  * -> void *: Base pointer to the reserved memory
  * @size: Object size to be allocated
  */
 void*
-early_alloc (size_t size)
+early_alloc ( size_t size )
 {
-	/* Get the current base address of our "early heap" */
-	void* ptr = &early_heap[early_ptr];
+	/* Treat the pointer */
+	/* =========================== */
 
-	/*
-	 * Advances the pointer
-	 *
-	 * Note it only needs to go forward
-	 */
-	early_ptr += size;
+	/* Current pointer */
+	void* ptr = ( void * ) next_addr;
+
+	/* Update the pointer */
+	next_addr += size;
+	/* =========================== */
+
 	return ptr;
 }
