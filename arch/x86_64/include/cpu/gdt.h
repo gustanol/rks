@@ -2,6 +2,7 @@
 #define GDT_H
 
 #include <rks/types.h>
+#include <rks/kernel/mem/vmm.h>
 
 /* GDT entry */
 typedef struct
@@ -74,7 +75,7 @@ typedef struct
 typedef struct
 {
 	u16 limit;
-	addr_t start;
+	vaddr_t start;
 } __attribute__ ( ( packed ) ) gdt_desc_t;
 
 typedef enum

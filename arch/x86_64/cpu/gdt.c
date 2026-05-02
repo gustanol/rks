@@ -2,7 +2,7 @@
 #include <cpu/tss.h>
 
 /* Just the necessary */
-#define GDT_ENTRIES 7
+#define GDT_ENTRIES 9
 
 #define LOAD_GDT(DESCRIPTOR) \
         __asm__ volatile ( \
@@ -32,7 +32,7 @@
 #define GDT_SEGMENT_ENTRY(SEGMENT) \
     (gdt_entry_t) { \
         .system_segment = { \
-            .base_ih = ( ( addr_t ) ( SEGMENT ) >> 32 ) & 0xFFFFFFFF, \
+            .base_ih = ( ( vaddr_t ) ( SEGMENT ) >> 32 ) & 0xFFFFFFFF, \
             .reserved = { 0 }, \
         } \
     }
@@ -61,7 +61,7 @@ _setup_long_gdt ( void )
 	gdt_descriptor = ( gdt_desc_t )
 	{
 	        .limit = ( GDT_ENTRIES * sizeof ( gdt_entry_t ) ) - 1,
-                .start = ( addr_t ) & gdt,
+                .start = ( vaddr_t ) & gdt,
         };
 	/* *INDENT-ON* */
 
@@ -84,29 +84,65 @@ __set_gdt_entries ( void )
 
         /* *INDENT-ON* */
 
-	/* Kernel code segment */
-	gdt[1] = GDT_ENTRY ( 0xFFFF, 0, 0x9A, 0x20 | 0x0F );
-
-	/* Kernel data segment */
-	gdt[2] = GDT_ENTRY ( 0xFFFF, 0, 0x92, 0x00 | 0x0F );
-
-	/* User code segment */
-	gdt[3] = GDT_ENTRY ( 0xFFFF, 0, 0xFA, 0x20 | 0x0F );
-
-	/* User data segment */
-	gdt[4] = GDT_ENTRY ( 0xFFFF, 0, 0xF2, 0x00 | 0x0F );
-
-	/* Tast State Segment */
-	gdt[5] = GDT_ENTRY ( sizeof ( tss ) - 1, ( addr_t ) & tss, 0x80 | TSS_A,
-	                     0x00 );
+	/*
+	 * 32-bit kernel code segment (0x8)
+	 *
+	 * Access byte: 0b10011010
+	 * Flags/limit: 0x11001111
+	 */
+	gdt[1] = GDT_ENTRY ( 0xFFFF, 0x0, 0x9A, 0xC0 | 0xF );
 
 	/*
-	 * For system segments, we must set its base address
+	 * 32-bit kernel data segment (0x10)
 	 *
-	 * As an address has 64 bits and an entry base has 32 bits, we must use more than one entry
-	 *
-	 * The first 32 bits are used as the upper 32 bits of TSS base address
-	 * The remaining are reserved
+	 * Access byte: 0b10010010
+	 * Flags/limit: 0x11001111
 	 */
-	gdt[6] = GDT_SEGMENT_ENTRY ( &tss );
+	gdt[2] = GDT_ENTRY ( 0xFFFF, 0x0, 0x92, 0xC0 | 0xF );
+
+	/*
+	 * 64-bit kernel code segment (0x18)
+	 *
+	 * Access byte: 0b10011010
+	 * Flags/limit: 0b10101111
+	 */
+	gdt[3] = GDT_ENTRY ( 0xFFFF, 0x0, 0x9A, 0xA0 | 0xF );
+
+	/*
+	 * 64-bit kernel data segment (0x20)
+	 *
+	 * Access byte: 0b10010010
+	 * Flags/limit: 0b11001111
+	 */
+	gdt[4] = GDT_ENTRY ( 0xFFFF, 0x0, 0x92, 0xC0 | 0xF );
+
+	/*
+	 * User code segment (0x28)
+	 *
+	 * Access byte: 0b11111010
+	 * Flags/limit: 0b10101111
+	 */
+	gdt[5] = GDT_ENTRY ( 0xFFFF, 0x0, 0xFA, 0xA0 | 0xF );
+
+	/*
+	 * User data segment (0x30)
+	 *
+	 * Access byte: 0b11110010
+	 * Flags/limit: 0b11001111
+	 */
+	gdt[6] = GDT_ENTRY ( 0xFFFF, 0x0, 0xF2, 0xC0 | 0xF );
+
+	/*
+	 * Tast State Segment (0x38)
+	 *
+	 * Access byte: 0b10000000
+	 * Flags/limit: 0b00000000
+	 */
+	gdt[7] = GDT_ENTRY ( sizeof ( tss ) - 1, ( vaddr_t ) & tss,
+	                     0x80 | TSS_A, 0x00 );
+
+	/*
+	 * 32 upper bits of TSS virtual address (0x40)
+	 */
+	gdt[8] = GDT_SEGMENT_ENTRY ( ( vaddr_t ) & tss );
 }

@@ -2,13 +2,12 @@
 #define PAGING_H
 
 #include <rks/kernel/mem/vmm.h>
-
-#define PAGING_PS PAGE_SIZE
 #define PT_ENTRIES 512
 
 #ifndef __ASSEMBLY__
 
 /* Page table entry bits */
+/* ================================= */
 
 /* Is present */
 #define PTE_PRESENT ( 1ULL << 0 )
@@ -41,6 +40,8 @@
 #define ADDR_OFFSET(vaddr) \
         ( ( vaddr ) & 0xFFF )
 
+/* ================================ */
+
 /* Page table entries */
 typedef addr_t pte_t;
 
@@ -72,5 +73,5 @@ paddr_t get_phys ( vaddr_t vaddr, paging_t * paging_ctx );
 /* Testings */
 void dump_tables ( vaddr_t vaddr, paging_t * paging_ctx );
 
-#endif
+#endif /* __ASSEMBLY__ */
 #endif /* PAGING_H */

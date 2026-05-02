@@ -2,6 +2,7 @@ KERNEL_LINKER_SCRIPT = $(ARCH_DIR)/boot/kernel.ld
 
 # Boot objects ==================================================
 # Protocols --------------------------------------------------
+
 # Multiboot2
 OBJ-$(CFG_MULTIBOOT2_LOADER) += \
 	$(ARCH_BUILD_DIR)/boot/protocols/multiboot2/header.o \
@@ -11,6 +12,12 @@ OBJ-$(CFG_MULTIBOOT2_LOADER) += \
 OBJ-1 += $(ARCH_BUILD_DIR)/boot/protocols/loader_parser.o
 # ------------------------------------------------------------
 
+# Generic early objects ------------------
+OBJ-1 += \
+	$(ARCH_BUILD_DIR)/boot/entry.o \
+	$(ARCH_BUILD_DIR)/boot/arch_init.o
+# ----------------------------------------
+
 # Common bootloader-independant objects ---------------
 OBJ-1 += \
 	$(ARCH_BUILD_DIR)/boot/common/boot_gdt.o \
@@ -18,12 +25,6 @@ OBJ-1 += \
 	$(ARCH_BUILD_DIR)/boot/common/transition_long.o \
 	$(ARCH_BUILD_DIR)/boot/common/higher_half.o
 # -----------------------------------------------------
-
-# Generic early objects ------------------
-OBJ-1 += \
-	$(ARCH_BUILD_DIR)/boot/entry.o \
-	$(ARCH_BUILD_DIR)/boot/arch_init.o
-# ----------------------------------------
 # ==============================================================
 
 # CPU-specific objects ==============

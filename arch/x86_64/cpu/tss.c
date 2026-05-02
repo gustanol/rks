@@ -1,4 +1,5 @@
 #include <cpu/tss.h>
+#include <rks/kernel/mem/vmm.h>
 
 #define LOAD_TSS(DESCRIPTOR) \
         __asm__ volatile ( \
@@ -27,13 +28,11 @@ _setup_tss ( void )
         tss = ( tss_t )
         {
                 .reserved0 = { 0 },
-                .rsp0 = ( addr_t ) kernel_stack_top,
+                .rsp0 = ( vaddr_t ) kernel_stack_top,
 
                 /*
-
-                .rsp1 = stack1
-                .rsp2 = stack2
-
+                 * .rsp1 = stack1
+                 * .rsp2 = stack2
                  */
 
                 .reserved1 = { 0 },
@@ -43,5 +42,6 @@ _setup_tss ( void )
 
         /* *INDENT-ON* */
 
-	LOAD_TSS ( 0x28 );
+	/* Load the TSS by its GDT descriptor index */
+	LOAD_TSS ( 0x38 );
 }

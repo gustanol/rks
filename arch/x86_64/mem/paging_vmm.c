@@ -1,5 +1,5 @@
 #include <mem/paging.h>
-#include <rks/kernel/mem/arch_vmm.h>
+#include <mem/arch_vmm.h>
 
 extern char pml4[];
 
