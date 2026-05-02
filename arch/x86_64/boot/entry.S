@@ -1,5 +1,27 @@
-.section .bss
+
+/*
+ * ".bootstrap": Section for early setup (until higher half mapping) 
+ *
+ * Paranoid consistency (not too much)
+ *
+ * "ax" mark this section with flags `SHF_ALLOC` and `SHF_EXECINSTR`
+ * Which means it's allocable and executable
+ *
+ * GAS uses to mark these standard flags for `.text` class sections
+ * But not for all sections
+ *
+ * This defines it explicitly
+ */
+
+.section .bootstrap, "ax"
+
+/* Global/extern symbols */
+/* ============ */
 .globl loader_info
+.globl __rks_start
+
+.extern _setup_gdt
+/* ============ */
 
 .align 16
 
@@ -17,29 +39,11 @@ loader_info:
 	.long 0 /* Pointer to its info struct */
 /* ========================================== */
 
-.section .data
-
-.globl __rks_start
-
-.extern _setup_gdt
-
-/*
- * ".text.init" defines a new section and declares the starter point in there
- *
- * Paranoid consistency:
- *
- * "ax" mark this section with flags `SHF_ALLOC` and `SHF_EXECINSTR`
- * Which means it's allocable and executable
- *
- * GAS uses to mark these standard flags for `.text` class sections
- * But this snippet defines it explicit
- */
-.section .text.init, "ax"
-
 .code32
 
 /* x86-64 entry */
 __rks_start:
+
 	/* EAX = Bootloader magic number */
 	/* EBX = Physical address of bootloader info struct */
 

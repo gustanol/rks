@@ -1,73 +1,31 @@
 #include <mem/paging.h>
 
-/* ------------------- */
-.section .bss
+.section .bootstrap, "ax"
 .align 16
 
-/* Kernel stack memory */
-/* ============== */
-.globl kernel_stack_top
-
-kernel_stack_bottom:
-	.skip 16384
-kernel_stack_top:
-/* ============== */
-
-kernel_pages: .quad 0
-/* ------------------- */
-
-/* --------------------------- */
-.section .data
-
-.globl KERNEL_VIRT_BASE
-
-KERNEL_VIRT_BASE:
-	.quad 0xFFFFFFFF80000000;
-/* --------------------------- */
-
-.section .text.long
-
+/* Global/extern symbols */
+/* ============================= */
 .globl identity_long
 
-identity_long:
-.code64
+/* Kernel stack */
+.extern kernel_stack_top
 
+/* kernel_pages -> R9 */
+.extern KERNEL_PHYS_BASE /* R10 */
+.extern KERNEL_VIRT_BASE /* R11 */
+.extern KERNEL_VIRT_OFF /* R12 */
+
+/* Generic symbols */
 .extern kernel_start
 .extern kernel_end
+.extern pml4
+.extern loader_info
 
-	movw $0x20, %ax
-	movw %ax, %ds
-	movw %ax, %es
-	movw %ax, %ss
-
-	/* Update the stack pointer */
-	movq $kernel_stack_top, %rsp
-
-	/* Prepare to map to higher-half */
-	movq $KERNEL_VIRT_BASE, %rsi
-
-	/* 2-MiB-sized pages for kernel code */
-	/* ======================================= */
-
-	/* Get the kernel code size */
-	movq $kernel_end, %rax
-	subq $kernel_start, %rax
-
-	/*
-	 * Just calculates the size of 2 MiB in bytes
-	 *
-	 * 1024 * 1024 * 2 (<< 1)
-	 */
-	movq $0x200000, %rsi
-	
-	/* Amount of pages */
-	divq %rsi
-
-	/* Move to a symbol */
-	movq %rax, kernel_pages(%rip)
-	/* ======================================= */
-
-map_higher_half:
+/* Functions */
+.extern early_alloc_phys
+.extern early_alloc
+.extern rks_main
+/* ============================ */
 
 /* Constants */
 /* =========== */
@@ -80,15 +38,65 @@ map_higher_half:
 .equ PG_PRESENT, 0x1
 /* =========== */
 
-/* Extern symbols */
+/* Early kernel stack memory */
 /* ============== */
-.extern pml4
-.extern early_alloc
+early_stack_bottom:
+	.skip 16384
+early_stack_top:
 /* ============== */
+
+identity_long:
+.code64
+
+	movw $0x20, %ax
+	movw %ax, %ds
+	movw %ax, %es
+	movw %ax, %ss
+
+	/* Update the stack pointer */
+	leaq early_stack_top(%rip), %rsp
+
+	/* 2-MiB-sized pages for kernel code */
+	/* ======================================= */
+
+	/* Get the kernel code size */
+	movq $kernel_end, %rax
+	subq $kernel_start, %rax
+
+	/* 2MiB - 1 (Guarantee it will no be zero) */
+	addq $0x1FFFFF, %rax
+
+	/* Clears RDX to avoid garbage division */
+	xorq %rdx, %rdx
+
+	/* Divide it by 2MiB */
+	movq $0x200000, %rsi
+	divq %rsi
+
+	/* Move to R9 (pages needed) */
+	movq %rax, %r9
+	/* ======================================= */
+
+	/*
+	 * Get the kernel physical base and align it
+	 *
+	 * For 2MiB pages, the mapping must start at an aligned region
+	 * To include the kernel, we ALWAYS must align it down
+	 */
+	movabsq $KERNEL_PHYS_BASE, %r10
+	andq $~0x1FFFFF, %r10
+
+	/* Kernel virtual base */
+	movabsq $KERNEL_VIRT_BASE, %r11
+
+	/* Kernel virtual offset */
+	movabsq $KERNEL_VIRT_OFF, %r12
+
+map_higher_half:
 
 	/* PML4 index */
 	/* ============================================ */
-	movq %rsi, %rax
+	movq %r11, %rax
 
 	/*
 	 * Right shift 39 bits
@@ -110,7 +118,7 @@ map_higher_half:
 
 	/* PDPT index */
 	/* ================== */
-	movq %rsi, %rax
+	movq %r11, %rax
 
 	/* Get the PDPT index */
 	shrq $PDPT_SHR, %rax
@@ -121,8 +129,8 @@ map_higher_half:
 	/* ================== */
 
 	/* PD index */
-	/* ================= */
-	movq %rsi, %rax
+	/* ================== */
+	movq %r11, %rax
 
 	/* Get the PD index */
 	shrq $PD_SHR, %rax
@@ -130,7 +138,7 @@ map_higher_half:
 
 	/* Store it into R13 */
 	movq %rax, %r13
-	/* ================= */
+	/* ================== */
 
 .pdpt_present:
 
@@ -166,18 +174,37 @@ map_higher_half:
 	pushq %r15
 	pushq %r14
 	pushq %r13
+	pushq %r12
+	pushq %r11
+	pushq %r10
+	pushq %r9
 	pushq %rbx
 	/* ==== */
 
 	/* Allocate another page */
 	/* =============== */
 	movq $PAGE_SIZE, %rdi
-	call early_alloc
+
+	/*
+	 * Get the physical address of 'early_alloc' function,
+	 * Which is located at '.section .text' (higher half)
+	 */
+	movabsq $early_alloc_phys, %rax
+	call *%rax
+
+	/* RAX = Returned virtual address */
+
+	/* Subtract the virtual kernel offset (R12) to get the physical address */
+	subq %r12, %rax
 	/* =============== */
 
 	/* Pop the registers */
 	/* === */
 	popq %rbx
+	popq %r9
+	popq %r10
+	popq %r11
+	popq %r12
 	popq %r13
 	popq %r14
 	popq %r15
@@ -199,21 +226,19 @@ map_higher_half:
 .pdpt_address:
 
 	/* PDPT address to RBX */
-	leaq (%rbx, %r15, 8), %rbx
+	movq (%rbx, %r15, 8), %rbx
 
 	/* Alignment */
 	/* ========================================== */
 
 	/*
-	 * We need to get only the address
-	 * For this, we don't consider the flags
+	 * Now, we need to align the address to 4096
+	 * This happens because we shall not consider the flags
 	 *
-	 * Aligning them means:
-	 *   - Right shift 12 bits (4096) to remove them
-	 *   - Left shift 12 bits to get them zero
+	 * Basically, the least significant 12 bits are zeroed (up to 2 ^ 11)
+	 * Doing this, we got only the physical page address
 	 */
-	shrq $12, %rbx
-	shlq $12, %rbx
+	andq $~0xFFF, %rbx
 	/* =========================================== */
 
 .pd_present:
@@ -224,7 +249,7 @@ map_higher_half:
 	/* PDPT (RBX) present bit checking */
 	testb $PG_PRESENT, (%rbx, %r14, 8)
 	jz .pd_alloc
-	jnz .continue_mapping
+	jnz .pd_address
 	/* ========================================= */
 
 .pd_alloc:
@@ -234,25 +259,36 @@ map_higher_half:
 	pushq %r15
 	pushq %r14
 	pushq %r13
+	pushq %r12
+	pushq %r11
+	pushq %r10
+	pushq %r9
 	pushq %rbx
 	/* ==== */
 
 	/* Allocate another page */
 	/* =============== */
 	movq $PAGE_SIZE, %rdi
-	call early_alloc
+
+	/* Call 'early_alloc' */
+	movabsq $early_alloc_phys, %rax
+	call *%rax
+
+	/* Get the physical address */
+	subq %r12, %rax
 	/* =============== */
 
 	/* Pop registers */
 	/* === */
 	popq %rbx
+	popq %r9
+	popq %r10
+	popq %r11
+	popq %r12
 	popq %r13
 	popq %r14
 	popq %r15
 	/* === */
-
-	/* Write page base address  */
-	/* ============================= */
 
 	/*
 	 * Returned page base address
@@ -260,21 +296,48 @@ map_higher_half:
 	 */
 	movq %rax, (%rbx, %r14, 8)
 
-	/* Add its permissions */
-	orq $PG_PERMISSIONS, (%rbx, %r15, 8)
-	orq $PG_PERMISSIONS_2MB, (%rbx, %r15, 8)
-	/* ============================= */
+	/* Permissions */
+	orq $PG_PERMISSIONS, (%rbx, %r14, 8)
+
+.pd_address:
+
+	/* PD index */
+	movq (%rbx, %r14, 8), %rbx
+
+	/* Alignment */
+	andq $~0xFFF, %rbx
+
+.map_pd_phys_addr:
+
+	/* Verify if the PD's index is present */
+	testb $PG_PRESENT, (%rbx, %r13, 8)
+	jnz .continue_mapping
+
+	/* Write the physical address and its flags to PD's index */
+	/* ================================== */
+
+	/* Updated kernel physical base */
+	movq %r10, (%rbx, %r13, 8)
+
+	/* Permissions */
+	orq $PG_PERMISSIONS, (%rbx, %r13, 8)
+	orq $PG_PERMISSIONS_2MB, (%rbx, %r13, 8)
+	/* ================================== */
 
 .continue_mapping:
 
 	/* Kernel code needed pages update */
 	/* ======================= */
-	movq kernel_pages(%rip), %rax
+	
+	/* Remaining pages to be mapped */
+	movq %r9, %rax
+
+	/* Update it */
 	decq %rax
-	movq %rax, kernel_pages(%rip)
+	movq %rax, %r9
 	/* ======================= */
 
-	/* Verify if all kernel was mapped */
+	/* Verify if all kernel code was mapped */
 	/* ============================================= */
 
 	/*
@@ -285,46 +348,63 @@ map_higher_half:
 	 */
 
 	testq %rax, %rax
-	jz .finish
+	jz .higher_half_jmp
 	jnz .map_another_page
 	/* ============================================= */
 
 .map_another_page:
 
-	/* Update the virtual base */
+	/* Update bases */
 	/* =========================== */
 
-	/* The current base is located at RSI */
-	movq %rsi, %rax
-	addq $200000, %rax
+	/* Physical base */
+	movq %r10, %rax
+	addq $0x200000, %rax
+	movq %rax, %r10
+
+	/* Virtual base */
+	movq %r11, %rax
+	addq $0x200000, %rax
+	movq %rax, %r11
 	/* =========================== */
 
-	/* Alignment */
-	/* ============================================= */
+	/* Go back to continue the mapping */
+	jmp map_higher_half
 
-	/*
-	 * Notice the base address is already 2-MiB-aligned
-	 */
+.higher_half_jmp:
 
-	/* 2 >> 21 = 2MiB */
-	shrq $21, %rax
-	shlq $21, %rax
+	/* Load the next label and jump to it */
+	movabsq $.higher_half_entry, %rax
+    	jmp *%rax
 
-	/* Update it */
-	movq %rax, %rsi
-	/* ============================================== */
+/* Only on error of jumping while still on identity mapping */
+.identity_halt:
 
-.finish:
+	cli
+	hlt
+	jmp .identity_halt
 
-.extern rks_main
-.extern loader_info
+/* From now on, RIP is truly on higher half */
+.section .text
+.code64
 
-	/* Call the main kernel function */
-	movq $loader_info, %rdi
+.higher_half_entry:
+
+	/* Reload the stack pointer */
+	movabsq $kernel_stack_top, %rsp
+
+	/* Load the bootloader information structure */
+	movabsq $loader_info, %rdi
+
+	/* Get its virtual address */
+	addq %r12, %rdi
+
+	/* Call the main C function */
 	call rks_main
 
 /* It should not be reached */
 .halt:
+
 	cli
 	hlt
 	jmp .halt

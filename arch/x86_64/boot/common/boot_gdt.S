@@ -1,4 +1,11 @@
-.section .data
+.section .bootstrap, "ax"
+
+/* Global/extern symbols */
+/* =========== */
+.globl _setup_gdt
+.extern check_a20
+/* =========== */
+
 .align 16
 
 /* Basic temporary 32-bit GDT */
@@ -76,11 +83,6 @@ gdt_descriptor:
 
 	/* GDT start */
 	.long gdt_start
-
-.section .text.gdt
-.globl _setup_gdt
-
-.extern check_a20
 
 .code32
 _setup_gdt:

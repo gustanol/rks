@@ -1,44 +1,84 @@
+/* Entry point */
 ENTRY(__rks_start)
 
-KERNEL_PHYS_BASE = 0x100000;
+/* Global symbols */
+/* ================================================== */
+KERNEL_PHYS_BASE = ALIGN(0x100000, 0x1000);
+KERNEL_VIRT_BASE = ALIGN(0xFFFFFFFF80000000, 0x1000);
+KERNEL_PHYSMAP_BASE = ALIGN(0xFFFFFFFFC0000000, 0x1000);
+
+/*
+ * Kernel virtual offset
+ *
+ * We use to convert physical addresses to virtual ones or the opposite
+ * Note: For 2MiB pages, the mapping base is KERNEL_VIRT_BASE
+ * The kernel starts at KERNEL_VIRT_BASE + KERNEL_PHYS_BASE
+ *
+ * After higher half, any physical address can be get by calculating:
+ *   VMA - KERNEL_VIRT_OFF
+ */
+KERNEL_VIRT_OFF  = KERNEL_VIRT_BASE;
+early_alloc_phys = early_alloc - KERNEL_VIRT_OFF;
+/* ================================================== */
 
 SECTIONS
 {
-    . = KERNEL_PHYS_BASE;
-    kernel_start = .;
-    
-    .text : ALIGN(4096)
-    {
-        KEEP(*(.boot))
-        *(.text.init)
-        *(.text.gdt)
-        *(.text.long)
-        *(.text)
-    }
-    
-    .rodata : ALIGN(4096)
-    {
-        *(.rodata)
-    }
+	. = KERNEL_PHYS_BASE;
+	kernel_start = KERNEL_VIRT_BASE;
 
-    .data : ALIGN(4096)
-    {
-        PROVIDE(gdt_start = .);
-        *(.data*)
-    }
-    
-    .bss : ALIGN(4096)
-    {
-        *(COMMON)
-        *(.bss)
-    }
+	/*
+	 * Early code must run at physical addresses
+	 *
+	 * Until kernel is higher half mapped, it will be only identity mapped
+	 * Virtual address must be equal to physical ones
+	 *
+	 * That's the role of this section
+	 */
+	.bootstrap : {
+		*(.bootstrap .bootstrap.*)
+	}
 
-    .drivers_init : ALIGN(4096)
-    {
+	/* Shift VMA to higher half */
+	. += KERNEL_VIRT_OFF;
+
+	/*
+	 * VMA is already at higher half
+	 *
+	 * We can subtract it from KERNEL_VIRT_OFF to get the physical address (for LMA)
+	 */
+	.text ALIGN(0x1000) : AT(ADDR(.text) - KERNEL_VIRT_OFF) {
+		KEEP(*(.text))
+		KEEP(*(.text.*))
+	}
+
+	.rodata ALIGN(0x1000) : AT(ADDR(.rodata) - KERNEL_VIRT_OFF) {
+		*(.rodata .rodata.*)
+	}
+
+	.bss ALIGN(0x1000) : AT(ADDR(.bss) - KERNEL_VIRT_OFF)
+	{
+		*(COMMON)
+		*(.bss .bss.*)
+	}
+
+	.data ALIGN(0x1000) : AT(ADDR(.data) - KERNEL_VIRT_OFF)	{
+		PROVIDE(gdt_start = .);
+		*(.data .data*)
+	}
+
+	.stack ALIGN(0x1000) : AT(ADDR(.stack) - KERNEL_VIRT_OFF) {
+		kernel_stack_bottom = .;
+		. += 0x4000;
+		kernel_stack_top = .;
+	}
+
+	/* Section for keeping all drivers */
+	.drivers_init ALIGN(0x1000) : AT(ADDR(.drivers_init) - KERNEL_VIRT_OFF)
+	{
 	    __drivers_init_start = .;
 	    *(.drivers_init)
 	    __drivers_init_end = .;
-    }
+	}
 
-    kernel_end = .;
+	kernel_end = .;
 }

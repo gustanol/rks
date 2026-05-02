@@ -4,7 +4,7 @@
  *
  * It'll specify the request of what data we're going to need from Multiboot2
  */
-.section .boot, "ax"
+.section .bootstrap, "ax"
 .align 8
 
 .globl MULTIBOOT_BOOTLOADER_MAGIC

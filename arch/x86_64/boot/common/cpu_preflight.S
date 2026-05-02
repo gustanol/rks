@@ -1,12 +1,18 @@
-.section .text.boot
+.section .bootstrap, "ax"
 
+/* Global/extern symbols */
+/* ============ */
 .globl check_a20
 .extern checkCPUID
+/* ============ */
 
+/* Constants */
+/* ================================== */
 .equ EFLAGS_ID, 1 << 21
 .equ CPUID_EXTENSIONS, 0x80000000
 .equ CPUID_EXTENDED_FEATURES, 0x80000001
 .equ CPUID_EDX_LONG_MODE, 1 << 29
+/* ================================== */
 
 /*
  * 8086 had 20 address lines
@@ -127,6 +133,7 @@ check_long_mode:
 	/* Jump to long mode setup */
 	jmp enable_pae
 
+/* Halts the CPU just on error */
 .halt:
 	cli
 	hlt

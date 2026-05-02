@@ -1,9 +1,24 @@
 #include <mem/paging.h>
 
-.section .data
+.section .bootstrap, "ax"
 .align 4096
 
+/* Global/extern symbols */
+/* =============== */
 .globl pml4
+.globl enable_pae
+.extern kernel_end
+.extern identity_long
+/* =============== */
+
+/* Constants */
+/* =================== */
+.equ CR4_PAE, 1 << 5
+.equ KERNEL_PRW, 0x3
+.equ EFER_MSR, 0xC0000080
+.equ CR0_PM, 1 << 0
+.equ CR0_PG, 1 << 31
+/* =================== */
 
 /* Page tables */
 /* ======================= */
@@ -23,14 +38,11 @@ pt:
 	.fill PAGE_SIZE, 1, 0
 /* ======================= */
 
-.section .text.long
-.globl enable_pae
 
 .code32
 
-/* From now, CPU will interpret CR3 as long-mode paging */
+/* From now, CPU will interpret CR3 as PML4 physical address */
 enable_pae:
-.equ CR4_PAE, 1 << 5
 
 	/* Set the Physical Address Extension */
 	/* ============ */
@@ -51,11 +63,7 @@ set_cr3:
 	/* Set CR3 as the PML4 base address */
 	movl %edi, %cr3
 
-/* End of kernel code (from linker script) */
-.extern kernel_end
-
 map_identity:
-.equ KERNEL_PRW, 0x3
 
 	/* Page directory pointer table entry */
 	/* ================================================ */
@@ -148,9 +156,6 @@ map_identity:
 
 enable_long_mode:
 
-/* EFER MSR number */
-.equ EFER_MSR, 0xC0000080
-	
 	/*
  	 * EFER: Extended Feature Enable Register
  	 *
@@ -173,11 +178,6 @@ enable_long_mode:
 
 enable_paging:
 
-.extern identity_long
-
-.equ CR0_PM, 1 << 0
-.equ CR0_PG, 1 << 31
-
 	/* Enable paging */
 	/* ================================ */
 	movl %cr0, %eax /* Load CR0 */
@@ -191,4 +191,5 @@ enable_paging:
 	movl %eax, %cr0 /* Write it again */
 	/* ================================ */
 
+	/* Long-jump to the next stage (higher half mapping) */
 	ljmp $0x18, $identity_long
