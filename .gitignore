@@ -1,10 +1,11 @@
 build/
+debug/
 *.o
 *.elf
 *.bin
 
 # Binary symlink
-./rks.*
+./rks.elf
 
 *.swp
 *.swo

@@ -1,8 +1,5 @@
 #include <rks/kernel/mem/vmm.h>
-#include <rks/kernel/mem/arch_vmm.h>
-
-extern void kernel_start ( void );
-extern void kernel_end ( void );
+#include <mem/arch_vmm.h>
 
 /*
  * Virtual Memory Manager initializer
@@ -17,16 +14,17 @@ vmm_init ( void )
 	_arch_vmm_init (  );
 
 	/* The kernel size to be used to map it entirely */
-	u64 kernel_size = ( u64 ) & kernel_end - ( u64 ) & kernel_start;
+	u64 kernel_size = ( paddr_t ) & kernel_end - ( paddr_t ) & kernel_start;
 
 	/* Map all the kernel code to its virtual base */
-	vmm_map_range ( KERNEL_VIRTUAL_BASE, ( paddr_t ) kernel_start,
-	                kernel_size, VMM_RW | VMM_PRESENT );
+	vmm_map_range ( ( vaddr_t ) KERNEL_VIRT_BASE,
+	                ( paddr_t ) kernel_start, kernel_size,
+	                VMM_RW | VMM_PRESENT );
 
 	size_t total_memory = pmm_get_total_memory (  );
 
 	/* Create a physical mapping of all physical RAM at PHYSMAP BASE */
-	vmm_map_range ( KERNEL_PHYSMAP_BASE, 0x0, total_memory,
+	vmm_map_range ( ( vaddr_t ) KERNEL_PHYSMAP_BASE, 0x0, total_memory,
 	                VMM_RW | VMM_PRESENT );
 }
 

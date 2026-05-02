@@ -1,7 +1,10 @@
-# Toolchain 
+# Toolchain/Variables
 CC ?= gcc
 AS ?= as
 LD ?= ld
+OBJCOPY ?= objcopy
+
+DEBUG ?= 0
 # =======
 
 # Architectures ===============================================
@@ -21,6 +24,7 @@ DRIVERS_DIR := drivers
 KERNEL_DIR := kernel
 LIB_DIR := lib
 INCLUDES_DIR := include
+DEBUG_DIR := debug
 # ======================
 
 # Build directories ==============================
@@ -33,8 +37,12 @@ LIB_BUILD_DIR := ./$(BUILD_DIR)/$(LIB_DIR)
 
 # Defines =======================================
 OBJ-1 :=
-BIN_NAME := rks
-TARGET := ./$(BUILD_DIR)/$(BIN_NAME)
+BASE_NAME := rks
+BIN_NAME := $(BASE_NAME).bin
+ELF_FILE := ./$(BUILD_DIR)/$(BASE_NAME).elf
+FINAL_BIN := ./$(BUILD_DIR)/$(BIN_NAME)
+DEBUG_MAP := ./$(DEBUG_DIR)/$(BASE_NAME).debug
+
 CONFIG_HEADER := ./$(INCLUDES_DIR)/rks/autoconf.h
 # ===============================================
 
@@ -73,6 +81,12 @@ CFLAGS := \
 	-I./$(INCLUDES_DIR) \
 	-I./arch/$(ARCH)/include
 
+ifeq ($(DEBUG),1)
+	CFLAGS += \
+		-g3 \
+		-O0
+endif
+
 CASFLAGS := $(CFLAGS) -D__ASSEMBLY__
 # ==============================
 
@@ -107,6 +121,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 	rm -f include/rks/autoconf.h
 	rm -f ./$(BIN_NAME)
+	rm -rf ./$(DEBUG_DIR)
 
 clean_arch:
 	rm -rf $(ARCH_BUILD_DIR)
@@ -122,12 +137,35 @@ clean_lib:
 # ==================================
 
 # Target build rule =========================
+ifeq ($(DEBUG),1)
+POST_LINK = \
+	mkdir -p $(DEBUG_DIR); \
+	$(OBJCOPY) --only-keep-debug $(ELF_FILE) $(DEBUG_MAP); \
+	$(OBJCOPY) --strip-all $(ELF_FILE) $(FINAL_BIN); \
+	$(OBJCOPY) --add-gnu-debuglink=$(DEBUG_MAP) $(FINAL_BIN); \
+	echo "Debug symbols -> $(DEBUG_MAP)";
+else
+POST_LINK = \
+	$(OBJCOPY) --strip-all $(ELF_FILE) $(FINAL_BIN);
+endif
+
 target: $(OBJS)
-	@$(LD) $(LDFLAGS) $^ -o $(TARGET)
-	@echo "LD -> $(TARGET)"
-	@ln -sf $(TARGET) .
+	@$(LD) $(LDFLAGS) $^ -o $(ELF_FILE)
+	@echo "LD -> $(ELF_FILE)"
+
+	@$(POST_LINK)
+
+	@echo "Stripped binary: $(FINAL_BIN)"
+	@ln -sf $(FINAL_BIN) .
+	@rm -f $(ELF_FILE)
+	@echo "Removed: $(ELF_FILE)"
 	@echo "Binary symlink: ./$(BIN_NAME)"
 # ===========================================
+
+# Debug building
+debug: $(OBJS)
+	@$(LD) $(LDFLAGS) $^ -o $(TARGET)
+	@echo "LD [DEBUG] -> $(TARGET)"
 
 # Generate a header with all flags =============================================
 config_header: config.mk

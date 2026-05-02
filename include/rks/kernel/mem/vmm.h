@@ -1,16 +1,7 @@
 #ifndef VMM_H
 #define VMM_H
 
-/*
- * Global page size
- *
- * Should be followed by every architecture
- */
-#define PAGE_SIZE 4096
-
-/* Virtual bases */
-#define KERNEL_VIRTUAL_BASE 0xFFFFFFFF80000000
-#define KERNEL_PHYSMAP_BASE 0xFFFFFFFFC0000000
+#include <arch_const.h>
 
 #ifndef __ASSEMBLY__
 
@@ -37,5 +28,5 @@ bool vmm_unmap ( vaddr_t vaddr );
 /* Debug/testing */
 void vmm_dump_tables ( vaddr_t vaddr );
 
-#endif
+#endif /* __ASSEMBLY__ */
 #endif /* VMM_H */
