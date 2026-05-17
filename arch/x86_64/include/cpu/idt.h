@@ -2,9 +2,10 @@
 #define IDT_H
 
 #include <rks/types.h>
+#include <rks/kernel/mem/vmm.h>
 
 /* IDT entry */
-typedef struct
+struct __attribute__ ( ( packed ) )
 {
 	u16 offset_l;
 	u16 selector;
@@ -13,13 +14,13 @@ typedef struct
 	u16 offset_m;
 	u32 offset_u;
 	pad_t reserved[2];
-} __attribute__ ( ( packed ) ) idt_entry_t;
+} idt_entry;
 
 /* IDT descriptor */
-typedef struct
+struct __attribute__ ( ( packed ) )
 {
 	u16 limit;
-	addr_t base;
-} __attribute__ ( ( packed ) ) idt_desc_t;
+	vaddr_t base;
+} idt_descriptor;
 
 #endif /* IDT_H */

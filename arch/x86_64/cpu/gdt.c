@@ -1,9 +1,11 @@
 #include <cpu/gdt.h>
 #include <cpu/tss.h>
+#include <mem/early_alloc.h>
 
-/* Just the necessary */
 #define GDT_ENTRIES 9
 
+/* Macro used to load a new GDT
+ * ============================ */
 #define LOAD_GDT(DESCRIPTOR) \
         __asm__ volatile ( \
                 "lgdt %0" \
@@ -12,9 +14,10 @@
                 : "memory" \
         )
 
-/* Populate a GDT entry */
+/* Helper macro used to populate a common GDT segment
+ * ================================================== */
 #define GDT_ENTRY(LIMIT_LOWER, BASE, ACCESS_BYTE, FLAGS_LIMIT) \
-        ( gdt_entry_t ) \
+        ( struct gdt_entry ) \
         { \
                 .limit_l = ( u16 ) ( LIMIT_LOWER ), \
                 .base_l = ( u32 ) ( BASE ) & 0xFFFF, \
@@ -24,12 +27,10 @@
                 .base_u = ( ( u32 ) ( BASE ) >> 24 ) & 0xFF, \
         }
 
-/*
- * Macro used to set the 32 upper bits for a segment (such as TSS)
- *
- * The previous GDT entry must describe this segment and set the lower 32 base bits
- */
-#define GDT_SEGMENT_ENTRY(SEGMENT) \
+/* Helper macro used to populate a system segment
+ * NOTE: The previous common segment must had been defined first
+ * ============================================================= */
+#define GDT_SYSTEM_ENTRY(SEGMENT) \
     (gdt_entry_t) { \
         .system_segment = { \
             .base_ih = ( ( vaddr_t ) ( SEGMENT ) >> 32 ) & 0xFFFFFFFF, \
@@ -37,49 +38,68 @@
         } \
     }
 
-/* GDT struct */
-static gdt_entry_t gdt[GDT_ENTRIES] __attribute__ ( ( aligned ( 16 ) ) );
-static gdt_desc_t gdt_descriptor __attribute__ ( ( aligned ( 16 ) ) );
-
-/* Prototypes */
-static void __set_gdt_entries ( void );
+/* Prototypes
+ * ========== */
+static void __set_gdt_entries ( struct gdt_entry* gdt );
 
 /*
- * Helper to set and load a 64-bit GDT
+ * Sets a 64-bit Global Descriptor Table
+ * Public helper
  *
- * -> void
+ * Return -> `void`
+ * Arguments:
+ *   1. `void`
+ * Callers:
+ *   - `set_64_descriptor`
  */
 void
 _setup_long_gdt ( void )
 {
-	/* Setup all needed GDT entries */
-	__set_gdt_entries (  );
+	/* GDT allocation */
+	struct gdt_entry* gdt =
+	        ( struct gdt_entry * ) early_alloc ( sizeof ( gdt_entry ) *
+	                                             GDT_ENTRIES );
+
+	/* GDT descriptor */
+	struct gdt_descriptor* desc =
+	        ( struct gdt_descriptor * )
+	        early_alloc ( sizeof ( gdt_descriptor ) );
+
+	/* Setups all needed GDT entries */
+	_set_gdt_entries ( gdt );
 
 	/* *INDENT-OFF* */
 
-        /* Fill the GDT descriptor */
-	gdt_descriptor = ( gdt_desc_t )
+        /* Fills the GDT descriptor */
+        desc = ( struct gdt_descriptor )
 	{
-	        .limit = ( GDT_ENTRIES * sizeof ( gdt_entry_t ) ) - 1,
+	        .limit = ( GDT_ENTRIES * sizeof ( struct gdt_entry ) ) - 1,
                 .start = ( vaddr_t ) & gdt,
         };
+
 	/* *INDENT-ON* */
 
+	/* Effectively loads it */
 	LOAD_GDT ( &gdt_descriptor );
 }
 
 /*
- * Set the essential GDT entries
+ * Sets all necessary GDT entries
+ * Private helper
  *
- * -> void
+ * Return -> `void`
+ * Arguments:
+ *   1. `struct gdt_entry* gdt`: GDT pointer
+ * Callers
+ *   - `_setup_long_gdt`
  */
 void
-__set_gdt_entries ( void )
+__set_gdt_entries ( struct gdt_entry* gdt )
 {
         /* *INDENT-OFF* */
 
 	/* Null entry */
-	gdt[0] = ( gdt_entry_t )
+	gdt[0] = ( struct gdt_entry )
 	{ 0 };
 
         /* *INDENT-ON* */
@@ -144,5 +164,5 @@ __set_gdt_entries ( void )
 	/*
 	 * 32 upper bits of TSS virtual address (0x40)
 	 */
-	gdt[8] = GDT_SEGMENT_ENTRY ( ( vaddr_t ) & tss );
+	gdt[8] = GDT_SYSTEM_ENTRY ( ( vaddr_t ) & tss );
 }

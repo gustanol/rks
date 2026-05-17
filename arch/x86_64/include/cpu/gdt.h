@@ -5,7 +5,7 @@
 #include <rks/kernel/mem/vmm.h>
 
 /* GDT entry */
-typedef struct
+struct __attribute__ ( ( packed ) )
 {
 	union
 	{
@@ -69,20 +69,26 @@ typedef struct
 			pad_t reserved[2];
 		} system_segment;
 	};
-} __attribute__ ( ( packed ) ) gdt_entry_t;
+} gdt_entry;
 
 /* GDT descriptor */
-typedef struct
+struct __attribute__ ( ( packed ) )
 {
 	u16 limit;
 	vaddr_t start;
-} __attribute__ ( ( packed ) ) gdt_desc_t;
+} gdt_descriptor;
 
-typedef enum
+/* Types of semgnets to choose */
+enum
 {
-	LDT = 0x2,              /* Local descriptor table */
-	TSS_A = 0x9,            /* Available Task State Segment */
+	/* Local Descriptor Table */
+	LDT = 0x2,
+
+	/* Available Task State Segment */
+	TSS_A = 0x9,
+
+	/* Busy Task State Segment */
 	TSS_B = 0xB,
-} segment_t;                    /* AB.ACC = 0 */
+} segment_type;
 
 #endif /* GDT_H */

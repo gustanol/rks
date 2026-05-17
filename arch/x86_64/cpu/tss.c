@@ -1,6 +1,8 @@
 #include <cpu/tss.h>
-#include <rks/kernel/mem/vmm.h>
+#include <mem/early_alloc.h>
 
+/* Helper macro used to load a new TSS
+ * =================================== */
 #define LOAD_TSS(DESCRIPTOR) \
         __asm__ volatile ( \
                 "ltr %0" \
@@ -9,23 +11,30 @@
                 : "memory" \
         )
 
-/* Task State Segment */
-tss_t tss;
-extern void kernel_stack_top ( void );
-
 /*
- * Setup and load a basic Task State Segment
+ * Setups and loads a 64-bit Task State Segment
+ * Public helper
  *
- * -> void
- * Called by `arch_eary_init`
+ * Return -> `void`
+ * Arguments:
+ *   1. `void`
+ * Callers:
+ *   - `set_64_descriptors`
  */
 void
 _setup_tss ( void )
 {
+	/* TSS allocation */
+	struct tss* tss =
+	        ( struct tss * ) early_alloc ( sizeof ( struct tss ) );
+
+	/* Top of the current kernel stack memory */
+	extern void kernel_stack_top ( void );
+
 	/* *INDENT-OFF* */
 
-        /* Populate the TSS before load it */
-        tss = ( tss_t )
+        /* Populates the TSS before loading it */
+        tss = ( struct tss )
         {
                 .reserved0 = { 0 },
                 .rsp0 = ( vaddr_t ) kernel_stack_top,
@@ -33,6 +42,9 @@ _setup_tss ( void )
                 /*
                  * .rsp1 = stack1
                  * .rsp2 = stack2
+                 *
+                 * In future, you can allocate other stacks right here
+                 * Commonly, using `early_alloc` or any other method
                  */
 
                 .reserved1 = { 0 },
@@ -42,6 +54,6 @@ _setup_tss ( void )
 
         /* *INDENT-ON* */
 
-	/* Load the TSS by its GDT descriptor index */
+	/* Loads the TSS by its GDT descriptor index */
 	LOAD_TSS ( 0x38 );
 }
