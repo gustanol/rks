@@ -3,17 +3,20 @@
 #include <boot/loader_parser.h>
 
 /*
- * Helper used to pass an info struct pointer (given by the loader)
- * To the correct parser (according the magic number)
+ * Parses the bootloader-given information structure
+ * Public helper
  *
- * -> void
- * @loader_info: Pointer to the struct containing the bootloader info
- * @boot_info: Pointer to the generic boot info
+ * Return -> `void`
+ * Arguments:
+ *   1. `struct loader_info* loader`: Bootloader state context
+ *   2. `struct boot_info* booti`: Generic boot information structure
+ * Callers:
+ *   - `rks_main`
  */
 void
-parse_boot (loader_info_t* loader_info, boot_info_t* boot_info)
+parse_boot ( struct loader_info* loader, struct boot_info* boot_i )
 {
 	/* Loaded by a Multibot2 bootloader */
-	if (loader_info->magic == MULTIBOOT2_BOOTLOADER_MAGIC)
-		parse_mbi2 (loader_info->info_ptr, boot_info);
+	if ( loader->magic == MULTIBOOT2_BOOTLOADER_MAGIC )
+		parse_mbi2 ( loader->info_ptr, boot_i );
 }

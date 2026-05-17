@@ -6,7 +6,7 @@
 #define PAGE_FAULT 14
 
 /* Frame with all pushed registers */
-typedef struct
+struct __attribute__ ( ( packed ) )
 {
 	reg_t r15,
 	  r14,
@@ -29,9 +29,9 @@ typedef struct
 	  rflags,
 	  rsp,
 	  ss;
-} __attribute__ ( ( packed ) ) interrupt_frame_t;
+} interrupt_frame;
 
 /* Handlers declaration */
-void page_fault_handler ( interrupt_frame_t * frame );
+void __page_fault_handler ( struct interrupt_frame* frame );
 
 #endif /* HANDLERS_H */
