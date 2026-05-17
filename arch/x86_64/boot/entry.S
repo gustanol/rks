@@ -36,7 +36,7 @@ boot_stack_top:
 /* ========================================== */
 loader_info:
 	.long 0 /* Magic number */
-	.long 0 /* Pointer to its info struct */
+	.quad 0 /* Pointer to its info struct */
 /* ========================================== */
 
 .code32
@@ -50,11 +50,13 @@ __rks_start:
 	/* Bootloader information */
 	/* ======================================== */
 
+	movl $loader_info, %edx
+
 	/* Store the magic number */
-	movl %eax, loader_info
+	movl %eax, (%edx)
 
 	/* Store the Bootloader info struct pointer */
-	movl %ebx, loader_info
+	movl %ebx, 4(%edx)
 	/* ======================================== */
 
 	/* Set a boot stack for protected mode */

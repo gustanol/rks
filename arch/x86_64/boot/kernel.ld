@@ -17,14 +17,14 @@ KERNEL_PHYSMAP_BASE = ALIGN(0xFFFFFFFFC0000000, 0x1000);
  * After higher half, any physical address can be get by calculating:
  *   VMA - KERNEL_VIRT_OFF
  */
-KERNEL_VIRT_OFF  = KERNEL_VIRT_BASE;
+KERNEL_VIRT_OFF = KERNEL_VIRT_BASE;
 early_alloc_phys = early_alloc - KERNEL_VIRT_OFF;
 /* ================================================== */
 
 SECTIONS
 {
 	. = KERNEL_PHYS_BASE;
-	kernel_start = KERNEL_VIRT_BASE;
+	KERNEL_START = KERNEL_VIRT_BASE;
 
 	/*
 	 * Early code must run at physical addresses
@@ -73,12 +73,16 @@ SECTIONS
 	}
 
 	/* Section for keeping all drivers */
-	.drivers_init ALIGN(0x1000) : AT(ADDR(.drivers_init) - KERNEL_VIRT_OFF)
+	.registry ALIGN(0x1000) : AT(ADDR(.registry) - KERNEL_VIRT_OFF)
 	{
-	    __drivers_init_start = .;
-	    *(.drivers_init)
-	    __drivers_init_end = .;
+	    __registry_drivers_start = .;
+	    KEEP(*(.registry.drivers))
+	    __registry_drivers_end = .;
+
+	    __registry_subsystems_start = .;
+	    KEEP(*(.registry.subsystems .registry.subsystems.*))
+	    __registry_subsystems_end = .;
 	}
 
-	kernel_end = .;
+	KERNEL_END = .;
 }

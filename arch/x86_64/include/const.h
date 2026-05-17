@@ -5,11 +5,14 @@
 #define PAGE_SIZE ( 1ULL << ( PAGE_LSHIFT ) )
 
 #ifndef __ASSEMBLY__
-extern void kernel_start ( void );
-extern void kernel_end ( void );
+
+extern void KERNEL_START ( void );
+extern void KERNEL_END ( void );
 extern void KERNEL_VIRT_BASE ( void );
+extern void KERNEL_VIRT_OFF ( void );
 extern void KERNEL_PHYS_BASE ( void );
 extern void KERNEL_PHYSMAP_BASE ( void );
+
 #endif /* __ASSEMBLY__ */
 
 #endif /* ARCH_CONST */
