@@ -7,6 +7,7 @@
 #ifndef __ASSEMBLY__
 
 /* Page table entry bits */
+
 /* ================================= */
 
 /* Is present */
@@ -46,32 +47,32 @@
 typedef addr_t pte_t;
 
 /* It must be aligned to unconsider the flags */
-typedef struct
+struct __attribute__ ( ( aligned ( 4096 ) ) )
 {
 	pte_t entries[PT_ENTRIES];
-} __attribute__ ( ( aligned ( 4096 ) ) ) page_table_t;
+} page_table;
 
-typedef struct
+struct
 {
 	page_table_t* pml4;
 	addr_t phys_pml4;
-} paging_t;
+} paging_info;
 
-typedef enum
+enum
 {
 	PPRESENT = 1 << 0,
 	PRW = 1 << 1,
 	PUS = 1 << 2,
 	PCD = 1 << 3,
-} paging_flags_t;
+} paging_flags;
 
-bool map_page ( vaddr_t vaddr, paddr_t paddr, paging_t * paging_ctx,
+bool map_page ( vaddr_t vaddr, paddr_t paddr, struct paging_info* paging,
                 u64 flags );
-bool unmap_page ( vaddr_t vaddr, paging_t * paging_ctx );
-paddr_t get_phys ( vaddr_t vaddr, paging_t * paging_ctx );
+bool unmap_page ( vaddr_t vaddr, struct paging_info* paging );
+paddr_t get_phys ( vaddr_t vaddr, struct paging_info* paging );
 
 /* Testings */
-void dump_tables ( vaddr_t vaddr, paging_t * paging_ctx );
+void dump_tables ( vaddr_t vaddr, struct paging_info* paging );
 
 #endif /* __ASSEMBLY__ */
 #endif /* PAGING_H */

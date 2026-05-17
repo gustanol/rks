@@ -1,9 +1,8 @@
 #include <mem/paging.h>
 #include <mem/arch_vmm.h>
 
-extern char pml4[];
+static struct paging_info paging;
 
-static paging_t paging_ctx;
 static u64 translate_flags ( vmm_map_flags_t flags );
 
 /*
@@ -14,12 +13,15 @@ static u64 translate_flags ( vmm_map_flags_t flags );
 void
 _arch_vmm_init ( void )
 {
+	/* External PML4 symbol */
+	extern char pml4[];
+
         /* *INDENT-OFF* */
 
 	/* Defining context for paging */
-	paging_ctx = ( paging_t )
+	paging = ( struct paging_info )
 	{
-		.pml4 = ( page_table_t * ) pml4,
+		.pml4 = ( struct page_table * ) pml4,
 		.phys_pml4 = ( addr_t ) pml4,
 	};
 
@@ -36,11 +38,11 @@ _arch_vmm_init ( void )
  *   Refer them at `rks/kernel/mem/vmm.h`
  */
 bool
-_arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
+_arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, enum vmm_map_flags flags )
 {
+
 	/* Try to map the page */
-	return map_page ( vaddr, paddr, &paging_ctx,
-	                  translate_flags ( flags ) );
+	return map_page ( vaddr, paddr, &paging, translate_flags ( flags ) );
 }
 
 /*
@@ -52,7 +54,7 @@ _arch_vmm_map ( vaddr_t vaddr, paddr_t paddr, vmm_map_flags_t flags )
 bool
 _arch_vmm_unmap ( vaddr_t vaddr )
 {
-	return unmap_page ( vaddr, &paging_ctx );
+	return unmap_page ( vaddr, &paging );
 }
 
 /*
@@ -64,7 +66,7 @@ _arch_vmm_unmap ( vaddr_t vaddr )
 void
 _arch_vmm_dump_tables ( vaddr_t vaddr )
 {
-	dump_tables ( vaddr, &paging_ctx );
+	dump_tables ( vaddr, &paging );
 }
 
 /*
@@ -73,8 +75,8 @@ _arch_vmm_dump_tables ( vaddr_t vaddr )
  * -> u64: Translated flags
  * @flags: Generic flags
  */
-static u64
-translate_flags ( vmm_map_flags_t flags )
+u64
+translate_flags ( enum vmm_map_flags flags )
 {
 	u64 paging_flags = 0;
 

@@ -2,8 +2,14 @@
 #define EARLY_ALLOC_H
 
 #include <rks/types.h>
-#include <rks/kernel/mem/pmm.h>
 
-void* early_alloc (size_t size);
+enum alloc_flags
+{
+	FILL_ZEROS,
+	FILL_ONES,
+	FILL_NOTHING,
+};
+
+void* _early_alloc ( size_t size, u32 align, enum alloc_flags alloc_flag );
 
 #endif /* EARLY_ALLOC_H */

@@ -24,7 +24,7 @@
  * @flags: Translated flags
  */
 bool
-map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
+map_page ( vaddr_t vaddr, paddr_t paddr, struct paging_info* paging, u64 flags )
 {
 	/* Index of each Page Table */
 	u16 pml4_idx = PML4_INDEX ( vaddr );
@@ -32,10 +32,10 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 	u16 pd_idx = PD_INDEX ( vaddr );
 	u16 pt_idx = PT_INDEX ( vaddr );
 
-	/* Each page table */
-	page_table_t* pdpt,
-	 *pd,
-	 *pt;
+	/* Page tables that will be used */
+	struct page_table* pdpt;
+	struct page_table* pd;
+	struct page_table* pt;
 
 	/* Entry offsets gotten from the virtual address */
 	pte_t* pml4_entry,
@@ -46,13 +46,14 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 	/*
 	 * Get the PML4 entry from the virtual address
 	 *
-	 * It points (or not) to a PDPT table
+	 * It points (or not yet) to a PDPT table
 	 */
-	pml4_entry = &paging_ctx->pml4->entries[pml4_idx];
+	pml4_entry = &paging->pml4->entries[pml4_idx];
 
 	/* PDPT not mapped */
 	if ( !( *pml4_entry & PPRESENT ) )
 	{
+
 		/* Allocate a new physical frame */
 		addr_t pdpt_phys = pmm_alloc_frames ( 1 );
 
@@ -61,8 +62,8 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 			return false;
 
 		/* Initialize it with zero */
-		pdpt = ( page_table_t * ) pdpt_phys;
-		memset ( pdpt, 0, sizeof ( page_table_t ) );
+		pdpt = ( struct page_table * ) pdpt_phys;
+		memset ( pdpt, 0, sizeof ( struct page_table ) );
 
 		/* Set the PDPT physical address and the specified flags */
 		*pml4_entry = pdpt_phys | PPRESENT | PRW | PUS;
@@ -72,7 +73,7 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 	else
 	{
 		/* PDPT = &PML4[INDEX] */
-		pdpt = ( page_table_t * ) ( *pml4_entry );
+		pdpt = ( struct page_table * ) ( *pml4_entry );
 	}
 
 	/* PDPT[i] -> PD */
@@ -89,8 +90,8 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 			return false;
 
 		/* Get the physical address and set it with zeros */
-		pd = ( page_table_t * ) pd_phys;
-		memset ( pd, 0, sizeof ( page_table_t ) );
+		pd = ( struct page_table * ) pd_phys;
+		memset ( pd, 0, sizeof ( struct page_table ) );
 
 		/* Set the physical address of PD */
 		*pdpt_entry = pd_phys | PPRESENT | PRW | PUS;
@@ -99,7 +100,7 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 	/* PD already mapped */
 	else
 	{
-		pd = ( page_table_t * ) ( *pdpt_entry );
+		pd = ( struct page_table * ) ( *pdpt_entry );
 	}
 
 	/* PD[i] -> PT */
@@ -116,8 +117,8 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 			return false;
 
 		/* Initialize this PT and set it with zeros */
-		pt = ( page_table_t * ) pt_phys;
-		memset ( pt, 0, sizeof ( page_table_t ) );
+		pt = ( struct page_table * ) pt_phys;
+		memset ( pt, 0, sizeof ( struct page_table ) );
 
 		/* Set the physical address of this PT */
 		*pd_entry = pt_phys | PPRESENT | PRW | PUS;
@@ -126,7 +127,7 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
 	/* PT already mapped */
 	else
 	{
-		pt = ( page_table_t * ) ( *pd_entry );
+		pt = ( struct page_table * ) ( *pd_entry );
 	}
 
 	/* Finally, the page */
@@ -149,7 +150,7 @@ map_page ( vaddr_t vaddr, paddr_t paddr, paging_t* paging_ctx, u64 flags )
  * @paging_ctx: Struct pointer containing a pointer to PML4
  */
 bool
-unmap_page ( vaddr_t vaddr, paging_t* paging_ctx )
+unmap_page ( vaddr_t vaddr, struct paging_info* paging )
 {
 	/* Indexes from the virtual address */
 	u16 pml4_idx = PML4_INDEX ( vaddr );
@@ -158,9 +159,9 @@ unmap_page ( vaddr_t vaddr, paging_t* paging_ctx )
 	u16 pt_idx = PT_INDEX ( vaddr );
 
 	/* Each page table */
-	page_table_t* pdpt,
-	 *pd,
-	 *pt;
+	struct page_table* pdpt;
+	struct page_table* pd;
+	struct page_table* pt;
 
 	/* Entry offsets gotten from the virtual address */
 	pte_t* pml4_entry,
@@ -169,12 +170,12 @@ unmap_page ( vaddr_t vaddr, paging_t* paging_ctx )
 	 *pt_entry;
 
 	/* Pass through each hierarchy layer 'til reach the PT */
-	pml4_entry = &paging_ctx->pml4->entries[pml4_idx];
+	pml4_entry = &paging->pml4->entries[pml4_idx];
 	if ( !( *pml4_entry & PPRESENT ) )
 		return false;
 
 	/* PDPT table */
-	pdpt = ( page_table_t * ) ( *pml4_entry );
+	pdpt = ( struct page_table * ) ( *pml4_entry );
 	pdpt_entry = &pdpt->entries[pdpt_idx];
 
 	if ( !( *pdpt_entry & PPRESENT ) )
@@ -182,7 +183,7 @@ unmap_page ( vaddr_t vaddr, paging_t* paging_ctx )
 	/* PDPT table */
 
 	/* PD table */
-	pd = ( page_table_t * ) ( *pdpt_entry );
+	pd = ( struct page_table * ) ( *pdpt_entry );
 	pd_entry = &pd->entries[pd_idx];
 
 	if ( !( *pd_entry & PPRESENT ) )
@@ -190,7 +191,7 @@ unmap_page ( vaddr_t vaddr, paging_t* paging_ctx )
 	/* PD table */
 
 	/* PT table */
-	pt = ( page_table_t * ) ( *pd_entry );
+	pt = ( struct page_table * ) ( *pd_entry );
 	pt_entry = &pt->entries[pt_idx];
 
 	if ( !( *pt_entry & PPRESENT ) )
@@ -214,7 +215,7 @@ unmap_page ( vaddr_t vaddr, paging_t* paging_ctx )
  * @paging_ctx: Pointer to the useful paging context structure
  */
 paddr_t
-get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
+get_phys ( vaddr_t vaddr, struct paging_info* paging )
 {
 	/* Indexes from the virtual address */
 	u16 pml4_idx = PML4_INDEX ( vaddr );
@@ -224,9 +225,9 @@ get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
 	u16 offset = ADDR_OFFSET ( vaddr );
 
 	/* Each page table */
-	page_table_t* pdpt,
-	 *pd,
-	 *pt;
+	struct page_table* pdpt;
+	struct page_table* pd;
+	struct page_table* pt;
 
 	/* Entries */
 	pte_t* pml4_entry,
@@ -234,13 +235,13 @@ get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
 	 *pd_entry,
 	 *pt_entry;
 
-	/* Go through each hierarchy layer 'til reach the PT */
-	pml4_entry = &paging_ctx->pml4->entries[pml4_idx];
+	/* Go throughout the hierarchy until reaching the PT */
+	pml4_entry = &paging->pml4->entries[pml4_idx];
 	if ( !( *pml4_entry & PPRESENT ) )
 		return false;
 
 	/* PDPT */
-	pdpt = ( page_table_t * ) ( *pml4_entry );
+	pdpt = ( struct page_table * ) ( *pml4_entry );
 	pdpt_entry = &pdpt->entries[pdpt_idx];
 
 	if ( !( *pdpt_entry & PPRESENT ) )
@@ -248,7 +249,7 @@ get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
 	/* PDPT */
 
 	/* PD */
-	pd = ( page_table_t * ) ( *pdpt_entry );
+	pd = ( struct page_table * ) ( *pdpt_entry );
 	pd_entry = &pd->entries[pd_idx];
 
 	if ( !( *pd_entry & PPRESENT ) )
@@ -256,12 +257,15 @@ get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
 	/* PD */
 
 	/* PT */
-	pt = ( page_table_t * ) ( *pd_entry );
+	pt = ( struct page_table * ) ( *pd_entry );
 	pt_entry = &pt->entries[pt_idx];
 
 	if ( !( *pt_entry & PPRESENT ) )
 		return false;
 	/* PT */
+
+	/* CAUTION: THIS FUNCTION IS NOT RETURNING PHYSICAL ADDRESSES YET */
+	/* GET PHYSICAL ADDRESS BY SUBTRACTING THE VIRTUAL ONE BY THE VIRTUAL BASE */
 
 	/* Align the address by 4096 to remove the flags */
 	return ( ( ALIGN_DOWN ( *pt_entry, 0xC ) ) + offset );
@@ -276,14 +280,14 @@ get_phys ( vaddr_t vaddr, paging_t* paging_ctx )
  * @paging_ctx: Pointer to paging context struct
  */
 void
-dump_tables ( vaddr_t vaddr, paging_t* paging_ctx )
+dump_tables ( vaddr_t vaddr, struct paging_info* paging )
 {
 	kprintf ( "Page tables for %llx:\n[ P = Present | NP = Not Present ]\n",
 	          vaddr );
 
 	/* PML4 */
 	u16 pml4_idx = PML4_INDEX ( vaddr );
-	pte_t pml4_entry = paging_ctx->pml4->entries[pml4_idx];
+	pte_t pml4_entry = paging->pml4->entries[pml4_idx];
 
 	kprintf ( "  PML4[%d] = %llx [%s]\n", pml4_idx, pml4_entry,
 	          pml4_entry & PPRESENT ? "P" : "NP" );
@@ -294,7 +298,7 @@ dump_tables ( vaddr_t vaddr, paging_t* paging_ctx )
 
 	/* PDPT table */
 	u16 pdpt_idx = PDPT_INDEX ( vaddr );
-	page_table_t* pdpt = ( page_table_t * ) ( pml4_entry );
+	struct page_table* pdpt = ( struct page_table * ) ( pml4_entry );
 	pte_t pdpt_entry = pdpt->entries[pdpt_idx];
 
 	kprintf ( "  PDPT[%d] = %llx [%s]\n", pdpt_idx, pdpt_entry,
@@ -306,7 +310,7 @@ dump_tables ( vaddr_t vaddr, paging_t* paging_ctx )
 
 	/* PD table */
 	u16 pd_idx = PD_INDEX ( vaddr );
-	page_table_t* pd = ( page_table_t * ) ( pdpt_entry );
+	struct page_table* pd = ( struct page_table * ) ( pdpt_entry );
 	pte_t pd_entry = pd->entries[pd_idx];
 
 	kprintf ( "  PD[%d] = %llx [%s]\n", pd_idx, pd_entry,
@@ -318,7 +322,7 @@ dump_tables ( vaddr_t vaddr, paging_t* paging_ctx )
 
 	/* PT table */
 	u16 pt_idx = PT_INDEX ( vaddr );
-	page_table_t* pt = ( page_table_t * ) ( pd_entry );
+	struct page_table* pt = ( struct page_table * ) ( pd_entry );
 	pte_t pt_entry = pt->entries[pt_idx];
 
 	kprintf ( "  PT[%d] = %llx [%s]\n", pt_idx, pt_entry,
