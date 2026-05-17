@@ -8,9 +8,12 @@
 /* Statements */
 -bl
 -bli0
--cli2
+-cli4
+-cbi0
 -prs
 -ut
+-ce
+-cdw
 
 /* Declarations */
 -bc
@@ -20,7 +23,6 @@
 -sar
 -sai
 -saw
--cdw
 
 /* Indentation */
 -i8
@@ -28,6 +30,7 @@
 -ip5
 -as
 -cs
+-lps
 
 /* Wrapping */
 -nbbo

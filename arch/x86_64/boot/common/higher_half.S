@@ -25,6 +25,7 @@
 .extern early_alloc_phys
 .extern early_alloc
 .extern rks_main
+.extern set_64_descriptors
 /* ============================ */
 
 /* Constants */
@@ -392,6 +393,9 @@ map_higher_half:
 
 	/* Reload the stack pointer */
 	movabsq $kernel_stack_top, %rsp
+
+	/* Set all needed 64-bit CPU descriptors */
+	call set_64_descriptors
 
 	/* Load the bootloader information structure */
 	movabsq $loader_info, %rdi
