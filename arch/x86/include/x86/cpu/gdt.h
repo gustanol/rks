@@ -5,7 +5,7 @@
 #include <rks/kernel/mem/vmm.h>
 
 /* GDT entry */
-struct __attribute__ ( ( packed ) )
+struct gdt_entry
 {
 	union
 	{
@@ -69,14 +69,14 @@ struct __attribute__ ( ( packed ) )
 			pad_t reserved[2];
 		} system_segment;
 	};
-} gdt_entry;
+} __attribute__ ( ( packed ) );
 
 /* GDT descriptor */
-struct __attribute__ ( ( packed ) )
+struct gdt_descriptor
 {
 	u16 limit;
 	vaddr_t start;
-} gdt_descriptor;
+} __attribute__ ( ( packed ) );
 
 /* Types of semgnets to choose */
 enum
