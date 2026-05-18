@@ -22,3 +22,6 @@ tags
 
 # Auto-generated header file
 include/rks/autoconf.h
+
+# Copied architecture include directory
+include/arch
