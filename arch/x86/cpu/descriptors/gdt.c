@@ -1,6 +1,6 @@
-#include <cpu/gdt.h>
-#include <cpu/tss.h>
-#include <mem/early_alloc.h>
+#include <x86/cpu/descriptors/gdt.h>
+#include <x86/cpu/descriptors/tss.h>
+#include <x86/mem/early_alloc.h>
 
 #define GDT_ENTRIES 9
 

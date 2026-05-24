@@ -1,4 +1,4 @@
-#include <cpu/tss.h>
+#include <cpu/descriptors/tss.h>
 #include <mem/early_alloc.h>
 
 /* Helper macro used to load a new TSS

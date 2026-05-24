@@ -1,4 +1,4 @@
-#include <cpu/idt.h>
+#include <cpu/descriptors/idt.h>
 #include <mem/early_alloc.h>
 
 #define IDT_ENTRIES 256
