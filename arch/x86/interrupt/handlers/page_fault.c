@@ -1,7 +1,7 @@
-#include <interrupt/handlers.h>
+#include <x86/interrupt/handlers.h>
 #include <rks/kernel/klog/print.h>
 
-/*
+/**
  * Page Fault handler
  * Private handler
  *
@@ -10,7 +10,7 @@
  *   1. `struct interrupt_frame* frame`: Stack frame pointer
  * Callers:
  *   - `_isr_generic_handler`
- */
+ **/
 void
 __page_fault_handler ( struct interrupt_frame* frame )
 {

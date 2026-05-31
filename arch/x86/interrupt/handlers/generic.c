@@ -1,7 +1,7 @@
-#include <interrupt/handlers.h>
 #include <rks/kernel/klog/print.h>
+#include <x86/interrupt/handlers.h>
 
-/*
+/**
  * Generic Interrupt Service Routine handler
  * Private handler
  *
@@ -10,7 +10,7 @@
  *   1. `struct interrupt_frame* frame`: Stack frame pointer
  * Callers:
  *   - `isr_common_stub`
- */
+ **/
 void
 _isr_generic_handler ( struct interrupt_frame* frame )
 {
