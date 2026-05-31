@@ -1,11 +1,11 @@
-PMM_SUBSYS_SRC_DIR   := $(KERNEL_DIR)/mem/pmm
+PMM_SUBSYS_SRC_DIR := $(KERNEL_DIR)/mem/pmm
 PMM_SUBSYS_BUILD_DIR := $(BUILD_DIR)/$(PMM_SUBSYS_SRC_DIR)
 
 # Core objects
 OBJ-1 += \
-    $(PMM_SUBSYS_BUILD_DIR)/core/dispatch.o \
-    $(PMM_SUBSYS_BUILD_DIR)/core/pmm.o \
-    $(PMM_SUBSYS_BUILD_DIR)/core/wrappers.o
+    $(PMM_SUBSYS_BUILD_DIR)/dispatch.o \
+    $(PMM_SUBSYS_BUILD_DIR)/pmm.o \
+    $(PMM_SUBSYS_BUILD_DIR)/wrappers.o
 
 # Backend-specific objects
 OBJ-$(COMPILE_PMM_BITMAP_BACKEND) += \

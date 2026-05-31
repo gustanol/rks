@@ -4,8 +4,9 @@
 #include <rks/kernel/subsys/registry.h>
 #include <rks/kernel/mem/pmm.h>
 
-#define REGISTER_PMM_BACKEND(NAME, INIT_FN, ATTACH_FN, OPS) \
-        REGISTER_SUBSYSTEM_BACKEND( ( SUBSYSTEM_TAG_PMM ), ( NAME ), ( OPS ), ( INIT_FN ), ( ATTACH_FN ))
+/* PMM backend registration macro */
+#define REGISTER_PMM_BACKEND(NAME, INIT_FN, OPS) \
+        REGISTER_SUBSYSTEM_BACKEND( ( SUBSYSTEM_TAG_PMM ), ( NAME ), ( INIT_FN ), ( OPS ) )
 
 /* PMM backend operations */
 struct pmm_ops

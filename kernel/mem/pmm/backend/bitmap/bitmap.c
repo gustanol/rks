@@ -6,22 +6,21 @@
 #include <rks/lib/string.h>
 
 /* Function prototypes
- * ============================================================= */
+ * =================== */
 static void __bitmap_init ( const struct pmm_init_backend_ctx* ctx );
 
-/* Operations */
+/* Operations
+ * ========== */
 static paddr_t _bitmap_alloc_frame ( void );
 static u32 _bitmap_free_frame ( paddr_t phys_addr );
 static size_t _bitmap_free_region ( paddr_t phys_addr, size_t size );
 static size_t _bitmap_fill_region ( paddr_t phys_addr, size_t size );
 
-/* ============================================================= */
-
 /* Global context */
 static struct bitmap_ctx* g_bitmap = NULL;
 
 /* PMM operations */
-static const pmm_ops bitmap_ops = {
+static const struct pmm_ops bitmap_ops = {
 	.alloc_frame = _bitmap_alloc_frame,
 	.free_frame = _bitmap_free_frame,
 	.free_region = _bitmap_region_free,
@@ -31,7 +30,7 @@ static const pmm_ops bitmap_ops = {
 /* Register it as a PMM backend */
 REGISTER_PMM_BACKEND ( "bitmap_pmm", __bitmap_init, &bitmap_ops );
 
-/*
+/**
  * PMM bitmap backend initializer function
  * Subsystem init function
  *
@@ -40,7 +39,7 @@ REGISTER_PMM_BACKEND ( "bitmap_pmm", __bitmap_init, &bitmap_ops );
  *   1. `const struct pmm_init_backend_ctx* ctx`: PMM non-specific backend data
  * Callers:
  *   - `pmm_init`
- */
+ **/
 void
 __bitmap_init ( const struct pmm_init_backend_ctx* ctx )
 {
@@ -61,7 +60,7 @@ __bitmap_init ( const struct pmm_init_backend_ctx* ctx )
 	g_bitmap->ptr = ( char * ) early_alloc ( g_bitmap->size );
 }
 
-/*
+/**
  * Bitmap single frame allocator
  * Subsystem backend function
  *
@@ -71,7 +70,7 @@ __bitmap_init ( const struct pmm_init_backend_ctx* ctx )
  *   1. `void`
  * Callers:
  *   - PMM implementations
- */
+ **/
 paddr_t
 _bitmap_alloc_frame ( void )
 {
@@ -98,7 +97,7 @@ _bitmap_alloc_frame ( void )
 	return ( frame_idx * FRAME_SIZE );
 }
 
-/*
+/**
  * Bitmap single frame freer
  * Subsystem backend function
  *
@@ -109,7 +108,7 @@ _bitmap_alloc_frame ( void )
  *   1. `paddr_t phys_addr`: Frame physical address
  * Callers:
  *   - PMM implementations
- */
+ **/
 u32
 _bitmap_free_frame ( paddr_t phys_addr )
 {
@@ -127,7 +126,7 @@ _bitmap_free_frame ( paddr_t phys_addr )
 	return 1;
 }
 
-/*
+/**
  * Bitmap region map freer
  * Subsystem backend function
  *
@@ -137,7 +136,7 @@ _bitmap_free_frame ( paddr_t phys_addr )
  *   2. `size_t size`: Region size
  * Callers:
  *   - PMM imprementations
- */
+ **/
 size_t
 _bitmap_free_region ( paddr_t phys_addr, size_t size )
 {
@@ -155,7 +154,7 @@ _bitmap_free_region ( paddr_t phys_addr, size_t size )
 	return cleared_frames;
 }
 
-/*
+/**
  * Bitmap region map setter
  * Subsystem backend function
  *
@@ -165,7 +164,7 @@ _bitmap_free_region ( paddr_t phys_addr, size_t size )
  *   2. `size_t size`: Region size
  * Callers:
  *   - PMM imprementations
- */
+ **/
 size_t
 _bitmap_fill_region ( paddr_t phys_addr, size_t size )
 {

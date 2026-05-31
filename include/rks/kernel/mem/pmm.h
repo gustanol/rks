@@ -4,23 +4,17 @@
 #include <rks/types.h>
 #include <rks/boot.h>
 
-#define FRAME_SIZE 4096
+#define FRAME_SIZE PAGE_SIZE
 
 typedef addr_t paddr_t;
 
-void pmm_init ( mmap_tag_t * mmap );
-u64 pmm_alloc_frames ( u64 frames_needed );
-void pmm_free_frame ( u64 phys_addr );
-size_t pmm_get_total_memory ( void );
+void pmm_init ( struct mmap_tag* mmap );
 
-/* PMM context struct */
-struct pmm_t
-{
-	u64 total_frames;
-	u64 used_frames;
-	size_t total_memory;
-	u64 bitmap_size;
-	char* bitmap;           /* Array made out of bits */
-};
+paddr_t pmm_alloc_frame ( void );
+paddr_t pmm_alloc_frames ( size_t frames_needed );
+u32 pmm_free_frame ( paddr_t phys_addr );
+size_t pmm_free_region ( paddr_t phys_addr, size_t size );
+size_t pmm_fill_region ( paddr_t phys_addr, size_t size );
+size_t pmm_get_total_memory ( void );
 
 #endif /* PMM_H */

@@ -8,10 +8,8 @@
 #include <rks/lib/bitwise.h>
 
 /* Static prototypes
- * ========================================== */
+ * ================= */
 static void _pmm_fill_total_memory ( struct mmap_tag* mmap );
-
-/* ========================================== */
 
 /*
  * Physical Memory Allocation context initializer
@@ -31,7 +29,8 @@ pmm_init ( struct mmap_tag* mmap )
 		return;
 
 	/* Allocates the global state PMM structure */
-	g_pmm = ( struct pmm * ) early_alloc ( sizeof ( struct pmm ) );
+	g_pmm = ( struct pmm * ) _early_alloc ( sizeof ( struct pmm ), 0x10,
+	                                        FILL_ZEROS );
 
 	/* Parses the memory and fills the structure */
 	_pmm_fill_total_memory ( mmap );
@@ -50,7 +49,7 @@ pmm_init ( struct mmap_tag* mmap )
 	 */
 
 	/* Backend init function
-	 * ====================================== */
+	 * ===================== */
 
 	/* Context (Useful non-specific data) */
 	struct pmm_init_backend ctx = {
@@ -60,7 +59,6 @@ pmm_init ( struct mmap_tag* mmap )
 
 	/* Calls it */
 	backend->init ( &ctx );
-	/* ====================================== */
 
 	/*
 	 * NOTE: For now on, the backend should be correctly initialized
@@ -71,7 +69,7 @@ pmm_init ( struct mmap_tag* mmap )
 	g_pmm->ops = ( struct pmm_ops * ) backend->ops;
 
 	/* Marks available entries as free regions
-	 * =========================================================== */
+	 * ======================================= */
 	for ( u32 i = 0; i < mmap->entry_count; i++ )
 	{
 		/* Available memory entries */
@@ -82,16 +80,14 @@ pmm_init ( struct mmap_tag* mmap )
 			                          mmap->entries[i].len );
 		}
 	}
-	/* =========================================================== */
 
 	/* MARKS THE WHOLE MAPPING, NOT JUST ISOLATED REGIONS (LATER) */
 
 	g_pmm->ops->fill_region ( ( paddr_t ) VIRT_TO_PHYS ( KERNEL_START ),
 	                          ( size_t ) ( KERNEL_END - KERNEL_START ) );
 	g_pmm->ops->fill_region ( ( paddr_t )
-	                          VIRT_TO_PHYS ( ( vaddr_t ) g_pmm->
-	                                         bitmap.ptr ),
-	                          g_pmm->bitmap.size );
+	                          VIRT_TO_PHYS ( ( vaddr_t ) g_pmm->bitmap.
+	                                         ptr ), g_pmm->bitmap.size );
 
 	/* Logging */
 	kprintf ( "PMM: Available memory = %llu MiB\n",
