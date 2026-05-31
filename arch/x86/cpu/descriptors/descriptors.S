@@ -52,4 +52,5 @@ set_64_descriptors:
 	/* Set the Interrupt Descriptor Table */
 	call _setup_idt
 
+	/* Return to the caller */
 	ret
