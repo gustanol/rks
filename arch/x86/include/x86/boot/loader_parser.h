@@ -1,8 +1,8 @@
 #ifndef LOADER_PARSER_H
 #define LOADER_PARSER_H
 
-#include <rks/boot.h>
+#include <rks/kernel/boot/info.h>
 
-void parse_mbi2 (u64 info_ptr, boot_info_t * boot_info);
+void _parse_mbi2 ( vaddr_t info_ptr, struct boot_info* boot_info );
 
 #endif /* LOADER_PARSER_H */

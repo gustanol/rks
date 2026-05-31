@@ -1,9 +1,9 @@
 #include <rks/boot.h>
 #include <rks/lib/boot/multiboot2.h>
-#include <boot/loader_parser.h>
+#include <x86/boot/loader_parser.h>
 
 /*
- * Parses the bootloader-given information structure
+ * Parses the bootloader-given Multiboot2 information structure
  * Public helper
  *
  * Return -> `void`
@@ -14,9 +14,9 @@
  *   - `rks_main`
  */
 void
-parse_boot ( struct loader_info* loader, struct boot_info* boot_i )
+parse_boot ( struct loader_info* loader, struct boot_info* boot )
 {
 	/* Loaded by a Multibot2 bootloader */
 	if ( loader->magic == MULTIBOOT2_BOOTLOADER_MAGIC )
-		parse_mbi2 ( loader->info_ptr, boot_i );
+		parse_mbi2 ( loader->info_ptr, boot );
 }
