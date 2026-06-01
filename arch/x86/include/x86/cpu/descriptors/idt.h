@@ -1,7 +1,7 @@
 #ifndef IDT_H
 #define IDT_H
 
-#include <rks/types.h>
+#include <rks/kernel/types.h>
 #include <rks/kernel/mem/vmm.h>
 
 /* IDT entry */

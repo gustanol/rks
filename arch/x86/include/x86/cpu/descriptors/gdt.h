@@ -1,7 +1,7 @@
 #ifndef GDT_H
 #define GDT_H
 
-#include <rks/types.h>
+#include <rks/kernel/types.h>
 #include <rks/kernel/mem/vmm.h>
 
 /* GDT entry */

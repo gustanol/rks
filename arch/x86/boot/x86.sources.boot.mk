@@ -1,8 +1,4 @@
-X86_BOOT_SRC_DIR := $(ARCH_DIR)/boot
 X86_BOOT_BUILD_DIR := $(BUILD_DIR)/$(X86_BOOT_SRC_DIR)
-
-# Global linker script
-LINKER_SCRIPT := $(X86_BOOT_SRC_DIR)/kernel.ld
 
 # x86 entry object
 OBJ-1 += \

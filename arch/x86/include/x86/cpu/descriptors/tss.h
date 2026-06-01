@@ -1,7 +1,7 @@
 #ifndef TSS_H
 #define TSS_H
 
-#include <rks/types.h>
+#include <rks/kernel/types.h>
 #include <rks/kernel/mem/vmm.h>
 
 struct __attribute__ ( ( packed ) )

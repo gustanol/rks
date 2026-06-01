@@ -3,6 +3,6 @@
 
 #include <rks/kernel/boot/info.h>
 
-void _parse_mbi2 ( vaddr_t info_ptr, struct boot_info* boot_info );
+void _parse_mbi2 ( addr_t info_ptr, struct boot_info* boot_info );
 
 #endif /* LOADER_PARSER_H */

@@ -1,3 +1,4 @@
+#include <rks/kernel/boot/mmap.h>
 #include <rks/lib/boot/multiboot2.h>
 #include <x86/mem/early_alloc.h>
 

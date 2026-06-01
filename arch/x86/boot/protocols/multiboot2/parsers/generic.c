@@ -1,3 +1,4 @@
+#include <rks/kernel/boot/info.h>
 #include <rks/kernel/klog/print.h>
 #include <rks/kernel/klog/log.h>
 #include <rks/lib/boot/multiboot2.h>
@@ -17,13 +18,13 @@ static void __parse_framebuffer ( struct multiboot2_tag_framebuffer* tag,
  *
  * Return -> `void`
  * Arguments:
- *   1. `vaddr_t info_ptr`: MBI2 pointer
+ *   1. `addr_t info_ptr`: MBI2 pointer
  *   2. `struct boot_info* boot_info`: Boot info struct pointer
  * Callers:
  *   - `parse_boot`
  **/
 void
-_parse_mbi2 ( vaddr_t info_ptr, struct boot_info* boot_info )
+_parse_mbi2 ( addr_t info_ptr, struct boot_info* boot_info )
 {
 	/* Gets the MB2 MMAP tag from the information pointer */
 	struct multiboot2_tag_mmap* mb2_mmap =

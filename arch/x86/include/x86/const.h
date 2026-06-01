@@ -11,7 +11,7 @@ extern void KERNEL_END ( void );
 extern void KERNEL_VIRT_BASE ( void );
 extern void KERNEL_VIRT_OFF ( void );
 extern void KERNEL_PHYS_BASE ( void );
-extern void KERNEL_PHYSMAP_BASE ( void );
+extern void HHDM_BASE ( void );
 
 #endif /* __ASSEMBLY__ */
 
