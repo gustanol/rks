@@ -11,7 +11,7 @@
  * ================= */
 static void _pmm_fill_total_memory ( struct mmap_tag* mmap );
 
-/*
+/**
  * Physical Memory Allocation context initializer
  * Global
  *
@@ -20,7 +20,7 @@ static void _pmm_fill_total_memory ( struct mmap_tag* mmap );
  *   1. `struct mmap_tag* mmap`: Memory descriptors entries
  * Callers:
  *   - `rks_main`
- */
+ **/
 void
 pmm_init ( struct mmap_tag* mmap )
 {
@@ -48,11 +48,15 @@ pmm_init ( struct mmap_tag* mmap )
 	   k_panic("no init function");
 	 */
 
+	/*
+	   k_print("[PMM] Registered backend: '%s'\n", backend->name);
+	 */
+
 	/* Backend init function
 	 * ===================== */
 
 	/* Context (Useful non-specific data) */
-	struct pmm_init_backend ctx = {
+	struct pmm_init_backend_ctx ctx = {
 		.mem_total = g_pmm->memory.total,
 		.frames_total = g_pmm->frames.total,
 	};
@@ -83,11 +87,11 @@ pmm_init ( struct mmap_tag* mmap )
 
 	/* MARKS THE WHOLE MAPPING, NOT JUST ISOLATED REGIONS (LATER) */
 
-	g_pmm->ops->fill_region ( ( paddr_t ) VIRT_TO_PHYS ( KERNEL_START ),
-	                          ( size_t ) ( KERNEL_END - KERNEL_START ) );
 	g_pmm->ops->fill_region ( ( paddr_t )
-	                          VIRT_TO_PHYS ( ( vaddr_t ) g_pmm->bitmap.
-	                                         ptr ), g_pmm->bitmap.size );
+	                          ( ( vaddr_t ) KERNEL_START -
+	                            ( vaddr_t ) HHDM_BASE ),
+	                          ( vaddr_t ) KERNEL_END -
+	                          ( vaddr_t ) KERNEL_START );
 
 	/* Logging */
 	kprintf ( "PMM: Available memory = %llu MiB\n",

@@ -1,4 +1,5 @@
 #include "bitmap.h"
+#include <arch/const.h>
 #include <arch/mem/early_alloc.h>
 #include <pmm/backend.h>
 #include <rks/kernel/init/subsystem.h>
@@ -58,6 +59,11 @@ __bitmap_init ( const struct pmm_init_backend_ctx* ctx )
 
 	/* Allocates the bitmap pointer */
 	g_bitmap->ptr = ( char * ) early_alloc ( g_bitmap->size );
+
+	/* Sets this region as used */
+	_bitmap_fill_region ( ( paddr_t )
+	                      ( ( vaddr_t ) g_bitmap->ptr -
+	                        ( vaddr_t ) HHDM_BASE ), g_bitmap->size );
 }
 
 /**

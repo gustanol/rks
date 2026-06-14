@@ -52,7 +52,7 @@ size_t
 pmm_free_region ( paddr_t phys_addr, size_t size )
 {
 	/* Frees the whole region */
-	return _pmm_dispatch_region_free ( phys_addr, size );
+	return _pmm_dispatch_free_region ( phys_addr, size );
 }
 
 /*
@@ -70,7 +70,7 @@ size_t
 pmm_fill_region ( paddr_t phys_addr, size_t size )
 {
 	/* Frees the whole region */
-	return _pmm_dispatch_region_used ( phys_addr, size );
+	return _pmm_dispatch_fill_region ( phys_addr, size );
 }
 
 /*

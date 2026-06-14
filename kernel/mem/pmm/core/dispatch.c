@@ -1,6 +1,6 @@
 #include <pmm/dispatch.h>
 
-/*
+/**
  * Private physical frame allocator
  * Private dispatcher
  *
@@ -9,7 +9,7 @@
  *   1. `void`
  * Callers:
  *   - `pmm_alloc_frame`
- */
+ **/
 paddr_t
 _pmm_dispatch_alloc_frame ( void )
 {
@@ -27,7 +27,7 @@ _pmm_dispatch_alloc_frame ( void )
 	return frame_phys_addr;
 }
 
-/*
+/**
  * Private physical frame freer
  * Private dispatcher
  *
@@ -36,7 +36,7 @@ _pmm_dispatch_alloc_frame ( void )
  *   1. `paddr_t phys_addr`: Frame physical address
  * Callers:
  *   - `pmm_free_frame`
- */
+ **/
 u32
 _pmm_dispatch_free_frame ( paddr_t phys_addr )
 {
@@ -54,7 +54,7 @@ _pmm_dispatch_free_frame ( paddr_t phys_addr )
 	return 1;
 }
 
-/*
+/**
  * Private region map freer
  * Private dispatcher
  *
@@ -64,7 +64,7 @@ _pmm_dispatch_free_frame ( paddr_t phys_addr )
  *   2. `size_t size`: Region size
  * Callers:
  *   - `pmm_region_free`
- */
+ **/
 size_t
 _pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
 {
@@ -78,7 +78,7 @@ _pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
 	return cleared_frames;
 }
 
-/*
+/**
  * Private region map setter
  * Private dispatcher
  *
@@ -88,7 +88,7 @@ _pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
  *   2. `size_t size`: Region size
  * Callers:
  *   - `pmm_region_used`
- */
+ **/
 size_t
 _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t size )
 {
@@ -102,7 +102,7 @@ _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t size )
 	return set_frames;
 }
 
-/*
+/**
  * Public physical memory getter
  * Public wrapper
  *
@@ -111,7 +111,7 @@ _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t size )
  *   1. `void`
  * Callers:
  *   - `pmm_get_total_memory`
- */
+ **/
 size_t
 _pmm_dispatch_get_total_memory ( void )
 {
