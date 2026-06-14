@@ -1,5 +1,5 @@
-#include <x86/cpu/descriptors/gdt.h>
-#include <x86/cpu/descriptors/tss.h>
+#include <x86/cpu/internal/descriptors/gdt.h>
+#include <x86/cpu/internal/descriptors/tss.h>
 #include <x86/mem/early_alloc.h>
 
 #define GDT_ENTRIES 9
