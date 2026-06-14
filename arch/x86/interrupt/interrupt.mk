@@ -1,4 +1,3 @@
-X86_INTERRUPT_SRC_DIR := $(ARCH_DIR)/interrupt
 X86_INTERRUPT_BUILD_DIR := $(BUILD_DIR)/$(X86_INTERRUPT_SRC_DIR)
 
 # Interrupt Service Routine listing object
