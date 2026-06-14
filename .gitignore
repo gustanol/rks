@@ -1,3 +1,4 @@
+cache/
 build/
 debug/
 *.o
@@ -19,6 +20,8 @@ iso/
 cscope.*
 tags
 .string*
+.arch
+.build.sources
 
 # Auto-generated header file
 include/rks/autoconf.h

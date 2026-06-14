@@ -1,3 +1,5 @@
+# Helping
+# =======
 help:
 	@echo "Research Kernel System"
 	@echo ""
@@ -33,3 +35,5 @@ help:
 	@echo "  { Others }"
 	@echo "    [ make help ]"
 	@echo "      Shows this message as a help."
+
+.PHONY: help
