@@ -1,5 +1,5 @@
-#include <x86/interrupt/handlers.h>
 #include <rks/kernel/klog/print.h>
+#include <x86/interrupt/internal/handlers.h>
 
 /**
  * Page Fault handler

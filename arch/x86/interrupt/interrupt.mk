@@ -8,3 +8,11 @@ OBJ-1 += \
 OBJ-1 += \
 	$(X86_INTERRUPT_BUILD_DIR)/handlers/generic.o \
 	$(X86_INTERRUPT_BUILD_DIR)/handlers/page_fault.o
+
+# Extra flags
+X86_INTERRUPT_CFLAGS := \
+	-I$(X86_INTERRUPT_SRC_DIR)/include
+
+# Scope flags
+$(X86_BUILD_DIR)/%.o: \
+	CFLAGS += $(X86_INTERRUPT_CFLAGS)

@@ -1,7 +1,7 @@
 #ifndef HANDLERS_H
 #define HANDLERS_H
 
-#include <rks/types.h>
+#include <rks/kernel/types.h>
 
 #define PAGE_FAULT 14
 
