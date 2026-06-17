@@ -4,8 +4,6 @@
 #include <rks/kernel/mem/pmm.h>
 #include <pmm/backend.h>
 
-#define SUBSYS_TAG_PMM 0x504D4D
-
 /* PMM context struct */
 struct pmm
 {
