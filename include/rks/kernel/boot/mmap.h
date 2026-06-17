@@ -2,7 +2,6 @@
 #define KERNEL_BOOT_MMAP_H
 
 #include <rks/kernel/types.h>
-#include <rks/kernel/mem/pmm.h>
 
 /* Memory types */
 enum mem_type
@@ -16,7 +15,7 @@ enum mem_type
 struct mmap_entry
 {
 	/* Base physical address */
-	paddr_t addr;
+	addr_t addr;
 
 	/* Entry length */
 	size_t len;

@@ -6,7 +6,10 @@
 /* Framebuffer information structure */
 struct framebuffer_info
 {
-	void* addr;
+	/* Framebuffer virtual address pointer */
+	addr_t* addr;
+
+	/* Dimensions */
 	u32 width;
 	u32 height;
 
@@ -16,6 +19,7 @@ struct framebuffer_info
 	/* Bits per pixel */
 	ubyte_t bpp;
 
+	/* Formatter */
 	struct
 	{
 		ubyte_t red_shift;

@@ -2,7 +2,6 @@
 #define KERNEL_BOOT_LOADER_H
 
 #include <rks/kernel/types.h>
-#include <rks/kernel/mem/pmm.h>
 
 /* Specific information about the kernel bootloader */
 struct loader_info
@@ -11,7 +10,7 @@ struct loader_info
 	u32 magic;
 
 	/* Information pointer */
-	paddr_t info_ptr;
+	addr_t info_ptr;
 } __attribute__ ( ( packed ) );
 
 #endif /* KERNEL_BOOT_LOADER_h */
