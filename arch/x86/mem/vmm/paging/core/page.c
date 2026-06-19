@@ -1,8 +1,7 @@
-#include <rks/kernel/klog/print.h>
-#include <rks/kernel/mem/pmm.h>
 #include <rks/lib/bitwise.h>
 #include <rks/lib/string.h>
-#include <x86/mem/vmm/paging.h>
+#include <x86/mem/vmm/paging/internal/flags.h>
+#include <x86/mem/vmm/paging/internal/ops.h>
 
 /* Macro used to invalidate the Translation Lookaside Buffer (TLB)
  * =============================================================== */
@@ -14,6 +13,16 @@
                 : "memory" \
         );
 
+/* Page table entry */
+typedef vaddr_t pte_t;
+
+/* Page table structure */
+struct page_table
+{
+	pte_t entries[PAGE_ENTRIES];
+} __attribute__ ( ( packed ) );
+
+/* Walker context */
 struct page_walk
 {
 	struct page_table* pml4;
@@ -22,7 +31,9 @@ struct page_walk
 	struct page_table* pt;
 };
 
-static void __paging_walk ( ADDRESS_SPACE * space, vaddr_t virt_addr,
+/* Prototypes
+ * ========== */
+static void __paging_walk ( ADDR_SPACE * space, vaddr_t virt_addr,
                             paddr_t phys_addr, vaddr_t hhdm_offset,
                             struct* page_walk walk, int create );
 
@@ -89,12 +100,14 @@ _paging_unmap ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset )
 	__paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags, &walk,
 	                0 );
 
+	/* Something went wrong if PT is NULL */
 	if ( walk->pt == NULL )
 		return 0;
 
+	/* Gets the entry */
 	pte_t* pt_entry & walk->pt->entries[PT_IDX ( virt_addr )];
 
-	/* Sets the entry with zeros */
+	/* Sets it with zeros */
 	memset ( pt_entry, 0, PAGE_SIZE );
 
 	/* Invalidates cache */
@@ -126,12 +139,15 @@ paddr_t _paging_virt_to_phys ( ADDR_SPACE * space, vaddr_t virt_addr,
 	__paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags, &walk,
 	                0 );
 
+	/* Something's wrong */
 	if ( walk->pt == NULL )
 		return 0;
 
+	/* Gets the correct entry */
 	pte_t* pt_entry & walk->pt->entries[PT_IDX ( virt_addr )];
 
-	return _paging_phys_to_virt ( ADDR_MASK ( *pt_entry ), hhdm_offset );
+	/* Masks its flags to get the physical address */
+	return ( paddr_t ) ADDR_MASK ( *pt_entry );
 }
 
 /**

@@ -2,7 +2,7 @@
 #include <rks/lib/bitwise.h>
 #include <x86/const.h>
 #include <x86/mem/early_alloc.h>
-#include <x86/mem/vmm/paging.h>
+#include <x86/mem/vmm/paging/internal/flags.h>
 
 /**
  * Early page table getter (and allocator when needed)
@@ -95,7 +95,7 @@ _early_map_range ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr,
 	/* Guarantees the size is aligned up */
 	size = ALIGN_UP ( size, 0x200000 );
 
-        /* Aligns the physical base address down */
+	/* Aligns the physical base address down */
 	phys_addr = ALIGN_DOWN ( phys_addr, 0x200000 );
 
 	/* Iterates for each page within the size */

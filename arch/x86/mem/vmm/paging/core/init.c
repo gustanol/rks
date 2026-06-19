@@ -1,9 +1,9 @@
-#include <rks/kernel/mem/pmm.h>
 #include <vmm/backend.h>
 #include <x86/const.h>
-#include <x86/mem/vmm/internal/paging.h>
+#include <x86/mem/vmm/paging/internal/ops.h>
 
-/* Static prototypes */
+/* Static prototypes
+ * ================= */
 void __paging_init ( ADDR_SPACE * kernel_address_space );
 void _paging_build_hhdm ( ADDR_SPACE * kernel_address_space );
 void _paging_identity_unmap ( ADDR_SPACE * kernel_address_space );
@@ -20,6 +20,7 @@ static const struct vmm_ops paging_ops = {
 	.unmap = _paging_unmap,
 	.remap = _paging_remap,
 	.virt_to_phys = _paging_virt_to_phys,
+	.phys_to_virt = _paging_phys_to_virt,
 	.flush_tlb = _paging_flush_tlb,
 };
 
