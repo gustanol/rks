@@ -1,6 +1,7 @@
 #include <vmm/backend.h>
 #include <x86/const.h>
-#include <x86/mem/vmm/paging/internal/ops.h>
+#include <x86/mem/vmm/paging/internal/addr_space.h>
+#include <x86/mem/vmm/paging/internal/map.h>
 
 /* Static prototypes
  * ================= */
@@ -21,7 +22,6 @@ static const struct vmm_ops paging_ops = {
 	.remap = _paging_remap,
 	.virt_to_phys = _paging_virt_to_phys,
 	.phys_to_virt = _paging_phys_to_virt,
-	.flush_tlb = _paging_flush_tlb,
 };
 
 /* Backend registration */

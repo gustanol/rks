@@ -1,7 +1,6 @@
-#include <rks/lib/bitwise.h>
 #include <rks/lib/string.h>
 #include <x86/mem/vmm/paging/internal/flags.h>
-#include <x86/mem/vmm/paging/internal/ops.h>
+#include <x86/mem/vmm/paging/internal/map.h>
 
 /* Macro used to invalidate the Translation Lookaside Buffer (TLB)
  * =============================================================== */
