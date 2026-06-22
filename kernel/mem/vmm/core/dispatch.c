@@ -98,7 +98,7 @@ _vmm_dispatch_unmap ( ADDR_SPACE* space, vaddr_t virt_addr )
 	/* HHDM_offset */
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
-	return ( int ) g_vmm->ops_unmap ( space, virt_addr, hhdm_offset );
+	return ( int ) g_vmm->ops->unmap ( space, virt_addr, hhdm_offset );
 }
 
 /**
@@ -162,15 +162,9 @@ _vmm_dispatch_virt_to_phys ( ADDR_SPACE* space, vaddr_t virt_addr )
 vaddr_t
 _vmm_dispatch_phys_to_virt ( paddr_t phys_addr )
 {
-        /* Gets the HHDM offset to serve as the conversion base */
+	/* Gets the HHDM offset to serve as the conversion base */
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
-        /* Converts it */
-	return ( vaddr_t ) g_vmm->ops_phys_to_virt ( phys_addr, hhdm_offset );
-}
-
-void
-_vmm_dispatch_flush_tlb ( ADDR_SPACE* space, vaddr_t virt_addr, size_t size )
-{
-	g_vmm->ops->flush_tlb ( space, virt_addr, size );
+	/* Converts it */
+	return ( vaddr_t ) g_vmm->ops->phys_to_virt ( phys_addr, hhdm_offset );
 }
