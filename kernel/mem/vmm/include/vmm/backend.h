@@ -39,25 +39,18 @@ struct vmm_ops
 	void ( *switch_to_space ) ( ADDR_SPACE * );
 
 	/* Virtual address mapping within an address space */
-	int ( *map ) ( ADDR_SPACE *, vaddr_t, paddr_t, size_t, u32 flags );
+	int ( *map ) ( ADDR_SPACE *, vaddr_t, paddr_t, vaddr_t, u32 flags );
 
 	/* Virtual address unmapping within an address space */
-	int ( *unmap ) ( ADDR_SPACE *, vaddr_t );
+	int ( *unmap ) ( ADDR_SPACE *, vaddr_t, vaddr_t );
 
 	/* Remapping operation */
-	int ( *remap ) ( ADDR_SPACE *, vaddr_t, size_t, u32 flags );
+	int ( *remap ) ( ADDR_SPACE *, vaddr_t, vaddr_t, u32 flags );
 
 	/* Convertion of a virtual address to a physical one within an address space */
-	  paddr_t ( *virt_to_phys ) ( ADDR_SPACE *, vaddr_t );
+	  paddr_t ( *virt_to_phys ) ( ADDR_SPACE *, vaddr_t, vaddr_t );
 
 	  vaddr_t ( *phys_to_virt ) ( paddr_t, vaddr_t );
-
-	/**
-         * Flush all Translation Lookaside Buffer for this address space
-         * Cache clearing
-         * Useful after any modifications
-         **/
-	void ( *flush_tlb ) ( ADDR_SPACE *, vaddr_t, size_t );
 };
 
 #endif /* VMM_BACKEND_H */
