@@ -10,9 +10,6 @@
 #define REGISTER_VMM_BACKEND(NAME, INIT_FN, OPS) \
         REGISTER_SUBSYSTEM_BACKEND( ( SUBSYSTEM_TAG_VMM ), ( NAME ), ( INIT_FN ), ( OPS ) )
 
-/* Opaque address space type */
-typedef struct addr_space ADDR_SPACE;
-
 /**
  * VMM private operations
  *
