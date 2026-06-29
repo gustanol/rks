@@ -1,105 +1,104 @@
 #include <pmm/dispatch.h>
+#include <pmm/internal.h>
 
 /**
  * Private physical frame allocator
  * Private dispatcher
  *
- * Return -> `paddr_t`: Physical frame base address
+ * Return -> `kerr_t`: Global error type
  * Arguments:
- *   1. `void`
+ *   1. `paddr_t ** page`: Page double pointer to be modified
  * Callers:
  *   - `pmm_alloc_frame`
  **/
-paddr_t
-_pmm_dispatch_alloc_frame ( void )
+kerr_t
+_pmm_dispatch_alloc_frame ( paddr_t** page )
 {
 	/* Allocates a new physical frame */
-	paddr_t frame_phys_addr = g_pmm->ops->alloc_frame (  );
+	kerr_t ret = g_pmm->ops->alloc_frame ( page );
 
-	/* Not allocated */
-	if ( !frame_phys_addr )
-		return 0;
+	/* If correctly allocated */
+	if ( ret == KERR_OK )
 
-	/* Update the amount of frames used */
-	g_pmm->frames.used++;
+	        /* Updates the amount of used frames */
+		g_pmm->frames.used++;
 
-	/* Cast and return it */
-	return frame_phys_addr;
+	/* Returns the actual value */
+	return err;
 }
 
 /**
  * Private physical frame freer
  * Private dispatcher
  *
- * Return -> `int`: Return code
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `paddr_t phys_addr`: Frame physical address
  * Callers:
  *   - `pmm_free_frame`
  **/
-u32
+kerr_t
 _pmm_dispatch_free_frame ( paddr_t phys_addr )
 {
 	/* Frees the requested frame */
-	u32 res = g_pmm->ops->free_frame ( phys_addr );
+	kerr_t ret = g_pmm->ops->free_frame ( phys_addr );
 
 	/* Not freed */
-	if ( !res )
-		return 0;
+	if ( ret == KERR_OK )
 
-	/* Update the amount of frames used */
-	g_pmm->frames.used--;
+	        /* Updates the amount of frames used */
+		g_pmm->frames.used--;
 
-	/* Success response */
-	return 1;
+	/* Returns it */
+	return ret;
 }
 
 /**
  * Private region map freer
  * Private dispatcher
  *
- * Return -> `size_t`: Cleared frames
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `paddr_t phys_addr`: Region base physical address
- *   2. `size_t size`: Region size
+ *   2. `size_t ** size`: Region size to be modified to the size freed
  * Callers:
  *   - `pmm_region_free`
  **/
-size_t
-_pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
+kerr_t
+_pmm_dispatch_free_region ( paddr_t phys_addr, size_t** size )
 {
-	/* Gets the amount of frames that were correctly freed */
-	size_t cleared_frames = g_pmm->ops->free_region ( phys_addr, size );
+	/* Tries to free this region */
+	kerr_t ret = g_pmm->ops->free_region ( phys_addr, size );
 
-	/* Decrease the amount of used frames */
-	g_pmm->frames.used -= cleared_frames;
+	/* Decreases the amount of used frames */
+	g_pmm->frames.used -= **size;
 
-	/* Return it */
-	return cleared_frames;
+	/* Returning code */
+	return ret;
 }
 
 /**
  * Private region map setter
  * Private dispatcher
  *
- * Return -> `size_t`: Set frames
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `paddr_t phys_addr`: Region base physical address
- *   2. `size_t size`: Region size
+ *   2. `size_t ** size`: Region size to be modified to the size filled
  * Callers:
  *   - `pmm_region_used`
  **/
-size_t
-_pmm_dispatch_fill_region ( paddr_t phys_addr, size_t size )
+kerr_t
+_pmm_dispatch_fill_region ( paddr_t phys_addr, size_t** size )
 {
-	/* Gets the amount of frames that were correctly set */
-	size_t set_frames = g_pmm->ops->fill_region ( phys_addr, size );
+	/* Tries to fill this region */
+	kerr_t ret = g_pmm->ops->fill_region ( phys_addr, size );
 
 	/* Increases the amount of used frames */
-	g_pmm->frames.used += set_frames;
+	g_pmm->frames.used += **size;
 
-	/* Return it */
-	return set_frames;
+	/* Returns it */
+	return ret;
 }
 
 /**

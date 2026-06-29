@@ -1,5 +1,5 @@
-#ifndef BITMAP_PMM_DRIVER_H
-#define BITMAP_PMM_DRIVER_H
+#ifndef _KERNEL_SUBSYS_PMM_BITMAP_BACKEND_H
+#define _KERNEL_SUBSYS_PMM_BITMAP_BACKEND_H
 
 #include <rks/kernel/types.h>
 
@@ -10,4 +10,4 @@ struct bitmap_ctx
 	size_t size;
 };
 
-#endif /* BITMAP_PMM_DRIVER_H */
+#endif /* _KERNEL_SUBSYS_PMM_BITMAP_BACKEND_H */

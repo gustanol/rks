@@ -1,7 +1,6 @@
 #ifndef PMM_INTERNAL_H
 #define PMM_INTERNAL_H
 
-#include <rks/kernel/mem/pmm.h>
 #include <pmm/backend.h>
 
 /* PMM context struct */
@@ -23,6 +22,6 @@ struct pmm
 };
 
 /* PMM context struct pointer */
-extern struct pmm* g_pmm;
+extern struct pmm* const g_pmm;
 
 #endif /* PMM_INTERNAL_H */

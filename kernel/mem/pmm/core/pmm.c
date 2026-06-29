@@ -1,39 +1,55 @@
 #include <arch/const.h>
-#include <arch/mem/early_alloc.h>
 #include <pmm/internal.h>
-#include <rks/kernel/subsys/registry.h>
 #include <rks/kernel/klog/print.h>
-#include <rks/kernel/mem/pmm.h>
-#include <rks/kernel/mem/vmm.h>
+#include <rks/kernel/mem/pmm/init.h>
+#include <rks/kernel/mem/vmm/types.h>
+#include <rks/kernel/subsys/registry.h>
 #include <rks/lib/bitwise.h>
 
 /* Static prototypes
  * ================= */
 static void _pmm_fill_total_memory ( struct mmap_tag* mmap );
 
+/* Static PMM context structure */
+static struct pmm _g_pmm;
+
 /**
  * Physical Memory Allocation context initializer
- * Global
+ * Global init function
  *
- * Return -> `void`
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `struct mmap_tag* mmap`: Memory descriptors entries
  * Callers:
  *   - `rks_main`
  **/
-void
+kerr_t
 pmm_init ( struct mmap_tag* mmap )
 {
 	/* We can't continue if it's NULL */
 	if ( mmap == NULL )
-		return;
+		return KERR_INVAL;
 
-	/* Allocates the global state PMM structure */
-	g_pmm = ( struct pmm * ) _early_alloc ( sizeof ( struct pmm ), 0x10,
-	                                        FILL_ZEROS );
+	/* Sets the global pointer */
+	g_pmm = &_g_pmm;
 
-	/* Parses the memory and fills the structure */
-	_pmm_fill_total_memory ( mmap );
+	/* Total memory size in bytes */
+	g_pmm->memory.total = 0;
+
+	/* First loop to get all available memory */
+	for ( u32 i = 0; i < mmap->entry_count; i++ )
+	{
+		/* Only get available memory */
+		if ( mmap->entries[i].type == MEM_AVAILABLE )
+		{
+			/* Total memory */
+			g_pmm->memory.total += mmap->entries[i].len;
+		}
+	}
+
+	/* The amount of physical frames the memory has */
+	g_pmm->frames.total = g_pmm->memory.total / FRAME_SIZE;
+	g_pmm->frames.used = 0;
 
 	/* Gets the registered backend */
 	struct subsys_backend* backend = subsys_find_backend ( SUBSYS_TAG_PMM );
@@ -98,37 +114,7 @@ pmm_init ( struct mmap_tag* mmap )
 	          g_pmm->memory.total / 1024 / 1024 );
 	kprintf ( "PMM: Total frames = %lu\n", g_pmm->frames.total );
 	kprintf ( "PMM: Used frames = %lu\n", g_pmm->frames.used );
-}
 
-/*
- * Fills the global PMM state struct with the total memory info
- * Private helper
- *
- * Return -> `void`
- * Arguments:
- *   1. `struct mmap_tag* mmap`: Pointer to the MMAP tag
- *     - Passed by `pmm_init`
- * Callers:
- *   - `pmm_init`
- */
-static void
-_pmm_fill_total_memory ( struct mmap_tag* mmap )
-{
-	/* Total memory size in bytes */
-	g_pmm->memory.total = 0;
-
-	/* First loop to get all available memory */
-	for ( u32 i = 0; i < mmap->entry_count; i++ )
-	{
-		/* Only get available memory */
-		if ( mmap->entries[i].type == MEM_AVAILABLE )
-		{
-			/* Increment the total memory */
-			g_pmm->memory.total += mmap->entries[i].len;
-		}
-	}
-
-	/* The amount of physical frames the memory has */
-	g_pmm->frames.total = g_pmm->memory.total / FRAME_SIZE;
-	g_pmm->frames.used = 0;
+	/* OK */
+	return KERR_OK;
 }
