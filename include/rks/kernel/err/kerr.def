@@ -1,0 +1,12 @@
+/**
+ * kerr.def
+ *
+ * Error types definition
+ **/
+
+X(KERR_OK, "Success")
+X(KERR_NOMEM, "Out of memory")
+X(KERR_INVAL, "Invalid argument")
+X(KERR_BUSY, "Resource busy")
+X(KERR_NOTFOUND, "Resource not found")
+X(KERR_IO, "I/O error")
