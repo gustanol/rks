@@ -8,8 +8,8 @@ struct pmm
 {
 	struct
 	{
-		u64 total;
-		u64 used;
+		u32 total;
+		u32 used;
 	} frames;
 
 	struct

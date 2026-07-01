@@ -4,12 +4,12 @@
 #include <rks/kernel/err/kerr.h>
 #include "types.h"
 
-kerr_t pmm_alloc_frame ( paddr_t ** page );
-kerr_t pmm_alloc_frames ( size_t frames_needed, paddr_t ** first_page );
+paddr_t pmm_alloc_frame ( void );
+paddr_t pmm_alloc_frames ( size_t frames_needed );
 kerr_t pmm_free_frame ( paddr_t phys_addr );
 
-kerr_t pmm_free_region ( paddr_t phys_addr, size_t** size );
-kerr_t pmm_fill_region ( paddr_t phys_addr, size_t** size );
+u32 pmm_free_region ( paddr_t phys_addr, size_t size );
+u32 pmm_fill_region ( paddr_t phys_addr, size_t size );
 
 size_t pmm_get_total_memory ( void );
 

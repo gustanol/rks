@@ -6,11 +6,11 @@
 
 /* Dispatch function prototypes
  * ============================ */
-kerr_t _pmm_dispatch_alloc_frame ( paddr_t ** page );
+paddr_t _pmm_dispatch_alloc_frame ( void );
 kerr_t _pmm_dispatch_free_frame ( paddr_t phys_addr );
 
-kerr_t _pmm_dispatch_free_region ( paddr_t phys_addr, size_t** size );
-kerr_t _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t** size );
+u32 _pmm_dispatch_free_region ( paddr_t phys_addr, size_t size );
+u32 _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t size );
 
 size_t _pmm_dispatch_get_total_memory ( void );
 

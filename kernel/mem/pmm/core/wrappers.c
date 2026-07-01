@@ -5,16 +5,15 @@
  * Public frame allocator
  * Public wrapper
  *
- * Return -> `kerr_t`: Global error type
+ * Return -> `paddr_t`: Physical frame base address
  * Arguments:
- *   1. `paddr_t ** page`: Page double pointer to be modified
+ *   1. `void`
  * Callers:
  *   - Many
  **/
-kerr_t
-pmm_alloc_frame ( paddr_t** page )
+paddr_t
+pmm_alloc_frame ( void )
 {
-	/* Allocates the next available frame */
 	return _pmm_dispatch_alloc_frame ( page );
 }
 
@@ -23,8 +22,6 @@ pmm_alloc_frame ( paddr_t** page )
  * Public wrapper
  *
  * Return -> `kerr_t`: Global error type
- *   - 1 on success
- *   - 0 on fail
  * Arguments:
  *   1. `paddr_t phys_addr`: Frame physical base address
  * Callers:
@@ -33,7 +30,6 @@ pmm_alloc_frame ( paddr_t** page )
 kerr_t
 pmm_free_frame ( paddr_t phys_addr )
 {
-	/* Frees the passed frame (by its physical base address) */
 	return _pmm_dispatch_free_frame ( phys_addr );
 }
 
@@ -41,17 +37,16 @@ pmm_free_frame ( paddr_t phys_addr )
  * Public region map freer
  * Public wrapper
  *
- * Return -> `kerr_t`: Global error type
+ * Return -> `u32`: Freed frames
  * Arguments:
  *   1. `paddr_t phys_addr`: Region physical base address
- *   2. `size_t ** size`: Region size to be modified to the size freed
+ *   2. `size_t size`: Region size
  * Callers:
  *   - Many
  **/
-kerr_t
-pmm_free_region ( paddr_t phys_addr, size_t** size )
+u32
+pmm_free_region ( paddr_t phys_addr, size_t size )
 {
-	/* Frees the whole region */
 	return _pmm_dispatch_free_region ( phys_addr, size );
 }
 
@@ -59,17 +54,16 @@ pmm_free_region ( paddr_t phys_addr, size_t** size )
  * Public region map setter
  * Public wrapper
  *
- * Return -> `kerr_t`: Global error type
+ * Return -> `u32`: Filled frames
  * Arguments:
  *   1. `paddr_t phys_addr`: Region physical base address
- *   2. `size_t ** size`: Region size to be modified to the size filled
+ *   2. `size_t size`: Region size
  * Callers:
  *   - Many
  **/
-kerr_t
-pmm_fill_region ( paddr_t phys_addr, size_t** size )
+u32
+pmm_fill_region ( paddr_t phys_addr, size_t size )
 {
-	/* Frees the whole region */
 	return _pmm_dispatch_fill_region ( phys_addr, size );
 }
 

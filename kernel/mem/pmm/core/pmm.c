@@ -1,37 +1,40 @@
 #include <arch/const.h>
 #include <pmm/internal.h>
-#include <rks/kernel/klog/print.h>
+#include <rks/kernel/err/kerr.h>
 #include <rks/kernel/mem/pmm/init.h>
 #include <rks/kernel/mem/vmm/types.h>
 #include <rks/kernel/subsys/registry.h>
-#include <rks/lib/bitwise.h>
 
 /* Static prototypes
  * ================= */
 static void _pmm_fill_total_memory ( struct mmap_tag* mmap );
 
 /* Static PMM context structure */
-static struct pmm _g_pmm;
+static struct pmm i_pmm;
 
 /**
  * Physical Memory Allocation context initializer
  * Global init function
  *
- * Return -> `kerr_t`: Global error type
+ * Return -> `void`
  * Arguments:
  *   1. `struct mmap_tag* mmap`: Memory descriptors entries
  * Callers:
  *   - `rks_main`
  **/
-kerr_t
+void
 pmm_init ( struct mmap_tag* mmap )
 {
 	/* We can't continue if it's NULL */
 	if ( mmap == NULL )
-		return KERR_INVAL;
+	{
+		/*
+		   k_panic ( "mmap == NULL" );
+		 */
+	}
 
 	/* Sets the global pointer */
-	g_pmm = &_g_pmm;
+	g_pmm = &i_pmm;
 
 	/* Total memory size in bytes */
 	g_pmm->memory.total = 0;
@@ -109,11 +112,12 @@ pmm_init ( struct mmap_tag* mmap )
 	                          ( vaddr_t ) KERNEL_END -
 	                          ( vaddr_t ) KERNEL_START );
 
-	/* Logging */
-	kprintf ( "PMM: Available memory = %llu MiB\n",
-	          g_pmm->memory.total / 1024 / 1024 );
-	kprintf ( "PMM: Total frames = %lu\n", g_pmm->frames.total );
-	kprintf ( "PMM: Used frames = %lu\n", g_pmm->frames.used );
+	/* Logging
+	   kprintf ( "PMM: Available memory = %llu MiB\n",
+	   g_pmm->memory.total / 1024 / 1024 );
+	   kprintf ( "PMM: Total frames = %lu\n", g_pmm->frames.total );
+	   kprintf ( "PMM: Used frames = %lu\n", g_pmm->frames.used );
+	 */
 
 	/* OK */
 	return KERR_OK;

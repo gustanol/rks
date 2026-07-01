@@ -3,8 +3,8 @@
 #include <arch/mem/early_alloc.h>
 #include <pmm/backend.h>
 #include <rks/kernel/init/subsystem.h>
+#include <rks/kernel/mem/vmm/types.h>
 #include <rks/lib/bitwise.h>
-#include <rks/lib/string.h>
 
 /* Function prototypes
  * =================== */
@@ -12,10 +12,12 @@ static void __bitmap_init ( const struct pmm_init_backend_ctx* ctx );
 
 /* Operations
  * ========== */
-static kerr_t _bitmap_alloc_frame ( paddr_t ** page );
-static kerr_t _bitmap_free_frame ( paddr_t phys_addr );
-static kerr_t _bitmap_free_region ( paddr_t phys_addr, size_t** size );
-static kerr_t _bitmap_fill_region ( paddr_t phys_addr, size_t** size );
+static paddr_t _bitmap_alloc_frame ( u32 total_frames );
+static kerr_t _bitmap_free_frame ( paddr_t phys_addr, u32 total_frames );
+static u32 _bitmap_free_region ( paddr_t phys_addr, size_t size,
+                                 u32 total_frames );
+static u32 _bitmap_fill_region ( paddr_t phys_addr, size_t size,
+                                 u32 total_frames );
 
 /* Global context struct */
 static struct bitmap_ctx g_bitmap;
@@ -53,7 +55,7 @@ __bitmap_init ( const struct pmm_init_backend_ctx* ctx )
 	g_bitmap.size = BIT_TO_BYTE_SIZE ( ctx->frames_total );
 
 	/* Allocates the bitmap pointer */
-	g_bitmap.ptr = ( char * ) early_alloc ( g_bitmap->size );
+	g_bitmap.ptr = ( char * ) early_alloc ( g_bitmap.size );
 
 	/* Sets this region as used */
 	_bitmap_fill_region ( ( paddr_t )
@@ -65,35 +67,35 @@ __bitmap_init ( const struct pmm_init_backend_ctx* ctx )
  * Bitmap single frame allocator
  * Subsystem backend function
  *
- * Return -> `kerr_t`: Global error type
+ * Return -> `paddr_t`: Allocated page physical address
  * Arguments:
- *   1. `paddr_t ** page`: Pointer to the original pointer provided by the caller
- *     It allows the page physical address to be set
+ *   1. `u32 total_frames`: Total amount of memory frames
  * Callers:
  *   - PMM implementations
  **/
-kerr_t
-_bitmap_alloc_frame ( paddr_t** page )
+paddr_t
+_bitmap_alloc_frame ( u32 total_frames )
 {
 	/* Gets the index of the first available physical frame */
-	long frame_idx = FIND_FIRST_ZERO_BIT ( g_bitmap->ptr, g_bitmap->size );
+	u32 frame_idx = FIND_FIRST_ZERO_BIT ( g_bitmap.ptr, g_bitmap.size );
 
 	/* No available memory */
-	if ( frame_idx == -1 )
-		return KERR_NOMEM;
+	if ( frame_idx < 0 )
+		return ENCODE_KERR ( KERR_NOMEM );
+
+	/* Frame out of boundary */
+	if ( frame_idx > total_frames )
+		return ENCODE_KERR ( KERR_INTERNAL );
 
 	/* Mark this frame as used */
-	BITMAP_SET_BIT ( g_bitmap->ptr, frame_idx );
+	BITMAP_SET_BIT ( g_bitmap.ptr, frame_idx );
 
-	/* Verifies if the bit was set */
-	if ( !BITMAP_TEST_BIT ( g_bitmap->ptr, frame_idx ) )
-		return KERR_INTERNAL;
+	/* Verify if the bit was set */
+	if ( !BITMAP_TEST_BIT ( g_bitmap.ptr, frame_idx ) )
+		return ENCODE_KERR ( KERR_INTERNAL );
 
-	/* Sets the page physical address */
-	**page = ( frame_idx * FRAME_SIZE );
-
-	/* OK */
-	return KERR_OK;
+	/* Page physical address */
+	return ( frame_idx * FRAME_SIZE );
 }
 
 /**
@@ -103,20 +105,25 @@ _bitmap_alloc_frame ( paddr_t** page )
  * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `paddr_t phys_addr`: Frame physical address
+ *   2. `u32 total_frames`: Total amount of physical frames
  * Callers:
  *   - PMM implementations
  **/
 kerr_t
-_bitmap_free_frame ( paddr_t phys_addr )
+_bitmap_free_frame ( paddr_t phys_addr, u32 total_frames )
 {
 	/* Physical frame index */
 	u32 frame_idx = phys_addr / FRAME_SIZE;
 
+	/* Invalid physical address */
+	if ( frame_idx > total_frames )
+		return KERR_INVAL;
+
 	/* Mark this frame as used */
-	BITMAP_CLEAR_BIT ( g_bitmap->ptr, frame_idx );
+	BITMAP_CLEAR_BIT ( g_bitmap.ptr, frame_idx );
 
 	/* Verify if the bit was cleared */
-	if ( BITMAP_TEST_BIT ( g_bitmap->ptr, frame_idx ) )
+	if ( BITMAP_TEST_BIT ( g_bitmap.ptr, frame_idx ) )
 		return KERR_INTERNAL;
 
 	/* Otherwise, success */
@@ -127,60 +134,64 @@ _bitmap_free_frame ( paddr_t phys_addr )
  * Bitmap region map freer
  * Subsystem backend function
  *
- * Return -> `kerr_t`: Global error type
+ * Return -> `u32`: Successfully freed frames
  * Arguments:
  *   1. `paddr_t phys_addr`: Region base physical address
- *   2. `size_t ** size`: Initially, region size. Returned as region successfully freed
+ *   2. `size_t size`: Region size
+ *   3. `u32 total_frames`: Total frames provided by dispatch layer
  * Callers:
  *   - PMM imprementations
  **/
-kerr_t
-_bitmap_free_region ( paddr_t phys_addr, size_t** size )
+u32
+_bitmap_free_region ( paddr_t phys_addr, size_t size, u32 total_frames )
 {
 	/* Starting index of the physical frame */
 	u32 frame_idx = phys_addr / FRAME_SIZE;
 
 	/* Amount of frames this region has */
-	size_t frame_count = **size / FRAME_SIZE;
+	u32 frame_count = size / FRAME_SIZE;
+
+	/* Region out of boundary */
+	if ( frame_idx + frame_count > total_frames )
+		return ENCODE_KERR ( KERR_INVAL );
 
 	/* Clear this region on the bitmap */
-	size_t cleared_frames =
+	u32 cleared_frames =
 	        BITMAP_CLEAR_REGION ( g_bitmap.ptr, frame_idx, frame_count );
 
 	/* The amount of frames that were correctly cleared */
-	**size = cleared_frames;
-
-	/* OK */
-	return KERR_OK;
+	return cleared_frames;
 }
 
 /**
  * Bitmap region map setter
  * Subsystem backend function
  *
- * Return -> `kerr_t`: Global error type
+ * Return -> `u32`: Successfully set frames
  * Arguments:
  *   1. `paddr_t phys_addr`: Region base physical address
- *   2. `size_t ** size`: Initially, region size. Returned as region successfully freed
+ *   2. `size_t size`: Region size
+ *   3. `u32 total_frames`: Total frames provided by dispatch layer
  * Callers:
  *   - PMM imprementations
  **/
-size_t
-_bitmap_fill_region ( paddr_t phys_addr, size_t size )
+u32
+_bitmap_fill_region ( paddr_t phys_addr, size_t size, u32 total_frames )
 {
 	/* Physical frame starting index */
 	u32 frame_idx = phys_addr / FRAME_SIZE;
 
 	/* Frames amount */
-	size_t frame_count = **size / FRAME_SIZE;
+	u32 frame_count = size / FRAME_SIZE;
+
+	/* Region out of boundary */
+	if ( frame_idx + frame_count > total_frames )
+		return ENCODE_KERR ( KERR_INVAL );
 
 	/* Set all the bits of this region */
-	size_t set_frames =
-	        BITMAP_SET_REGION ( g_bitmap->ptr, frame_idx, frame_count );
+	u32 set_frames =
+	        BITMAP_SET_REGION ( g_bitmap.ptr, frame_idx, frame_count );
 
 	/* The amount of frames that were correctly set */
-	**page = set_frames;
-
-	/* OK */
-	return KERR_OK;
+	return set_frames;
 }

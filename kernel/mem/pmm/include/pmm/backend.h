@@ -14,17 +14,17 @@
 /* PMM backend operations */
 struct pmm_ops
 {
-	kerr_t ( *alloc_frame ) ( paddr_t ** );
-	kerr_t ( *free_frame ) ( paddr_t );
-	kerr_t ( *free_region ) ( paddr_t, size_t**  );
-	kerr_t ( *fill_region ) ( paddr_t, size_t**  );
+	paddr_t ( *alloc_frame ) ( u32 );
+	kerr_t ( *free_frame ) ( paddr_t, u32 );
+	size_t ( *free_region ) ( paddr_t, size_t, u32 );
+	size_t ( *fill_region ) ( paddr_t, size_t, u32 );
 };
 
 /* Context for init backend functions */
 struct pmm_init_backend_ctx
 {
 	size_t mem_total;
-	u64 frames_total;
+	u32 frames_total;
 };
 
 #endif /* _KERNEL_SUBSYS_PMM_BACKEND_H */

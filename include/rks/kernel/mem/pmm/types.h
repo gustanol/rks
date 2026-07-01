@@ -7,6 +7,6 @@
 #define FRAME_SIZE PAGE_SIZE
 
 /* Physical address type */
-typedef addr_t paddr_t;
+typedef u64 paddr_t;
 
 #endif /* _KERNEL_PMM_TYPES_H */
