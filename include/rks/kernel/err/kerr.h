@@ -1,6 +1,23 @@
 #ifndef _KERNEL_ERR_H
 #define _KERNEL_ERR_H
 
+#include <rks/kernel/mem/vmm/types.h>
+
+#define KERR_PTR_BASE 0xFFFFEE0000000000ULL
+#define KERR_PTR_MASK 0xFFFFFF0000000000ULL
+
+/* kerr_t -> tagged error convertor */
+#define ENCODE_KERR(err) \
+        ( ( void * ) ( KERR_PTR_BASE | ( ( vaddr_t ) ( err ) & 0xFFFFULL ) ) )
+
+/* Checks a valid encoded kerr_t */
+#define IS_KERR(ptr) \
+        ( ( ( vaddr_t ) ( ptr ) & KERR_PTR_MASK ) == KERR_PTR_BASE )
+
+/* Enconded kerr_t extractor */
+#define GET_KERR(ptr) \
+        ( ( kerr_t ) ( ( vaddr_t ) ( ptr ) & 0xFFFFULL ) )
+
 /* General error types */
 typedef enum
 {
