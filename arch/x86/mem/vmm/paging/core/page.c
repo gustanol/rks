@@ -32,17 +32,15 @@ struct page_walk
 
 /* Prototypes
  * ========== */
-static void __paging_walk ( ADDR_SPACE * space, vaddr_t virt_addr,
-                            paddr_t phys_addr, vaddr_t hhdm_offset,
-                            struct* page_walk walk, int create );
+static kerr_t __paging_walk ( ADDR_SPACE * space, vaddr_t virt_addr,
+                              paddr_t phys_addr, vaddr_t hhdm_offset,
+                              struct* page_walk walk, int create );
 
 /**
  * x86 VMM paging mapping
  * Subsystem backend function
  *
- * Return -> `int`:
- *   - 1: Everything went fine
- *   - 0: Not good at all
+ * Return -> `kerr_t`: Global kernel error types
  * Arguments:
  *   1. `ADDR_SPACE* space`: Address space to map the page in
  *   2. `vaddr_t virt_addr`: Virtual address
@@ -51,7 +49,7 @@ static void __paging_walk ( ADDR_SPACE * space, vaddr_t virt_addr,
  * Callers:
  *   - VMM implementations
  **/
-int
+kerr_t
 _paging_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
               vaddr_t hhdm_offset, u32 flags )
 {
@@ -59,8 +57,14 @@ _paging_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 	struct page_walk walk;
 
 	/* Calls the walker */
-	__paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags, &walk,
-	                1 );
+	kerr_t err =
+	        __paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags,
+	                        &walk,
+	                        1 );
+
+	/* Stops on error */
+	if ( err != KERR_OK )
+		return err;
 
 	/* Gets the PT entry */
 	pte_t* pt_entry = &walk->pt->entries[PT_IDX ( virt_addr )];
@@ -72,16 +76,14 @@ _paging_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 	INVLPG ( virt_addr );
 
 	/* Successful mapped */
-	return 1;
+	return KERR_OK;
 }
 
 /**
  * x86 VMM paging unmapping
  * Subsystem backend function
  *
- * Return -> `int`
- *   - 1: Only on address unmapping
- *   - 0: On failure (address not reached)
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `ADDR_SPACE* space`: Addess space the page table should be unmapped from
  *   2. `vaddr_t virt_addr`: Page virtual address
@@ -89,19 +91,21 @@ _paging_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
  * Callers:
  *   - VMM implementations
  **/
-int
+kerr_t
 _paging_unmap ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset )
 {
 	/* Stack-allocated `page_walk` struct */
 	struct page_walk walk;
 
 	/* Calls the walker */
-	__paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags, &walk,
-	                0 );
+	kerr_t err =
+	        __paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags,
+	                        &walk,
+	                        0 );
 
-	/* Something went wrong if PT is NULL */
-	if ( walk->pt == NULL )
-		return 0;
+	/* Stops on error */
+	if ( err != KERR_OK )
+		return err;
 
 	/* Gets the entry */
 	pte_t* pt_entry & walk->pt->entries[PT_IDX ( virt_addr )];
@@ -113,7 +117,7 @@ _paging_unmap ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset )
 	INVLPG ( vaddr );
 
 	/* Correctly unmapped */
-	return 1;
+	return KERR_OK;
 }
 
 /**
@@ -135,12 +139,14 @@ paddr_t _paging_virt_to_phys ( ADDR_SPACE * space, vaddr_t virt_addr,
 	struct page_walk walk;
 
 	/* Calls the walker */
-	__paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags, &walk,
-	                0 );
+	kerr_t err =
+	        __paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags,
+	                        &walk,
+	                        0 );
 
-	/* Something's wrong */
-	if ( walk->pt == NULL )
-		return 0;
+	/* Some error occurred */
+	if ( err != KERR_OK )
+		return ENCODE_KERR ( err );
 
 	/* Gets the correct entry */
 	pte_t* pt_entry & walk->pt->entries[PT_IDX ( virt_addr )];
@@ -171,7 +177,7 @@ _paging_phys_to_virt ( paddr_t phys_addr, vaddr_t hhdm_offset )
  * VMM paging internal walker
  * Private helper
  *
- * Return -> `void`
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `ADDR_SPACE* space`: Given address space
  *   2. `vaddr_t virt_addr`: Virtual address
@@ -182,11 +188,15 @@ _paging_phys_to_virt ( paddr_t phys_addr, vaddr_t hhdm_offset )
  * Callers:
  *   - Internal paging functions
  **/
-void
+kerr_t
 __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr,
                 paddr_t phys_addr, vaddr_t hhdm_offset,
                 struct* page_walk walk, int create )
 {
+	/* Can't proceed */
+	if ( walk == NULL )
+		return KERR_INVAL;
+
 	/* Page table indexes */
 	u16 pml4_idx = PML4_INDEX ( virt_addr );
 	u16 pdpt_idx = PDPT_INDEX ( virt_addr );
@@ -233,19 +243,14 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr,
                  * In this case, nothing else can be done
                  **/
 		if ( !create )
-			return;
+			return KERR_NOTMAPPED;
 
 		/* Allocates a new physical frame */
 		paddr_t pdpt_phys = pmm_alloc_frame (  );
 
 		/* Error allocating a physical address */
-		if ( !pdpt_phys )
-
-			/*
-			   k_panic ("error allocating a physical frame");
-		         */
-
-			return;
+		if ( IS_KERR ( pdpt_phys ) )
+			return GET_KERR ( pdpt_phys );
 
 		/* Initializes it zeroed */
 		pdpt = ( struct page_table * )
@@ -280,19 +285,14 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr,
 	{
 		/* Stops for lookups */
 		if ( !create )
-			return;
+			return KERR_NOTMAPPED;
 
 		/* Allocates a new frame table for the PD */
 		paddr_t pd_phys = pmm_alloc_frame (  );
 
 		/* Error: PD was not mapped */
-		if ( !pd_phys )
-
-			/*
-			   k_panic();
-		         */
-
-			return;
+		if ( IS_KERR ( pd_phys ) )
+			return GET_KERR ( pd_phys );
 
 		/* Initializes it zeroed */
 		pd = ( struct page_table * ) _paging_phys_to_virt ( pd_phys,
@@ -322,19 +322,14 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr,
 	{
 		/* Stops for non-allocators callers */
 		if ( !create )
-			return;
+			return KERR_NOTMAPPED;
 
 		/* Allocates a new physical frame for PT */
 		paddr_t pt_phys = pmm_alloc_frame (  );
 
 		/* PT not mapped */
-		if ( !pt_phys )
-
-			/*
-			   k_panic();
-		         */
-
-			return;
+		if ( IS_KERR ( pt_phys ) )
+			return GET_KERR ( pt_phys );
 
 		/* Initializes it zeroed */
 		pt = ( struct page_table * ) _paging_phys_to_virt ( pt_phys,
@@ -347,4 +342,7 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr,
 
 	/* Finally, sets PT physical address */
 	walk->pt = pt;
+
+	/* Everything's good */
+	return KERR_OK;
 }
