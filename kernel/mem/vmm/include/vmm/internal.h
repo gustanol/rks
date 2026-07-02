@@ -1,8 +1,8 @@
-#ifndef VMM_INTERNAL_H
-#define VMM_INTERNAL_H
+#ifndef _KERNEL_VMM_INTERNAL_H
+#define _KERNEL_VMM_INTERNAL_H
 
 #include "backend.h"
-#include <rks/kernel/mem/vmm.h>
+#include <rks/kernel/mem/vmm/types.h>
 
 /* VMM context struct */
 struct vmm
@@ -32,4 +32,4 @@ struct vmm
 /* VMM global state pointer */
 extern struct vmm* g_vmm;
 
-#endif /* VMM_INTERNAL_H */
+#endif /* _KERNEL_VMM_INTERNAL_H */

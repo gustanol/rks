@@ -14,11 +14,11 @@ enum vmm_flags
 };
 
 /* Mapping operations */
-int vmm_map ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
-              u32 flags );
-int vmm_unmap ( ADDR_SPACE * space, vaddr_t virt_addr );
-int vmm_remap ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
-                u32 flags );
+kerr_t vmm_map ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
+                 u32 flags );
+kerr_t vmm_unmap ( ADDR_SPACE * space, vaddr_t virt_addr );
+kerr_t vmm_remap ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
+                   u32 flags );
 
 /* Convert operations */
 paddr_t vmm_virt_to_phys ( ADDR_SPACE * space, vaddr_t virt_addr );

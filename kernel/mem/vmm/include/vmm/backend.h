@@ -1,8 +1,9 @@
-#ifndef VMM_BACKEND_H
-#define VMM_BACKEND_H
+#ifndef _KERNEL_VMM_BACKEND_H
+#define _KERNEL_VMM_BACKEND_H
 
+#include <rks/kernel/err/kerr.h>
+#include <rks/kernel/mem/vmm/types.h>
 #include <rks/kernel/subsys/registry.h>
-#include <rks/kernel/mem/vmm.h>
 
 #define SUBSYS_TAG_VMM 0x564D4D
 
@@ -30,24 +31,26 @@ struct vmm_ops
 	ADDR_SPACE* ( *create_space ) ( void );
 
 	/* Address space destruction */
-	void ( *destroy_space ) ( ADDR_SPACE * );
+	  kerr_t ( *destroy_space ) ( ADDR_SPACE * );
 
 	/* Address space switching */
-	void ( *switch_to_space ) ( ADDR_SPACE * );
+	  kerr_t ( *switch_to_space ) ( ADDR_SPACE * );
 
 	/* Virtual address mapping within an address space */
-	int ( *map ) ( ADDR_SPACE *, vaddr_t, paddr_t, vaddr_t, u32 flags );
+	  kerr_t ( *map ) ( ADDR_SPACE *, vaddr_t, paddr_t, vaddr_t,
+	                    u32 flags );
 
 	/* Virtual address unmapping within an address space */
-	int ( *unmap ) ( ADDR_SPACE *, vaddr_t, vaddr_t );
+	  kerr_t ( *unmap ) ( ADDR_SPACE *, vaddr_t, vaddr_t );
 
 	/* Remapping operation */
-	int ( *remap ) ( ADDR_SPACE *, vaddr_t, vaddr_t, u32 flags );
+	  kerr_t ( *remap ) ( ADDR_SPACE *, vaddr_t, vaddr_t, u32 flags );
 
-	/* Convertion of a virtual address to a physical one within an address space */
+	/**
+         * Convertions of virtual to physical address
+         **/
 	  paddr_t ( *virt_to_phys ) ( ADDR_SPACE *, vaddr_t, vaddr_t );
-
 	  vaddr_t ( *phys_to_virt ) ( paddr_t, vaddr_t );
 };
 
-#endif /* VMM_BACKEND_H */
+#endif /* _KERNEL_VMM_BACKEND_H */

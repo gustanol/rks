@@ -1,7 +1,10 @@
 #include <arch/const.h>
-#include <arch/mem/early_alloc.h>
 #include <rks/kernel/mem/vmm/init.h>
 #include <rks/kernel/subsys/registry.h>
+#include <vmm/internal.h>
+
+/* Static VMM context structure */
+static struct vmm i_vmm;
 
 /**
  * Virtual Memory Manager initializer
@@ -16,10 +19,8 @@
 void
 vmm_init ( void )
 {
-
-	/* VMM global state structure allocation */
-	g_vmm = ( struct vmm * ) _early_alloc ( sizeof ( struct vmm ), 0x10,
-	                                        FILL_ZEROS );
+	/* VMM global state structure pointer */
+	g_vmm = &i_pmm;
 
 	/* Gets the registered VMM backend (architecture-dependent) */
 	struct subsys_backend* backend =

@@ -1,4 +1,5 @@
 #include <vmm/dispatch.h>
+#include <vmm/internal.h>
 
 /**
  * Private address space creator
@@ -14,50 +15,48 @@ ADDR_SPACE*
 _vmm_dispatch_create_space ( void )
 {
 	/* Calls the operation function to create a new space */
-	return ( ADDR_SPACE * ) g_vmm->ops->create_space (  );
+	return g_vmm->ops->create_space (  );
 }
 
 /**
  * Private address space destroyer
  * Private dispatcher
  *
- * Return -> `void`
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `ADDR_SPACE* space`: Space to be destroyed
  * Callers:
  *   - `vmm_destroy_space`
  **/
-void
+kerr_t
 _vmm_dispatch_destroy_space ( ADDR_SPACE* space )
 {
 	/* Destroys this space */
-	g_vmm->ops->destroy_space ( space );
+	return g_vmm->ops->destroy_space ( space );
 }
 
 /**
  * Private address space switcher
  * Private dispatcher
  *
- * Return -> `void`
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `ADDR_SPACE* space`: Address space to be switched to
  * Callers:
  *   - `vmm_switch_to_space`
  **/
-void
+kerr_t
 _vmm_dispatch_switch_to_space ( ADDR_SPACE* space )
 {
 	/* Switches the caller core to this space */
-	g_vmm->ops->switch_to_space ( space );
+	return g_vmm->ops->switch_to_space ( space );
 }
 
 /**
  * Private virtual memory mapper
  * Private dispatcher
  *
- * Return -> `int`:
- *   - 1: Successfully mapped
- *   - 0: Not mapped
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `ADDR_SPACE* space`: Address space to map the address to
  *   2. `vaddr_t virt_addr`: Virtual address to map
@@ -66,7 +65,7 @@ _vmm_dispatch_switch_to_space ( ADDR_SPACE* space )
  * Callers:
  *   - `vmm_map`
  **/
-int
+kerr_t
 _vmm_dispatch_map ( ADDR_SPACE* space, vaddr_t virt_addr,
                     paddr_t phys_addr, u32 flags )
 {
@@ -74,40 +73,35 @@ _vmm_dispatch_map ( ADDR_SPACE* space, vaddr_t virt_addr,
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
 	/* Calls the operation function */
-	return ( int ) g_vmm->ops->map ( space, virt_addr, phys_addr,
-	                                 hhdm_offset, flags );
+	return g_vmm->ops->map ( space, virt_addr, phys_addr,
+	                         hhdm_offset, flags );
 }
 
 /**
  * Private virtual memory unmapper
  * Private dispatcher
  *
- * Return -> `int`:
- *   - 1: Successfully unmapped
- *   - 0: Not unmapped
- *     - Probably, any upper layer were not mapped yet
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `ADDR_SPACE* space`: Address space to unmap the address from
  *   2. `vaddr_t virt_addr`: Virtual address
  * Callers:
  *   - `vmm_unmap`
  **/
-int
+kerr_t
 _vmm_dispatch_unmap ( ADDR_SPACE* space, vaddr_t virt_addr )
 {
 	/* HHDM_offset */
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
-	return ( int ) g_vmm->ops->unmap ( space, virt_addr, hhdm_offset );
+	return g_vmm->ops->unmap ( space, virt_addr, hhdm_offset );
 }
 
 /**
  * Private virtual memory remapper
  * Private dispatcher
  *
- * Return -> `int`:
- *   - 1: Successfully remapped
- *   - 0: Not remapped
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `ADDR_SPACE* space`: Address space to map the address to
  *   2. `vaddr_t virt_addr`: Virtual address to map
@@ -116,7 +110,7 @@ _vmm_dispatch_unmap ( ADDR_SPACE* space, vaddr_t virt_addr )
  * Callers:
  *   - `vmm_map`
  **/
-int
+kerr_t
 _vmm_dispatch_remap ( ADDR_SPACE* space, vaddr_t virt_addr,
                       paddr_t phys_addr, u32 flags )
 {
@@ -145,8 +139,7 @@ _vmm_dispatch_virt_to_phys ( ADDR_SPACE* space, vaddr_t virt_addr )
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
 	/* Converts the virtual address to its associated physical one */
-	return ( paddr_t ) g_vmm->ops->virt_to_phys ( space, virt_addr,
-	                                              hhdm_offset );
+	return g_vmm->ops->virt_to_phys ( space, virt_addr, hhdm_offset );
 }
 
 /**
@@ -166,5 +159,5 @@ _vmm_dispatch_phys_to_virt ( paddr_t phys_addr )
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
 	/* Converts it */
-	return ( vaddr_t ) g_vmm->ops->phys_to_virt ( phys_addr, hhdm_offset );
+	return g_vmm->ops->phys_to_virt ( phys_addr, hhdm_offset );
 }

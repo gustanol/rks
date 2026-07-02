@@ -4,7 +4,7 @@
 #include <rks/kernel/types.h>
 
 /* Virtual address corresponding type */
-typedef addr_t vaddr_t;
+typedef u64 vaddr_t;
 
 /* Opaque address space type */
 typedef struct address_space ADDR_SPACE;
