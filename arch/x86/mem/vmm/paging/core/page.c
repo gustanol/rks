@@ -67,10 +67,14 @@ _paging_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 		return err;
 
 	/* Gets the PT entry */
-	pte_t* pt_entry = &walk->pt->entries[PT_IDX ( virt_addr )];
+	pte_t* pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
+
+	/* PT entry already set */
+	if ( IS_PRESENT ( *pt_entry ) )
+		return RKERR_EXIST;
 
 	/* Passes the physical address to PT entry with its flags */
-	*pt_entry = phys_addr | flags;
+	*pt_entry = phys_addr | ( PAGE_PRESENT & flags );
 
 	/* Invalidates any cache for this page */
 	INVLPG ( virt_addr );
@@ -108,15 +112,65 @@ _paging_unmap ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset )
 		return err;
 
 	/* Gets the entry */
-	pte_t* pt_entry & walk->pt->entries[PT_IDX ( virt_addr )];
+	pte_t* pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
 
-	/* Sets it with zeros */
+	/* PT not present (can't be unmapped) */
+	if ( !IS_PRESENT ( *pt_entry ) )
+		return KERR_NOTMAPPED;
+
+	/* Fill it with zeros */
 	memset ( pt_entry, 0, PAGE_SIZE );
 
 	/* Invalidates cache */
 	INVLPG ( vaddr );
 
 	/* Correctly unmapped */
+	return KERR_OK;
+}
+
+/**
+ * x86 VMM paging remapping
+ * Subsystem backend function
+ *
+ * Return -> `kerr_t`: Global kernel error types
+ * Arguments:
+ *   1. `ADDR_SPACE* space`: Address space where the page should be remapped
+ *   2. `vaddr_t virt_addr`: Virtual address
+ *   3. `paddr_t phys_addr`: Physical address
+ *   4. `vaddr_t hhdm_offset`: Kernel HHDM offset
+ * Callers:
+ *   - VMM implementations
+ **/
+kerr_t
+_paging_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
+                vaddr_t hhdm_offset, u32 flags )
+{
+	struct page_walk walk;
+
+	/* As remapping operation, walker can't allocate new pages */
+	kerr_t err =
+	        __paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags,
+	                        &walk,
+	                        0 );
+
+	/* Stops on error */
+	if ( err != KERR_OK )
+		return err;
+
+	/* Gets the PT entry */
+	pte_t* pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
+
+	/* PT entry not set. Should be mapped first */
+	if ( !IS_PRESENT ( *pt_entry ) )
+		return KERR_NOTMAPPED;
+
+	/* Passes the new physical address to PT entry with its flags */
+	*pt_entry = phys_addr | ( PAGE_PRESENT & flags );
+
+	/* Invalidates any cache */
+	INVLPG ( virt_addr );
+
+	/* Successful remapped */
 	return KERR_OK;
 }
 
@@ -150,6 +204,8 @@ paddr_t _paging_virt_to_phys ( ADDR_SPACE * space, vaddr_t virt_addr,
 
 	/* Gets the correct entry */
 	pte_t* pt_entry & walk->pt->entries[PT_IDX ( virt_addr )];
+
+
 
 	/* Masks its flags to get the physical address */
 	return ( paddr_t ) ADDR_MASK ( *pt_entry );

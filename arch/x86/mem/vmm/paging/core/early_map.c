@@ -22,7 +22,7 @@ __early_get_or_alloc_table ( paddr_t* entry )
 {
 
 	/* Is this entry already present? */
-	if ( !( *entry & PAGE_PRESENT ) )
+	if ( !IS_PRESENT ( *entry ) )
 	{
 
 		/* Allocates a new page for this entry */

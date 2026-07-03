@@ -1,5 +1,5 @@
-#ifndef X86_PAGING_FLAGS
-#define X86_PAGING_FLAGS
+#ifndef _X86_PAGING_FLAGS
+#define _X86_PAGING_FLAGS
 
 #define PAGE_ENTRIES 512
 
@@ -28,7 +28,7 @@
 #define ADDR_MASK(ADDR) \
         ( ( ADDR ) & ( PAGE_ADDR_MASK ) )
 
-/* Main flags */
+/* Core flags */
 #define PAGE_PRESENT ( 1ULL << 0 )
 #define PAGE_RW ( 1ULL << 1 )
 #define PAGE_US ( 1ULL << 2 )
@@ -38,4 +38,8 @@
 #define PAGE_HUGE ( 1ULL << 7 )
 #define PAGE_XD ( 1ULL << 63 )
 
-#endif /* X86_PAGING_FLAGS */
+/* Helper macro to identify already present entries */
+#define IS_PRESENT(ENT) \
+        ( ( ENT ) & PAGE_PRESENT )
+
+#endif /* _X86_PAGING_FLAGS */
