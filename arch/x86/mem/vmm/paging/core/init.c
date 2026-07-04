@@ -1,19 +1,19 @@
 #include <vmm/backend.h>
 #include <x86/const.h>
 #include <x86/mem/vmm/paging/internal/addr_space.h>
+#include <x86/mem/vmm/paging/internal/early_map.h>
 #include <x86/mem/vmm/paging/internal/map.h>
 
 /* Static prototypes
  * ================= */
 void __paging_init ( ADDR_SPACE * kernel_address_space );
-void _paging_build_hhdm ( ADDR_SPACE * kernel_address_space );
-void _paging_identity_unmap ( ADDR_SPACE * kernel_address_space );
+void _paging_map_hhdm ( ADDR_SPACE * kernel_address_space );
 
 /* Paging backend operations setting
  * ================================= */
 static const struct vmm_ops paging_ops = {
-	.early_build_hhdm = _paging_build_hhdm,
-	.early_identity_unmap = _paging_identity_unmap,
+	.early_build_hhdm = _paging_map_hhdm,
+	.unmap_identity = _paging_unmap_identity,
 	.create_space = _paging_create_space,
 	.destroy_space = _paging_destroy_space,
 	.switch_to_space = _paging_switch_to_space,
@@ -59,17 +59,17 @@ __paging_init ( ADDR_SPACE* kernel_address_space )
 }
 
 /**
- * Memory Higher Half Direct Mapping builder
+ * Kernel Higher Half Direct Mapping mapper
  * Backend operation
  *
  * Return -> `void`
  * Arguments:
- *   1. `ADDR_SPACE* kernel_address_space`: Address space containing the kernel PML4
+ *   1. `ADDR_SPACE* kernel_address_space`: Kernel address space
  * Callers:
- *  - VMM implementation
+ *   - `vmm_init`
  **/
 void
-_paging_build_hhdm ( ADDR_SPACE* kernel_address_space )
+_paging_map_hhdm ( ADDR_SPACE* kernel_address_space )
 {
 	/* Memory size to be mapped */
 	size_t memory_size = pmm_get_total_memory (  );
