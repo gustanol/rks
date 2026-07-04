@@ -1,15 +1,8 @@
-#ifndef EARLY_ALLOC_H
-#define EARLY_ALLOC_H
+#ifndef _X86_MEM_EARLY_ALLOC_H
+#define _X86_MEM_EARLY_ALLOC_H
 
-#include <rks/types.h>
+#include <rks/kernel/types.h>
 
-enum alloc_flags
-{
-	FILL_ZEROS,
-	FILL_ONES,
-	FILL_NOTHING,
-};
+void* _early_alloc ( size_t size, u32 align );
 
-void* _early_alloc ( size_t size, u32 align, enum alloc_flags alloc_flag );
-
-#endif /* EARLY_ALLOC_H */
+#endif /* _X86_MEM_EARLY_ALLOC_H */
