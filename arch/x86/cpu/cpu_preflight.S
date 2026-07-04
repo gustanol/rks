@@ -27,11 +27,11 @@ check_a20:
 	movl $0x0000000, %esi
 	movl $0x1000000, %edi
 
-	/* Moves them to other registers to restore later */
+	/* Move them to other registers to restore later */
 	movl (%esi), %eax
 	movl (%esi), %ebx
 
-	/* Sets them different values */
+	/* Sets them with different values */
 	movl $0x10000000, (%esi)
         movl $0x50000000, (%edi)
 
@@ -52,7 +52,7 @@ check_a20:
 
 _enable_a20:
 
-	/* Disables interrupts */
+	/* Disable interrupts */
 	cli
 
 	/* Enables it via port 0x92 */
