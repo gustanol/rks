@@ -1,7 +1,9 @@
+#include <rks/kernel/mem/pmm/types.h>
 #include <rks/kernel/sections.h>
 #include <rks/lib/bitwise.h>
 #include <x86/const.h>
 #include <x86/mem/early_alloc.h>
+#include <x86/mem/vmm/paging/internal/early_map.h>
 #include <x86/mem/vmm/paging/internal/flags.h>
 
 /**
@@ -26,8 +28,7 @@ __early_get_or_alloc_table ( paddr_t* entry )
 	{
 
 		/* Allocates a new page for this entry */
-		paddr_t phys_addr =
-		        __early_phys_alloc ( PAGE_SIZE, PAGE_SIZE, FILL_ZEROS );
+		paddr_t phys_addr = __early_phys_alloc ( PAGE_SIZE, PAGE_SIZE );
 
 		/* Subtracts the virtual offset to get the physical address */
 		phys_addr -= KERNEL_VIRT_OFF;
@@ -74,7 +75,7 @@ __early_map_page ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr,
 
 /**
  * Early page range mapper
- * Private helper
+ * Paging private helper
  *
  * Return -> `void`
  * Arguments:
