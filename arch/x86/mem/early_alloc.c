@@ -7,7 +7,7 @@ extern void BOOTSTRAP_ARENA_START ( void );
 extern void BOOTSTRAP_ARENA_END ( void );
 
 /* Next available address */
-u64 next_addr = ( u64 ) BOOTSTRAP_ARENA_START;
+__BOOT_DATA u64 next_addr = ( u64 ) BOOTSTRAP_ARENA_START;
 
 /*
  * Early boot allocator
