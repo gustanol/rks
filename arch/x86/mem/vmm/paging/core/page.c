@@ -33,8 +33,8 @@ struct page_walk
 /* Prototypes
  * ========== */
 static kerr_t __paging_walk ( ADDR_SPACE * space, vaddr_t virt_addr,
-                              paddr_t phys_addr, vaddr_t hhdm_offset,
-                              struct* page_walk walk, int create );
+                              vaddr_t hhdm_offset, struct* page_walk walk,
+                              int create );
 
 /**
  * x86 VMM paging mapping
@@ -57,10 +57,8 @@ _paging_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 	struct page_walk walk;
 
 	/* Calls the walker */
-	kerr_t err =
-	        __paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags,
-	                        &walk,
-	                        1 );
+	kerr_t err = __paging_walk ( space, virt_addr, hhdm_offset, flags,
+	                             &walk, 1 );
 
 	/* Stops on error */
 	if ( err != KERR_OK )
@@ -102,10 +100,8 @@ _paging_unmap ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset )
 	struct page_walk walk;
 
 	/* Calls the walker */
-	kerr_t err =
-	        __paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags,
-	                        &walk,
-	                        0 );
+	kerr_t err = __paging_walk ( space, virt_addr, hhdm_offset, flags,
+	                             &walk, 0 );
 
 	/* Stops on error */
 	if ( err != KERR_OK )
@@ -148,10 +144,8 @@ _paging_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 	struct page_walk walk;
 
 	/* As remapping operation, walker can't allocate new pages */
-	kerr_t err =
-	        __paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags,
-	                        &walk,
-	                        0 );
+	kerr_t err = __paging_walk ( space, virt_addr, hhdm_offset, flags,
+	                             &walk, 0 );
 
 	/* Stops on error */
 	if ( err != KERR_OK )
@@ -175,6 +169,60 @@ _paging_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 }
 
 /**
+ * x86 identity unmapping
+ * Subsystem backend function
+ *
+ * Return -> `kerr_t`: Global error type
+ * Arguments:
+ *   1. `ADDR_SPACE* space`: Kernel address space
+ * Callers:
+ *   - VMM implementations
+ **/
+kerr_t
+_paging_unmap_identity ( ADDR_SPACE* kernel_address_space )
+{
+	/* Kernel AS PML4 */
+	struct page_table* pml4 =
+	        ( struct page_table * ) _paging_phys_to_virt ( space->pml4_phys,
+	                                                       hhdm_offset );
+
+	/**
+         * The identity mapping was mapped the following way:
+         *   - 1 GiB PDPT huge page
+         *   - Starting at 0x0 (0x0000000000000000)
+         *   - PLM4[0] and PDPT[0]
+         **/
+
+	/* Get the PML4 entry */
+	pte_t* pml4_entry = &pml4->entries[0];
+
+	/**
+         * If it's not present, it was already unmapped
+         * This will avoid duplicate callings
+         **/
+	if ( !IS_PRESENT ( *pml4_entry ) )
+		return KERR_NOTMAPPED;
+
+	/* Get the PDPT page table */
+	struct page_table* pdpt = ( struct page_table * )
+	        _paging_phys_to_virt ( ADDR_MASK ( *pml4_entry ), hhdm_offset );
+
+	/* And its entry */
+	pte_t* pdpt_entry = &pdpt->entries[0];
+
+	/* The same present verification as above */
+	if ( !IS_PRESENT ( *pdpt_entry ) )
+		return KERR_NOTMAPPED;
+
+	/* Finally, we can zero them */
+	memset ( pdpt_entry, 0, PAGE_SIZE );
+	memset ( pml4_entry, 0, PAGE_SIZE );
+
+	/* Everything's good */
+	return KERR_OK;
+}
+
+/**
  * Physical address conversor
  * Subsystem backend function
  *
@@ -193,10 +241,8 @@ paddr_t _paging_virt_to_phys ( ADDR_SPACE * space, vaddr_t virt_addr,
 	struct page_walk walk;
 
 	/* Calls the walker */
-	kerr_t err =
-	        __paging_walk ( space, virt_addr, phys_addr, hhdm_offset, flags,
-	                        &walk,
-	                        0 );
+	kerr_t err = __paging_walk ( space, virt_addr, hhdm_offset, flags,
+	                             &walk, 0 );
 
 	/* Some error occurred */
 	if ( err != KERR_OK )
@@ -245,8 +291,7 @@ _paging_phys_to_virt ( paddr_t phys_addr, vaddr_t hhdm_offset )
  *   - Internal paging functions
  **/
 kerr_t
-__paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr,
-                paddr_t phys_addr, vaddr_t hhdm_offset,
+__paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset,
                 struct* page_walk walk, int create )
 {
 	/* Can't proceed */
@@ -281,7 +326,7 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr,
 	pte_t* pml4_entry = &pml4->entries[pml4_idx];
 
 	/* PDPT was already mapped */
-	if ( *pml4_entry & PAGE_PRESENT )
+	if ( IS_PRESENT ( *pml4_entry ) )
 
 	        /* Masks its flags to get the PDPT address */
 		pdpt = ( struct page_table * )
@@ -329,7 +374,7 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr,
 	pte_t* pdpt_entry = &pdpt->entries[pdpt_idx];
 
 	/* PD is already mapped */
-	if ( *pdpt_entry & PAGE_PRESENT )
+	if ( IS_PRESENT ( *pdpt_entry ) )
 
 	        /* Masks the entry flags to get the PD's address */
 		pd = ( struct page_table * )
@@ -366,7 +411,7 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr,
 	pte_t* pd_entry = &pd->entries[pd_idx];
 
 	/* PT was already mapped */
-	if ( *pd_entry & PAGE_PRESENT )
+	if ( IS_PRESENT ( *pd_entry ) )
 
 	        /* Ignores the flags */
 		pt = ( struct page_table * )

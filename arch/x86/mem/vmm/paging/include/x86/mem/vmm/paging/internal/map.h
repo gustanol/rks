@@ -10,6 +10,7 @@ kerr_t _paging_map ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
                      vaddr_t hhdm_offset, u32 flags );
 kerr_t _paging_unmap ( ADDR_SPACE * space, vaddr_t virt_addr,
                        vaddr_t hhdm_offset );
+kerr_t _paging_unmap_identity ( ADDR_SPACE * kernel_address_space );
 kerr_t _paging_remap ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
                        vaddr_t hhdm_offset, u32 flags );
 
