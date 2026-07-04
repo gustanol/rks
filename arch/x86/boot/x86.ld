@@ -7,17 +7,14 @@ KERNEL_PHYS_BASE = ALIGN(0x100000, 0x1000);
 KERNEL_VIRT_OFF = ALIGN(0xFFFFFFFF80000000, 0x1000);
 KERNEL_VIRT_BASE = KERNEL_VIRT_OFF + KERNEL_PHYS_BASE;
 HHDM_BASE = ALIGN(0xFFFFFFFFC0000000, 0x1000);
-
-/* Physical address of "_early_alloc" */
-__early_phys_alloc = _early_alloc - KERNEL_VIRT_OFF;
+BOOSTRAP_ARENA_SIZE = 0x100000;
 
 SECTIONS
 {
 	. = KERNEL_PHYS_BASE;
 	KERNEL_START = KERNEL_VIRT_BASE;
 
-	/* Identity mapped code running on physical addresses
-	 * ================================================== */
+	/* Identity-mapped code running on physical addresses */
 	.bootstrap.text : ALIGN(0x1000) {
 		*(.bootstrap.text)
 		*(.bootstrap.text.*)
@@ -37,6 +34,14 @@ SECTIONS
 		*(.bootstrap.bss)
 		*(.bootstrap.bss.*)
 	}
+
+	.bootstrap.arena (NOLOAD) : ALIGN(0x1000) {
+		BOOTSTRAP_ARENA_START = .;
+		. += BOOTSTRAP_ARENA_SIZE;
+		BOOTSTRAP_ARENA_END = .;
+	}
+
+	. = ALIGN(0x1000);
 
 	/* Shift VMA to higher half */
 	. += KERNEL_VIRT_OFF;
