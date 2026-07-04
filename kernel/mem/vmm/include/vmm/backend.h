@@ -21,12 +21,6 @@ struct vmm_ops
 	/* Early higher half direct mapping constructor */
 	void ( *early_build_hhdm ) ( ADDR_SPACE * );
 
-	/**
-         * Early identity unmapping
-         * It can be shared between architectures
-         **/
-	void ( *early_identity_unmap ) ( ADDR_SPACE * );
-
 	/* Address space creation */
 	ADDR_SPACE* ( *create_space ) ( void );
 
@@ -42,6 +36,9 @@ struct vmm_ops
 
 	/* Virtual address unmapping within an address space */
 	  kerr_t ( *unmap ) ( ADDR_SPACE *, vaddr_t, vaddr_t );
+
+	/* Identity unmapping */
+	  kerr_t ( *unmap_identity ) ( ADDR_SPACE * );
 
 	/* Remapping operation */
 	  kerr_t ( *remap ) ( ADDR_SPACE *, vaddr_t, vaddr_t, u32 flags );
