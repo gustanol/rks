@@ -104,3 +104,26 @@ _early_map_range ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr,
 		__early_map_page ( pml4, virt_addr + offset, phys_addr + offset,
 	                           flags );
 }
+
+/**
+ * Early kernel higher-half mapper
+ * Private helper
+ *
+ * Return -> `void`
+ * Arguments:
+ *   1. `paddr_t pml4_phys`: Kernel PML4 physical address
+ * Callers:
+ *   -
+ **/
+__BOOT_TEXT void
+_map_kernel_hh ( paddr_t pml4_phys )
+{
+	/* Calculates the kernel size */
+	size_t kernel_size =
+	        ( ( vaddr_t ) KERNEL_END - ( vaddr_t ) KERNEL_START );
+
+	/* Maps the whole mapping */
+	_early_map_range ( &pml4_phys, ( vaddr_t ) KERNEL_VIRT_BASE,
+	                   ( paddr_t ) KERNEL_PHYS_BASE, kernel_size,
+	                   ( PAGE_PRESENT | PAGE_WRITE ) );
+}
