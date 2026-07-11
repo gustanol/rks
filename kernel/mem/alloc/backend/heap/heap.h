@@ -10,6 +10,10 @@
 #define CHUNK_SIZE(SIZE) \
         ( ( SIZE ) - sizeof ( struct chunk_meta ) )
 
+/* Least chunk size to determine heap growth */
+#define LEAST_CHUNK_SIZE(SIZE) \
+        ( ( SIZE ) + sizeof ( struct chunk_meta ) )
+
 /* Ignores the starting metadata of a chunk */
 #define META_SHIFT(ADDR) \
         ( ( char * ) ( ADDR ) + sizeof ( struct chunk_meta ) )

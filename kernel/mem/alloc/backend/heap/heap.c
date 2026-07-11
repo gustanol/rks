@@ -29,6 +29,9 @@ const struct alloc_backend backend = {
 /* Register this backend */
 REGISTER_ALLOC_BACKEND ( backend );
 
+/* Prototypes */
+static vaddr_t __heap_grow ( size_t least_size );
+
 /**
  * Heap backend initializer
  * Backend function
@@ -46,16 +49,8 @@ __heap_init ( struct heap* heap )
 	if ( heap->ready )
 		return KERR_REXIST;
 
-	/* HEAP: Size and physical allocation */
-	size_t frames_needed = FRAMES_BY_SIZE ( HEAP_INITIAL_SIZE );
-	paddr_t phys_addr = pmm_alloc_frames ( frames_needed );
-
-	/* Physical frames not allocated correctly */
-	if ( IS_KERR ( phys_addr ) )
-		return GET_KERR ( phys_addr );
-
-	/* Physical -> Virtual Address */
-	vaddr_t virt_heap_base = vmm_phys_to_virt ( phys_addr );
+	/* Allocate the initial heap region */
+	vaddr_t virt_heap_base = __heap_grow ( HEAP_INITIAL_SIZE );
 
 	/* Return any error */
 	if ( IS_KERR_ ( virt_heap_base ) )
@@ -99,7 +94,7 @@ _heap_malloc ( struct heap* heap, size_t size )
 		return ENCODE_KERR ( KERR_INVAL );
 
 	/* Current chunk's metadata */
-	struct chunk_meta* current_chunk = heap->base;
+	struct chunk_meta* current_chunk = ( struct chunk_meta * ) heap->base;
 
 	/* Loop 'til manual break */
 	for ( ;; )
@@ -150,9 +145,36 @@ _heap_malloc ( struct heap* heap, size_t size )
 		current_chunk = current_chunk->next;
 
 		/* Tries growing the heap size if there's no a next chunk */
-		/* NOT IMPLEMENTED YET */
 		if ( current_chunk == NULL )
-			__heap_grow (  );
+		{
+			/* At least one frame */
+			vaddr_t virt_heap_base =
+			        __heap_grow ( LEAST_CHUNK_SIZE ( size ) );
+
+			/* Some error occurred */
+			if ( IS_KERR ( virt_heap_base ) )
+				return ENCODE_KERR ( GET_KERR
+			                             ( virt_heap_base ) );
+
+			heap->ready = 0;        /* Locks it */
+
+			/* Updated current frame */
+			heap->current = virt_heap_base;
+
+			/* New limit */
+			heap->limit += FRAMES_BY_SIZE ( size );
+
+			heap->ready = 1;        /* Unlocks it again */
+
+			/* Sets its metadata */
+			struct chunk_meta* meta =
+			        ( struct chunk_meta * ) heap->current;
+
+			/* Sets it */
+			meta->size = CHUNK_SIZE ( size );
+			meta->is_free = 1;      /* It's free for the next iteratiion */
+			meta->next = NULL;      /* The last element */
+		}
 	}
 
 	/**
@@ -161,4 +183,41 @@ _heap_malloc ( struct heap* heap, size_t size )
          * This shound't be achievable considering errors during heap growns are treated before
          **/
 	return ENCODE_KERR ( KERR_NOMEM );
+}
+
+/**
+ * Heap helper used to grow the region
+ * Private backend helper
+ *
+ * Return -> `vaddr_t`: New allocation base address
+ * Arguments:
+ *   1. `size_t least_size`: As it grows by frames, the minimum size to be grown
+ * Callers:
+ *   - Internal heap backend functions
+ **/
+vaddr_t
+__heap_grow ( size_t least_size )
+{
+
+	/* HEAP: Size and physical allocation */
+	size_t frames_needed = FRAMES_BY_SIZE ( least_size );
+	paddr_t phys_addr = pmm_alloc_frames ( frames_needed );
+
+	/* Physical frames not allocated correctly */
+	if ( IS_KERR ( phys_addr ) )
+
+	        /* Note `phys_addr` is already an encoded error. Just make it explicity */
+		return ENCODE_KERR ( GET_KERR ( phys_addr ) );
+
+	/* Physical -> Virtual Address */
+	vaddr_t virt_heap_base = vmm_phys_to_virt ( phys_addr );
+
+	/* Return any error */
+	if ( IS_KERR_ ( virt_heap_base ) )
+
+	        /* Just like `phys_addr`, `virt_heap_base` is already an encoded error */
+		return ENCODE_KERR ( GET_KERR ( virt_heap_base ) );
+
+	/* After verifications, we can return it safely */
+	return virt_heap_base;
 }
