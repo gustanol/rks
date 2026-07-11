@@ -1,6 +1,7 @@
 #include "heap.h"
 #include <alloc/backend.h>
 #include <rks/kernel/mem/pmm.h>
+#include <rks/kernel/mem/vmm/map.h>
 
 /* Operations */
 const struct alloc_ops ops = {
@@ -70,10 +71,94 @@ __heap_init ( struct heap* heap )
 	struct chunk_meta* meta = ( struct chunk_meta * ) heap->base;
 
 	/* Sets it */
-	meta->size = heap->limit;       /* The whole size */
+	meta->size = CHUNK_SIZE ( heap->limit );        /* The whole size */
 	meta->is_free = 1;      /* It's free to use */
 	meta->next = NULL;      /* There's no the next linked list chunk */
 
 	/* Corrent initialized */
 	return KERR_OK;
+}
+
+/**
+ * Heap backend memory allocator
+ * Backend function
+ *
+ * Return -> `void *`: Pointer to allocated object
+ * Arguments:
+ *   1. `struct heap* heap`: Heap state
+ *   2. `size_t size`: Object size
+ * Callers:
+ *   - ALLOC implementations
+ **/
+void*
+_heap_malloc ( struct heap* heap, size_t size )
+{
+
+	/* The heap state is not prepared */
+	if ( !heap->ready )
+		return ENCODE_KERR ( KERR_INVAL );
+
+	/* Current chunk's metadata */
+	struct chunk_meta* current_chunk = heap->base;
+
+	/* Loop 'til manual break */
+	for ( ;; )
+	{
+
+		/* Verifies this chunk availability */
+		if ( current_chunk->is_free && current_chunk->size >= size )
+		{
+
+			/* Split this chunk if it's too big for the size */
+			if ( current_chunk->size >=
+			     CHUNK_SIZE ( size + CHUNK_LIMIT_BOUNDARY ) )
+			{
+
+				/* New chunk metadata */
+				struct chunk_meta* new_chunk =
+				        ( struct heap_meta * ) ( ( char * )
+				                                 current_chunk +
+				                                 CHUNK_SIZE
+				                                 ( size ) );
+
+				/* Newer chunk metadata */
+				/* Size is simply the displacement */
+				new_chunk->size =
+				        CHUNK_SIZE ( CHUNK_LIMIT_BOUNDARY );
+
+				/* Just set. It's free  */
+				new_chunk->is_free = 1;
+
+				/**
+                                 * As we splitted, the next chunk is gonna be the current's one
+                                 * And this pass to be the next right there
+                                 **/
+				new_chunk->next = current_chunk->next;
+
+				/* Updates on the current chunk metadata */
+				current_chunk->size = size;     /* It was shrank */
+				current_chunk->next = new_chunk;        /* The new chunk */
+			}
+
+			current_chunk->is_free = 0;     /* Now it's in use */
+
+			/* Return the base pointer */
+			return ( void * ) META_SHIFT ( current );
+		}
+
+		/* Goes to the next chunk on the linked list */
+		current_chunk = current_chunk->next;
+
+		/* Tries growing the heap size if there's no a next chunk */
+		/* NOT IMPLEMENTED YET */
+		if ( current_chunk == NULL )
+			__heap_grow (  );
+	}
+
+	/**
+         * If not found or not allocated, probably out of memory
+         *
+         * This shound't be achievable considering errors during heap growns are treated before
+         **/
+	return ENCODE_KERR ( KERR_NOMEM );
 }

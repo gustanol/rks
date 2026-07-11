@@ -4,9 +4,15 @@
 #include <rks/kernel/err/kerr.h>
 #include <rks/kernel/mem/vmm/types.h>
 
+#define CHUNK_LIMIT_BOUNDARY 64
+
 /* Chunk's size unconsidering metadata */
 #define CHUNK_SIZE(SIZE) \
         ( ( SIZE ) - sizeof ( struct chunk_meta ) )
+
+/* Ignores the starting metadata of a chunk */
+#define META_SHIFT(ADDR) \
+        ( ( char * ) ( ADDR ) + sizeof ( struct chunk_meta ) )
 
 /**
  * As it suggests, this metadata struct describes a chunk of memory
@@ -21,6 +27,8 @@ struct chunk_meta
 
 /* This backend operation functions */
 static kerr_t __heap_init ( struct heap* heap );
+
+/* UPDATE THE ARGUMENTS */
 static void* _heap_malloc ( size_t size );
 static kerr_t _heap_free ( void* start, size_t size );
 
