@@ -45,6 +45,7 @@ static vaddr_t __heap_grow ( size_t frames_needed );
 kerr_t
 __heap_init ( struct heap* heap )
 {
+
 	/* Duplicate calling */
 	if ( heap->ready )
 		return KERR_REXIST;
@@ -64,12 +65,13 @@ __heap_init ( struct heap* heap )
 	heap->ready = 1;        /* Everything was already set */
 
 	/* Defines the whole heap initially as a single chunk to be splitted */
-	struct chunk_meta* meta = ( struct chunk_meta * ) heap->base;
+	struct chunk_header* meta = ( struct chunk_header * ) heap->base;
 
 	/* Sets it */
-	meta->size = CHUNK_SIZE ( heap->limit );        /* The whole size */
+	meta->size = heap->limit;       /* The whole size */
 	meta->is_free = 1;      /* It's free to use */
-	meta->next = NULL;      /* There's no the next linked list chunk */
+	meta->prev_free = 0;    /* There's no previous chunk */
+	meta->next = NULL;      /* The next chunk wasn't set yet */
 
 	/* Corrent initialized */
 	return KERR_OK;
@@ -95,32 +97,48 @@ _heap_malloc ( struct heap* heap, size_t size )
 		return ENCODE_KERR ( KERR_INVAL );
 
 	/* Current chunk's metadata */
-	struct chunk_meta* current_chunk = ( struct chunk_meta * ) heap->base;
+	struct chunk_header* current_chunk =
+	        ( struct chunk_header * ) heap->base;
 
 	/* Loop 'til manual break */
 	for ( ;; )
 	{
 
 		/* Verifies this chunk availability */
-		if ( current_chunk->is_free && current_chunk->size >= size )
+		if ( current_chunk->is_free &&
+		     PAYLOAD_SIZE ( current_chunk->size ) >= size )
 		{
 
 			/* Split this chunk if it's too big for the size */
-			if ( current_chunk->size >=
-			     CHUNK_SIZE ( size + CHUNK_LIMIT_BOUNDARY ) )
+			if ( PAYLOAD_SIZE ( current_chunk->size ) - size >=
+			     CHUNK_LIMIT_BOUNDARY )
 			{
 
-				/* New chunk metadata */
-				struct chunk_meta* new_chunk =
+
+				/**
+                                 * Now we know the current chunk is far bigger than needed,
+                                 * This is its updated size, where only the `size` is enough
+                                 *
+                                 * The macro will consider metadata and align it up
+                                 **/
+				size_t new_current_chunk_size =
+				        CHUNK_SIZE ( size );
+
+				/* New chunk header metadata */
+				struct chunk_header* new_chunk =
 				        ( struct heap_meta * ) ( ( char * )
 				                                 current_chunk +
-				                                 CHUNK_SIZE
-				                                 ( size ) );
+				                                 new_current_chunk_size );
 
 				/* Newer chunk metadata */
-				/* Size is simply the displacement */
+
+				/**
+                                 * Size is simply the displacement
+                                 * Of the updated current chunk's size
+                                 **/
 				new_chunk->size =
-				        CHUNK_SIZE ( CHUNK_LIMIT_BOUNDARY );
+				        current_chunk->size -
+				        new_current_chunk_size;
 
 				/* Just set. It's free  */
 				new_chunk->is_free = 1;
@@ -131,12 +149,13 @@ _heap_malloc ( struct heap* heap, size_t size )
                                  **/
 				new_chunk->next = current_chunk->next;
 
-				/* Updates on the current chunk metadata */
-				current_chunk->size = size;     /* It was shrank */
+				/* It was shrank */
+				current_chunk->size = new_current_chunk_size;
 				current_chunk->next = new_chunk;        /* The new chunk */
 			}
 
-			current_chunk->is_free = 0;     /* Now it's in use */
+			/* Now it's in use */
+			current_chunk->is_free = 0;
 
 			/* Return the base pointer */
 			return ( void * ) META_SHIFT ( current );
@@ -174,10 +193,10 @@ _heap_malloc ( struct heap* heap, size_t size )
 			current_chunk->next = heap->current;
 
 			/* Next chunk's metadata */
-			struct chunk_meta* meta =
-			        ( struct chunk_meta * ) current_chunk->next;
+			struct chunk_header* meta =
+			        ( struct chunk_header * ) current_chunk->next;
 
-			/* The whole size to permit it to be splitted */
+			/* The whole size to permit it to be splitted later */
 			meta->size = SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
 			meta->is_free = 1;      /* It's free for the next iteration */
 			meta->next = NULL;      /* The last element */
