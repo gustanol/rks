@@ -30,7 +30,7 @@ const struct alloc_backend backend = {
 REGISTER_ALLOC_BACKEND ( backend );
 
 /* Prototypes */
-static vaddr_t __heap_grow ( size_t least_size );
+static vaddr_t __heap_grow ( size_t frames_needed );
 
 /**
  * Heap backend initializer
@@ -50,7 +50,8 @@ __heap_init ( struct heap* heap )
 		return KERR_REXIST;
 
 	/* Allocate the initial heap region */
-	vaddr_t virt_heap_base = __heap_grow ( HEAP_INITIAL_SIZE );
+	vaddr_t virt_heap_base =
+	        __heap_grow ( FRAMES_BY_SIZE ( HEAP_INITIAL_SIZE ) );
 
 	/* Return any error */
 	if ( IS_KERR_ ( virt_heap_base ) )
@@ -141,15 +142,12 @@ _heap_malloc ( struct heap* heap, size_t size )
 			return ( void * ) META_SHIFT ( current );
 		}
 
-		/* Goes to the next chunk on the linked list */
-		current_chunk = current_chunk->next;
-
 		/* Tries growing the heap size if there's no a next chunk */
-		if ( current_chunk == NULL )
+		if ( current_chunk->next == NULL )
 		{
 			/* At least one frame */
 			vaddr_t virt_heap_base =
-			        __heap_grow ( LEAST_CHUNK_SIZE ( size ) );
+			        __heap_grow ( FRAMES_BY_SIZE ( size ) );
 
 			/* Some error occurred */
 			if ( IS_KERR ( virt_heap_base ) )
@@ -161,20 +159,32 @@ _heap_malloc ( struct heap* heap, size_t size )
 			/* Updated current frame */
 			heap->current = virt_heap_base;
 
-			/* New limit */
-			heap->limit += FRAMES_BY_SIZE ( size );
+			/**
+                         * New limit
+                         *
+                         * - `FRAMES_BY_SIZE`: At least one frames
+                         * - `SIZE_BY_FRAMES`: Convert this amount in an absolute size
+                         **/
+			heap->limit +=
+			        SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
 
 			heap->ready = 1;        /* Unlocks it again */
 
-			/* Sets its metadata */
-			struct chunk_meta* meta =
-			        ( struct chunk_meta * ) heap->current;
+			/* Next chunk's base address */
+			current_chunk->next = heap->current;
 
-			/* Sets it */
-			meta->size = CHUNK_SIZE ( size );
-			meta->is_free = 1;      /* It's free for the next iteratiion */
+			/* Next chunk's metadata */
+			struct chunk_meta* meta =
+			        ( struct chunk_meta * ) current_chunk->next;
+
+			/* The whole size to permit it to be splitted */
+			meta->size = SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
+			meta->is_free = 1;      /* It's free for the next iteration */
 			meta->next = NULL;      /* The last element */
 		}
+
+		/* Goes to the next chunk on the linked list */
+		current_chunk = current_chunk->next;
 	}
 
 	/**
@@ -191,16 +201,15 @@ _heap_malloc ( struct heap* heap, size_t size )
  *
  * Return -> `vaddr_t`: New allocation base address
  * Arguments:
- *   1. `size_t least_size`: As it grows by frames, the minimum size to be grown
+ *   1. `size_t frames_needed`: As it grows by frames, the minimum amount to be grown
  * Callers:
  *   - Internal heap backend functions
  **/
 vaddr_t
-__heap_grow ( size_t least_size )
+__heap_grow ( size_t frames_needed )
 {
 
-	/* HEAP: Size and physical allocation */
-	size_t frames_needed = FRAMES_BY_SIZE ( least_size );
+	/* Tries to allocate the requested amount of frames */
 	paddr_t phys_addr = pmm_alloc_frames ( frames_needed );
 
 	/* Physical frames not allocated correctly */
