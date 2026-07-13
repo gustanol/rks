@@ -21,38 +21,6 @@
 #define PAYLOAD_SIZE(SIZE) \
         ( ( SIZE ) - sizeof ( struct chunk_header ) - sizeof ( struct chunk_footer ) )
 
-/* Ignores the starting metadata of a chunk */
-#define SKIP_HEADER(ADDR) \
-        ( ( char * ) ( ADDR ) + sizeof ( struct chunk_header ) )
-
-/* Chunk's footer from its start (header) */
-#define THIS_FOOTER_FROM_HEADER(HEADER) \
-        ( struct chunk_footer * ) ({ \
-                const size_t __tmp_size = ( HEADER )->size; \
-                ( char * ) ( HEADER ) \
-                + sizeof ( struct chunk_header ) \
-                + PAYLOAD_SIZE ( __tmp_size ); \
-        })
-
-/* Start of the previous chunk's footer */
-#define PREV_FOOTER_FROM_HEADER(HEADER) \
-        ( struct chunk_footer * ) ({ \
-                const struct chunk_header* __tmp_header = ( HEADER ); \
-                ( char * ) ( __tmp_header ) - sizeof ( struct chunk_footer ); \
-        })
-
-/* Header from the chunk's footer base address */
-#define THIS_HEADER_FROM_FOOTER(FOOTER) \
-        ( struct chunk_header * ) ({ \
-                const size_t __tmp_size = ( FOOTER )->size; \
-                ( char * ) ( FOOTER ) \
-                - PAYLOAD_SIZE ( __tmp_size ); \
-        })
-
-/* From the payload address, return to its header metadata base address */
-#define HEADER_FROM_PAYLOAD(PAYLOAD) \
-        ( ( char * ) ( PAYLOAD ) - sizeof ( struct chunk_header ) )
-
 /**
  * As it suggests, this metadata struct describes a chunk of memory
  * It acts like a linked list, referencing the next chunk of the chain
@@ -78,5 +46,46 @@ static kerr_t __heap_init ( struct heap* heap );
 /* UPDATE THE ARGUMENTS */
 static void* _heap_malloc ( size_t size );
 static kerr_t _heap_free ( void* ptr );
+
+/* Chunk's footer from its start (header) */
+static inline struct chunk_footer*
+this_footer_from_header ( const struct chunk_header* header )
+{
+	return ( struct chunk_footer * ) ( ( char * ) header +
+	                                   sizeof ( struct chunk_header ) +
+	                                   PAYLOAD_SIZE ( header->size ) );
+}
+
+/* Start of the previous chunk's footer */
+static inline struct chunk_footer*
+prev_footer_from_header ( const struct chunk_header* header )
+{
+	return ( struct chunk_footer * ) ( ( char * ) header -
+	                                   sizeof ( struct chunk_header ) );
+}
+
+/* Header from the chunk's footer base address */
+static inline struct chunk_header*
+this_header_from_footer ( const struct chunk_footer* footer )
+{
+	return ( struct chunk_header * ) ( ( char * ) footer -
+	                                   PAYLOAD_SIZE ( footer->size ) );
+}
+
+/* From the payload address, return to its header metadata base address */
+static inline struct chunk_header*
+this_header_from_payload ( const void* payload )
+{
+	return ( struct chunk_header * ) ( ( char * ) payload -
+	                                   sizeof ( struct chunk_header ) );
+}
+
+/* Ignores the starting metadata of a chunk */
+static inline void*
+this_payload_from_header ( const struct chunk_header* header )
+{
+	return ( void * ) ( ( char * ) header +
+	                    sizeof ( struct chunk_header ) );
+}
 
 #endif /* _KERNEL_SUBSYS_ALLOC_HEAP_H */

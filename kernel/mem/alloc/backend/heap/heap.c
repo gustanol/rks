@@ -145,13 +145,13 @@ _heap_malloc ( struct heap* heap, size_t size )
 				new_chunk->next_free = current_chunk->next_free;
 
 				/**
-                                 * As we splitted, the next chunk is gonna be the current's one
+                                 * As we splitted it, the next chunk is gonna be the current one
                                  * And this pass to be the next right there
                                  **/
 				new_chunk->next = current_chunk->next;
 
 				/* As it's free, sets its footer */
-				THIS_FOOTER_FROM_HEADER ( new_chunk )->size =
+				this_footer_from_header ( new_chunk )->size =
 				        new_chunk->size;
 
 				/* It was shrank */
@@ -164,7 +164,7 @@ _heap_malloc ( struct heap* heap, size_t size )
 			current_chunk->is_free = 0;
 
 			/* Return the base pointer */
-			return ( void * ) SKIP_HEADER ( current_chunk );
+			return this_header_from_payload ( current_chunk );
 		}
 
 		/* Tries growing the heap size if there's no a next chunk */
@@ -232,26 +232,25 @@ _heap_free ( void* ptr )
 		return KERR_INVAL;
 
 	/* Gets its header metadata */
-	struct chunk_header* this_header =
-	        ( struct chunk_header * ) HEADER_FROM_PAYLOAD ( ptr );
+	struct chunk_header* this_header = this_header_from_payload ( ptr );
 
 	/* Set it as free to use */
 	this_header->is_free = 1;
 
 	/* Gets this chunk's footer */
 	struct chunk_footer* this_footer =
-	        ( struct chunk_footer * ) GET_THIS_FOOTER ( this_header );
+	        this_footer_from_header ( this_header );
 
 	/* Sets its size in the footer */
 	this_footer->size = this_header->size;
 
 	/* Previous chunk's footer (tags boundary) */
 	struct chunk_footer* prev_footer =
-	        PREV_FOOTER_FROM_HEADER ( this_header );
+	        prev_footer_from_header ( this_header );
 
 	/* Previous chunk's header (from its footer) */
 	struct chunk_header* prev_header =
-	        THIS_HEADER_FROM_FOOTER ( prev_footer );
+	        this_header_from_footer ( prev_footer );
 
 	/* Next chunk's header */
 	struct chunk_header* next_header = this_header->next;
@@ -350,6 +349,6 @@ __heap_merge_chunks ( struct chunk_header* left, struct chunk_header* right )
 	memset ( right, 0, sizeof ( struct chunk_header ) );
 
 	/* Just like its footer */
-	memset ( THIS_FOOTER_FROM_HEADER ( right ), 0,
+	memset ( this_footer_from_header ( right ), 0,
 	         sizeof ( struct chunk_footer ) );
 }
