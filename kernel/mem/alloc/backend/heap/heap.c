@@ -74,9 +74,10 @@ __heap_init ( struct heap* heap )
 	meta->size = heap->limit;       /* The whole size */
 	meta->is_free = 1;      /* It's free to use */
 	meta->prev_free = 0;    /* There's no previous chunk */
+	meta->next_free = 0;    /* There's no next chunk, This is the first one */
 	meta->next = NULL;      /* The next chunk wasn't set yet */
 
-	/* Corrent initialized */
+	/* Correct initialized */
 	return KERR_OK;
 }
 
@@ -113,10 +114,9 @@ _heap_malloc ( struct heap* heap, size_t size )
 		{
 
 			/* Split this chunk if it's too big for the size */
-			if ( PAYLOAD_SIZE ( current_chunk->size ) - size >=
+			if ( current_chunk->size - CHUNK_SIZE ( size ) >=
 			     CHUNK_LIMIT_BOUNDARY )
 			{
-
 
 				/**
                                  * Now we know the current chunk is far bigger than needed,
@@ -124,27 +124,25 @@ _heap_malloc ( struct heap* heap, size_t size )
                                  *
                                  * The macro will consider metadata and align it up
                                  **/
-				size_t new_current_chunk_size =
-				        CHUNK_SIZE ( size );
+				size_t new_chunk_size = CHUNK_SIZE ( size );
 
 				/* New chunk header metadata */
 				struct chunk_header* new_chunk =
 				        ( struct heap_meta * ) ( ( char * )
 				                                 current_chunk +
-				                                 new_current_chunk_size );
-
-				/* Newer chunk metadata */
+				                                 new_chunk_size );
 
 				/**
-                                 * Size is simply the displacement
+                                 * Size is simply the displacement ->
                                  * Of the updated current chunk's size
                                  **/
 				new_chunk->size =
-				        current_chunk->size -
-				        new_current_chunk_size;
+				        current_chunk->size - new_chunk_size;
 
-				/* Just set. It's free  */
+				/* Just set. It's free */
 				new_chunk->is_free = 1;
+				new_chunk->prev_free = 0;       /* Current chunk */
+				new_chunk->next_free = current_chunk->next_free;
 
 				/**
                                  * As we splitted, the next chunk is gonna be the current's one
@@ -152,8 +150,13 @@ _heap_malloc ( struct heap* heap, size_t size )
                                  **/
 				new_chunk->next = current_chunk->next;
 
+				/* As it's free, sets its footer */
+				THIS_FOOTER_FROM_HEADER ( new_chunk )->size =
+				        new_chunk->size;
+
 				/* It was shrank */
-				current_chunk->size = new_current_chunk_size;
+				current_chunk->size = new_chunk_size;
+				current_chunk->next_free = 1;   /* New chunk */
 				current_chunk->next = new_chunk;        /* The new chunk */
 			}
 
@@ -161,12 +164,13 @@ _heap_malloc ( struct heap* heap, size_t size )
 			current_chunk->is_free = 0;
 
 			/* Return the base pointer */
-			return ( void * ) META_SHIFT ( current );
+			return ( void * ) SKIP_HEADER ( current_chunk );
 		}
 
 		/* Tries growing the heap size if there's no a next chunk */
 		if ( current_chunk->next == NULL )
 		{
+
 			/* At least one frame */
 			vaddr_t virt_heap_base =
 			        __heap_grow ( FRAMES_BY_SIZE ( size ) );
@@ -196,13 +200,16 @@ _heap_malloc ( struct heap* heap, size_t size )
 			current_chunk->next = heap->current;
 
 			/* Next chunk's metadata */
-			struct chunk_header* meta =
+			struct chunk_header* new_chunk =
 			        ( struct chunk_header * ) current_chunk->next;
 
 			/* The whole size to permit it to be splitted later */
-			meta->size = SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
-			meta->is_free = 1;      /* It's free for the next iteration */
-			meta->next = NULL;      /* The last element */
+			new_chunk->size =
+			        SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
+			new_chunk->is_free = 1; /* It's free for the next iteration */
+			new_chunk->prev_free = current_chunk->is_free;
+			new_chunk->next_free = 0;       /* The newest */
+			new_chunk->next = NULL; /* The last element */
 		}
 
 		/* Goes to the next chunk on the linked list */
@@ -336,7 +343,7 @@ __heap_merge_chunks ( struct chunk_header* left, struct chunk_header* right )
 	left->size += right->size;
 
 	/* "Next of the next" update */
-	left->next_free += right->next_free;
+	left->next_free = right->next_free;
 	left->next = right->next;
 
 	/* Clears the next header */

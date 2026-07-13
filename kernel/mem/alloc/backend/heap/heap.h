@@ -22,7 +22,7 @@
         ( ( SIZE ) - sizeof ( struct chunk_header ) - sizeof ( struct chunk_footer ) )
 
 /* Ignores the starting metadata of a chunk */
-#define META_SHIFT(ADDR) \
+#define SKIP_HEADER(ADDR) \
         ( ( char * ) ( ADDR ) + sizeof ( struct chunk_header ) )
 
 /* Chunk's footer from its start (header) */
@@ -36,7 +36,10 @@
 
 /* Start of the previous chunk's footer */
 #define PREV_FOOTER_FROM_HEADER(HEADER) \
-        ( struct chunk_footer * ) ( ( char * ) ( HEADER ) - sizeof ( struct chunk_footer ) )
+        ( struct chunk_footer * ) ({ \
+                const struct chunk_header* __tmp_header = ( HEADER ); \
+                ( char * ) ( __tmp_header ) - sizeof ( struct chunk_footer ); \
+        })
 
 /* Header from the chunk's footer base address */
 #define THIS_HEADER_FROM_FOOTER(FOOTER) \
