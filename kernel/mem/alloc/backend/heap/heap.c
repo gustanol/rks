@@ -68,14 +68,14 @@ __heap_init ( struct heap* heap )
 	heap->ready = 1;        /* Everything was already set */
 
 	/* Defines the whole heap initially as a single chunk to be splitted */
-	struct chunk_header* meta = ( struct chunk_header * ) heap->base;
+	struct chunk_header* header = ( struct chunk_header * ) heap->base;
 
 	/* Sets it */
-	meta->size = heap->limit;       /* The whole size */
-	meta->is_free = 1;      /* It's free to use */
-	meta->prev_free = 0;    /* There's no previous chunk */
-	meta->next_free = 0;    /* There's no next chunk, This is the first one */
-	meta->next = NULL;      /* The next chunk wasn't set yet */
+	header->size = heap->limit;     /* The whole size */
+	header->is_free = 1;    /* It's free to use */
+	header->prev_free = 0;  /* There's no previous chunk */
+	header->next_free = 0;  /* There's no next chunk, This is the first one */
+	header->next = NULL;    /* The next chunk wasn't set yet */
 
 	/* Correct initialized */
 	return KERR_OK;
