@@ -25,6 +25,31 @@
 #define META_SHIFT(ADDR) \
         ( ( char * ) ( ADDR ) + sizeof ( struct chunk_header ) )
 
+/* Chunk's footer from its start (header) */
+#define THIS_FOOTER_FROM_HEADER(HEADER) \
+        ( struct chunk_footer * ) ({ \
+                const size_t __tmp_size = ( HEADER )->size; \
+                ( char * ) ( HEADER ) \
+                + sizeof ( struct chunk_header ) \
+                + PAYLOAD_SIZE ( __tmp_size ); \
+        })
+
+/* Start of the previous chunk's footer */
+#define PREV_FOOTER_FROM_HEADER(HEADER) \
+        ( struct chunk_footer * ) ( ( char * ) ( HEADER ) - sizeof ( struct chunk_footer ) )
+
+/* Header from the chunk's footer base address */
+#define THIS_HEADER_FROM_FOOTER(FOOTER) \
+        ( struct chunk_header * ) ({ \
+                const size_t __tmp_size = ( FOOTER )->size; \
+                ( char * ) ( FOOTER ) \
+                - PAYLOAD_SIZE ( __tmp_size ); \
+        })
+
+/* From the payload address, return to its header metadata base address */
+#define HEADER_FROM_PAYLOAD(PAYLOAD) \
+        ( ( char * ) ( PAYLOAD ) - sizeof ( struct chunk_header ) )
+
 /**
  * As it suggests, this metadata struct describes a chunk of memory
  * It acts like a linked list, referencing the next chunk of the chain
@@ -34,6 +59,7 @@ struct chunk_header
 	size_t size;            /* Chunk size */
 	bool is_free;           /* Is this chunk free? */
 	bool prev_free;
+	bool next_free;
 	struct chunk_header* next;      /* Next chunk metadata */
 };
 

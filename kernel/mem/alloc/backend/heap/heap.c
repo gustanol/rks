@@ -2,6 +2,7 @@
 #include <alloc/backend.h>
 #include <rks/kernel/mem/pmm.h>
 #include <rks/kernel/mem/vmm/map.h>
+#include <rks/lib/string.h>
 
 /* Operations */
 const struct alloc_ops ops = {
@@ -31,6 +32,8 @@ REGISTER_ALLOC_BACKEND ( backend );
 
 /* Prototypes */
 static vaddr_t __heap_grow ( size_t frames_needed );
+static void __heap_merge_chunks ( struct chunk_header* left,
+                                  struct chunk_header* right );
 
 /**
  * Heap backend initializer
@@ -214,6 +217,71 @@ _heap_malloc ( struct heap* heap, size_t size )
 	return ENCODE_KERR ( KERR_NOMEM );
 }
 
+kerr_t
+_heap_free ( void* ptr )
+{
+	/* If pointer is an actual address, return the invalid argument error */
+	if ( ptr == NULL || IS_KERR ( ptr ) )
+		return KERR_INVAL;
+
+	/* Gets its header metadata */
+	struct chunk_header* this_header =
+	        ( struct chunk_header * ) HEADER_FROM_PAYLOAD ( ptr );
+
+	/* Set it as free to use */
+	this_header->is_free = 1;
+
+	/* Gets this chunk's footer */
+	struct chunk_footer* this_footer =
+	        ( struct chunk_footer * ) GET_THIS_FOOTER ( this_header );
+
+	/* Sets its size in the footer */
+	this_footer->size = this_header->size;
+
+	/* Previous chunk's footer (tags boundary) */
+	struct chunk_footer* prev_footer =
+	        PREV_FOOTER_FROM_HEADER ( this_header );
+
+	/* Previous chunk's header (from its footer) */
+	struct chunk_header* prev_header =
+	        THIS_HEADER_FROM_FOOTER ( prev_footer );
+
+	/* Next chunk's header */
+	struct chunk_header* next_header = this_header->next;
+
+	/**
+         * NOTE: Now we must verify if the neighbors chunks are also free
+         * This avoids keeping consecutive free chunks by merging them,
+         * Allowing future allocations to split them once again
+         **/
+
+	/* Is the previous chunk free? */
+	if ( this_header->prev_free )
+	{
+		/* Previous + Current */
+		__heap_merge_chunks ( prev_header, this_header );
+
+		/* Is the next free? */
+		if ( header_meta->next_free )
+
+		        /* Previous (already merged) + Next */
+			__heap_merge_chunks ( prev_header, next_header );
+	}
+
+	/* Now, is the next free */
+	else if ( this_header->next_free )
+
+	        /* As the previous chunk isn't free, merge the Current + Next */
+		__heap_merge_chunks ( this_header, next_header );
+
+	/* If neither of them are free, we can update 'em safely */
+	else
+	{
+		prev_header->next_free = 1;
+		next_header->prev_free = 1;
+	}
+}
+
 /**
  * Heap helper used to grow the region
  * Private backend helper
@@ -248,4 +316,33 @@ __heap_grow ( size_t frames_needed )
 
 	/* After verifications, we can return it safely */
 	return virt_heap_base;
+}
+
+/**
+ * Receiving two headers, merges them into one, always modifying the left one
+ * Private helper
+ *
+ * Return -> `void`
+ * Arguments:
+ *   1. `struct chunk_header* left`: Left chunk header to be modified
+ *   2. `struct chunk_header* right`: Right chunk header to be the new boundary
+ * Callers:
+ *   - `_heap_free`
+ **/
+static void
+__heap_merge_chunks ( struct chunk_header* left, struct chunk_header* right )
+{
+	/* Increases the whole chunk size */
+	left->size += right->size;
+
+	/* "Next of the next" update */
+	left->next_free += right->next_free;
+	left->next = right->next;
+
+	/* Clears the next header */
+	memset ( right, 0, sizeof ( struct chunk_header ) );
+
+	/* Just like its footer */
+	memset ( THIS_FOOTER_FROM_HEADER ( right ), 0,
+	         sizeof ( struct chunk_footer ) );
 }
