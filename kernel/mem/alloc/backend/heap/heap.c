@@ -224,9 +224,20 @@ _heap_malloc ( struct heap* heap, size_t size )
 	return ENCODE_KERR ( KERR_NOMEM );
 }
 
+/**
+ * Heap backend memory freer
+ * Backend function
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `void* ptr`: Payload base address
+ * Callers:
+ *   - ALLOC implementations
+ **/
 kerr_t
 _heap_free ( void* ptr )
 {
+
 	/* If pointer is an actual address, return the invalid argument error */
 	if ( ptr == NULL || IS_KERR ( ptr ) )
 		return KERR_INVAL;
@@ -264,6 +275,7 @@ _heap_free ( void* ptr )
 	/* Is the previous chunk free? */
 	if ( this_header->prev_free )
 	{
+
 		/* Previous + Current */
 		__heap_merge_chunks ( prev_header, this_header );
 
@@ -286,6 +298,9 @@ _heap_free ( void* ptr )
 		prev_header->next_free = 1;
 		next_header->prev_free = 1;
 	}
+
+	/* Everything's okay */
+	return KERR_OK;
 }
 
 /**
@@ -320,7 +335,7 @@ __heap_grow ( size_t frames_needed )
 	        /* Just like `phys_addr`, `virt_heap_base` is already an encoded error */
 		return ENCODE_KERR ( GET_KERR ( virt_heap_base ) );
 
-	/* After verifications, we can return it safely */
+	/* After verification, we can return it safely */
 	return virt_heap_base;
 }
 
@@ -338,6 +353,7 @@ __heap_grow ( size_t frames_needed )
 static void
 __heap_merge_chunks ( struct chunk_header* left, struct chunk_header* right )
 {
+
 	/* Increases the whole chunk size */
 	left->size += right->size;
 
