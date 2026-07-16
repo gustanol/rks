@@ -7,6 +7,9 @@
 /* Address space struct */
 struct addr_space
 {
+	/* atomic_size_t refcount */
+	/* spinlock_t lock */
+	/* struct vm_region_tree regions */
 	paddr_t pml4_phys;
 };
 
