@@ -1,9 +1,0 @@
-/**
- * alloc/backends.def
- *
- * ALLOC backends definition
- **/
-
-/* X ( ENUM member, STRUCT member ) */
-X(ALLOC_BACKEND_HEAP, heap)
-X(ALLOC_BACKEND_SLAB, slab)
