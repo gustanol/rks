@@ -18,6 +18,16 @@
 #define GET_KERR(ptr) \
         ( ( kerr_t ) ( ( vaddr_t ) ( ptr ) & 0xFFFFULL ) )
 
+#define IS_RET_OK(err) \
+        ( ( err ) == KERR_OK )
+
+/* Return a kerr_t on condition pass */
+#define KERR_RETURN_IF(cond, err) \
+        ({ \
+                if ( cond ) \
+                        return ( err ); \
+        })
+
 /* General error types */
 typedef enum
 {

@@ -5,9 +5,14 @@
  **/
 
 X(KERR_OK, "Success")
+
 X(KERR_NOMEM, "Out of memory")
+X(KERR_REXIST, "Existent resource")
+X(KERR_NOTMAPPED, "Resource not mapped")
+
 X(KERR_INVAL, "Invalid argument")
 X(KERR_INTERNAL, "Internal error")
 X(KERR_BUSY, "Resource busy")
 X(KERR_NOTFOUND, "Resource not found")
+
 X(KERR_IO, "I/O error")
