@@ -40,13 +40,6 @@ struct chunk_footer
 	size_t size;
 };
 
-/* This backend operation functions */
-static kerr_t __heap_init ( struct heap* heap );
-
-/* UPDATE THE ARGUMENTS */
-static void* _heap_malloc ( size_t size );
-static kerr_t _heap_free ( void* ptr );
-
 /* Chunk's footer from its start (header) */
 static inline struct chunk_footer*
 this_footer_from_header ( const struct chunk_header* header )

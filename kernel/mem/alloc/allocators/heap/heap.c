@@ -1,84 +1,77 @@
 #include "heap.h"
 #include <alloc/backend.h>
+#include <alloc/allocators/heap.h>
 #include <rks/kernel/mem/pmm.h>
 #include <rks/kernel/mem/vmm/map.h>
 #include <rks/lib/string.h>
 
 /* Operations */
-const struct alloc_ops ops = {
+const struct heap_ops ops = {
+	.create = _heap_create,
+	.destroy = _heap_destroy,
 	.malloc = _heap_malloc,
 	.free = _heap_free,
 };
 
-/* Backend context */
-const struct alloc_backend backend = {
-
-        /* *INDENT-OFF* */
-
-	.base = {
-		 .name = "heap_alloc_backend",
-		 .tag = SUBSYS_TAG_ALLOC,
-	},
-
-        /* *INDENT-ON* */
-
-	.type = ALLOC_BACKEND_HEAP,
-	.init = __heap_init,
-	.ops = &ops,
-};
-
-/* Register this backend */
-REGISTER_ALLOC_BACKEND ( backend );
-
 /* Prototypes */
-static vaddr_t __heap_grow ( size_t frames_needed );
-static void __heap_merge_chunks ( struct chunk_header* left,
-                                  struct chunk_header* right );
+static kerr_t _heap_destroy ( struct heap* heap );
+static void* _heap_malloc ( struct heap* heap, size_t size );
+static kerr_t _heap_free ( void* ptr );
+static vaddr_t _heap_grow ( struct heap* heap, size_t frames_needed );
+
+static __heap_alloc_and_map ( size_t frames_needed );
+static void _heap_merge_chunks ( struct chunk_header* left,
+                                 struct chunk_header* right );
 
 /**
- * Heap backend initializer
+ * Heap backend context creator
  * Backend function
  *
- * Return -> `kerr_t`: Kernel global error type
+ * Return -> `struct heap *`: Heap context pointer (opaque type only accessible through ALLOC subsystem)
  * Arguments:
- *   1. `struct heap* heap`: Kernel heap context
+ *   1. `void`
  * Callers:
- *   - `alloc_init`
+ *   - ALLOC implementations
  **/
-kerr_t
-__heap_init ( struct heap* heap )
+struct heap*
+_heap_create ( void )
 {
 
-	/* Duplicate calling */
-	if ( heap->ready )
-		return KERR_REXIST;
-
-	/* Allocate the initial heap region */
+	/* Gets a mapped init heap region */
 	vaddr_t virt_heap_base =
-	        __heap_grow ( FRAMES_BY_SIZE ( HEAP_INITIAL_SIZE ) );
+	        __heap_alloc_and_map ( FRAMES_BY_SIZE ( HEAP_INITIAL_SIZE ) );
 
 	/* Return any error */
-	if ( IS_KERR_ ( virt_heap_base ) )
-		return GET_KERR ( virt_heap_base );
+	if ( IS_KERR ( virt_heap_base ) )
+		return virt_heap_base;  /* Already encoded */
 
-	/* Fills out the kernel global heap state */
-	heap->base = virt_heap_base;    /* Base address */
-	heap->current = heap->base;     /* Current base */
-	heap->limit = HEAP_INITIAL_SIZE;        /* Current limit size */
-	heap->ready = 1;        /* Everything was already set */
+	/* This heap struct starts at the start of this allocation */
+	struct heap* this_heap = virt_heap_base;
+
+	/* Arena region start */
+	this_heap->arena_start =
+	        ( char * ) virt_heap_base + sizeof ( struct heap );
+
+	/* Current base */
+	this_heap->current_arena = this_heap->arena_start;
+
+	this_heap->limit = HEAP_INITIAL_SIZE;   /* Current limit size */
+	this_heap->ops = &ops;  /* Global operations */
+	this_heap->ready = 1;   /* Everything was already set */
 
 	/* Defines the whole heap initially as a single chunk to be splitted */
-	struct chunk_header* header = ( struct chunk_header * ) heap->base;
+	struct chunk_header* this_header =
+	        ( struct chunk_header * ) this_heap->arena_start;
 
 	/* Sets it */
-	header->size = heap->limit;     /* The whole size */
-	header->is_free = 1;    /* It's free to use */
-	header->prev_free = 0;  /* There's no previous chunk */
-	header->next_free = 0;  /* There's no next chunk, This is the first one */
-	header->next = NULL;    /* The next chunk wasn't set yet */
+	this_header->size = heap->limit;        /* The whole size */
+	this_header->is_free = 1;       /* It's free to use */
+	this_header->prev_free = 0;     /* There's no previous chunk */
+	this_header->next_free = 0;     /* There's no next chunk, This is the first one */
+	this_header->next = NULL;       /* The next chunk wasn't set yet */
 
-	/* Correct initialized */
-	return KERR_OK;
+	/* Return the reference */
+	return heap;
 }
 
 /**
@@ -102,7 +95,7 @@ _heap_malloc ( struct heap* heap, size_t size )
 
 	/* Current chunk's metadata */
 	struct chunk_header* current_chunk =
-	        ( struct chunk_header * ) heap->base;
+	        ( struct chunk_header * ) heap->current_arena;
 
 	/* Loop 'til manual break */
 	for ( ;; )
@@ -172,32 +165,15 @@ _heap_malloc ( struct heap* heap, size_t size )
 		{
 
 			/* At least one frame */
-			vaddr_t virt_heap_base =
-			        __heap_grow ( FRAMES_BY_SIZE ( size ) );
+			kerr_t err =
+			        _heap_grow ( heap, FRAMES_BY_SIZE ( size ) );
 
 			/* Some error occurred */
-			if ( IS_KERR ( virt_heap_base ) )
-				return ENCODE_KERR ( GET_KERR
-			                             ( virt_heap_base ) );
-
-			heap->ready = 0;        /* Locks it */
-
-			/* Updated current frame */
-			heap->current = virt_heap_base;
-
-			/**
-                         * New limit
-                         *
-                         * - `FRAMES_BY_SIZE`: At least one frames
-                         * - `SIZE_BY_FRAMES`: Convert this amount in an absolute size
-                         **/
-			heap->limit +=
-			        SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
-
-			heap->ready = 1;        /* Unlocks it again */
+			if ( IS_RET_OK ( err ) )
+				return ENCODE_KERR ( err );
 
 			/* Next chunk's base address */
-			current_chunk->next = heap->current;
+			current_chunk->next = heap->current_arena;
 
 			/* Next chunk's metadata */
 			struct chunk_header* new_chunk =
@@ -235,7 +211,7 @@ _heap_malloc ( struct heap* heap, size_t size )
  *   - ALLOC implementations
  **/
 kerr_t
-_heap_free ( void* ptr )
+_heap_mfree ( void* ptr )
 {
 
 	/* If pointer is an actual address, return the invalid argument error */
@@ -304,17 +280,56 @@ _heap_free ( void* ptr )
 }
 
 /**
- * Heap helper used to grow the region
+ * Heap area grower
+ * Backend function
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `struct heap* heap`: Heap to be grown
+ *   2. `size_t frames_needed`: As it grows by frames, the minimum amount to be grown
+ * Callers:
+ *   - ALLOC implementations
+ **/
+kerr_t
+_heap_grow ( struct heap* heap, size_t frames_needed )
+{
+
+	/* Gets another mapped region */
+	vaddr_t virt_heap_current_base = __heap_alloc_and_map ( frames_needed );
+
+	/* Locks it */
+	heap->ready = 0;
+
+	/* Updated current frame */
+	heap->current_arena = virt_heap_base;
+
+	/**
+         * New limit
+         *
+         * - `FRAMES_BY_SIZE`: At least one frames
+         * - `SIZE_BY_FRAMES`: Convert this amount in an absolute size
+         **/
+	heap->limit += SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
+
+	/* Unlocks it to proceed */
+	heap->ready = 1;
+
+	/* Success */
+	return KERR_OK;
+}
+
+/**
+ * Heap helper used to get a mapped region memory
  * Private backend helper
  *
  * Return -> `vaddr_t`: New allocation base address
  * Arguments:
  *   1. `size_t frames_needed`: As it grows by frames, the minimum amount to be grown
  * Callers:
- *   - Internal heap backend functions
+ *   - Private heap implementations
  **/
 vaddr_t
-__heap_grow ( size_t frames_needed )
+__heap_alloc_and_map ( size_t frames_needed )
 {
 
 	/* Tries to allocate the requested amount of frames */
@@ -322,21 +337,17 @@ __heap_grow ( size_t frames_needed )
 
 	/* Physical frames not allocated correctly */
 	if ( IS_KERR ( phys_addr ) )
-
-	        /* Note `phys_addr` is already an encoded error. Just make it explicity */
-		return ENCODE_KERR ( GET_KERR ( phys_addr ) );
+		return phys_addr;
 
 	/* Physical -> Virtual Address */
-	vaddr_t virt_heap_base = vmm_phys_to_virt ( phys_addr );
+	vaddr_t virt_addr = vmm_phys_to_virt ( phys_addr );
 
 	/* Return any error */
-	if ( IS_KERR_ ( virt_heap_base ) )
+	if ( IS_KERR ( virt_addr ) )
+		return virt_heap_base;
 
-	        /* Just like `phys_addr`, `virt_heap_base` is already an encoded error */
-		return ENCODE_KERR ( GET_KERR ( virt_heap_base ) );
-
-	/* After verification, we can return it safely */
-	return virt_heap_base;
+	/* Return the mapped virtual address */
+	return virt_addr;
 }
 
 /**
