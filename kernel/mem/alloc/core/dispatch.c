@@ -1,0 +1,107 @@
+#include <alloc/dispatch.h>
+#include <alloc/internal.h>
+
+/**
+ * Private heap creator
+ * Private dispatcher
+ *
+ * Return -> `struct heap *`: Created heap context
+ * Arguments:
+ *   1. `void`
+ * Callers:
+ *   - `alloc_heap_create`
+ **/
+struct heap*
+_alloc_dispatch_heap_create ( void )
+{
+	return _heap_create (  );
+}
+
+/**
+ * Private heap destroyer
+ * Private dispatcher
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `void`
+ * Callers:
+ *   - `alloc_heap_destroy`
+ **/
+kerr_t
+_alloc_dispatch_heap_destroy ( struct heap* heap )
+{
+	/* Get the function pointer from the internal operations */
+	return heap->ops->destroy ( heap );
+}
+
+/**
+ * Private heap memory allocator
+ * Private dispatcher
+ *
+ * Return -> `void *`: Payload start pointer
+ * Arguments:
+ *   1. `struct heap* heap`: Heap context
+ *   2. `size_t size`: Allocation size
+ * Callers:
+ *   - `alloc_heap_malloc`
+ **/
+void*
+_alloc_dispatch_heap_malloc ( struct heap* heap, size_t size )
+{
+	return heap->ops->malloc ( heap, size );
+}
+
+/**
+ * Private heap memory liberator
+ * Private dispatcher
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `struct heap* heap`: Heap context
+ *   2. `void *`: Payload start
+ * Callers:
+ *   - `alloc_heap_mfree`
+ **/
+kerr_t
+_alloc_dispatch_heap_mfree ( struct heap* heap, void* ptr )
+{
+	return heap->ops->mfree ( ptr );
+}
+
+/**
+ * Private heap grower
+ * Private dispatcher
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `struct heap* heap`: Heap context
+ *   2. `size_t frames_needed`: Amount of frames to be allocated
+ * Callers:
+ *   - `alloc_heap_grow`
+ **/
+kerr_t
+_alloc_dispatch_heap_grow ( struct heap* heap, size_t frames_needed )
+{
+	return heap->ops->grow ( heap, frames_needed );
+}
+
+/**
+ * Private kernel memory allocator
+ * Private dispatcher
+ *
+ * Return -> `void *`: Payload start pointer
+ * Arguments:
+ *   1. `size_t size`: Allocation size
+ * Callers:
+ *   - `k_malloc`
+ **/
+void*
+_alloc_dispatch_k_malloc ( size_t size )
+{
+
+	/* Kernel global heap state */
+	struct heap* kernel_heap = g_alloc->kernel.heap;
+
+	/* Calls the dispatcher layer */
+	return _alloc_heap_malloc ( kernel_heap, size );
+}
