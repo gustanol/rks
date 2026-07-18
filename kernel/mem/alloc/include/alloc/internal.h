@@ -1,14 +1,20 @@
 #ifndef _KERNEL_ALLOC_INTERNAL_H
 #define _KERNEL_ALLOC_INTERNAL_H
 
-#include "backend.h"
 #include <rks/kernel/types.h>
 
 /* Allocaton context structure */
 struct alloc_ctx
 {
+	/* Is it ready to use? */
 	int ready;
-	struct alloc_ops* ops;
+
+	/* Kernel state */
+	struct
+	{
+		struct heap* heap;
+		/* struct slab* slab_ctx; */
+	} kernel;
 };
 
 /* Allocation global state pointer */

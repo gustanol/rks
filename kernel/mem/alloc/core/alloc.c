@@ -4,40 +4,41 @@
 /* Statically allocate the global state Allocation context struct */
 static struct alloc_ctx i_alloc;
 
-void
+/**
+ * Allocation subsystem initializer
+ * Public subsystem initializer
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `void`
+ * Callers:
+ *   - `rks_main`
+ **/
+kerr_t
 alloc_init ( void )
 {
+
 	/* Sets the pointer */
 	g_alloc = &i_alloc;
 
-	/**
-         * As this subsystem can have more than one registered backend,
-         * We will find them as an array of pointers
-         **/
-	struct subsys_backend* arr[ALLOC_BACKEND_AMOUNT];
+	/* Create the kernel global heap context */
+	struct heap* kernel_heap = _heap_create (  );
 
-	/* Find them */
-	size_t backends_found =
-	        subsys_find_multiple_backends ( SUBSYS_TAG_ALLOC, arr,
-	                                        ALLOC_BACKEND_AMOUNT );
+	/* Verify integrity */
+	if ( IS_KERR ( kernel_heap ) )
+		return GET_KERR ( kernel_heap );
 
-	/* As a critical operation, if failed, raises a panic */
-	if ( IS_KERR ( backends_found ) )
-		k_panic ( kerr_str ( GET_KERR ( backends_found ) ) );
+	/* Defines it correctly */
+	g_alloc->kernel.heap = kernel_heap;
 
-	/* For all defined backends */
-	for ( size_t i = 0; i < ALLOC_BACKEND_AMOUNT; i++ )
-	{
-		/* Gets the current backend from the generic base struct pointer */
-		struct alloc_backend* backend =
-		        alloc_backend_from_base ( arr[i] );
+	/*
+	   struct slab* kernel_slab = _slab_create (  );
 
-		/* Initializes it */
-		backend->init (  );
+	   if ( IS_KERR ( kernel_slab ) )
+	   return GET_KERR ( kernel_slab );
 
-		/* Now, according to the current backend, sets its operations */
-		g_alloc->backends[backend->type].ops = backend->ops;
-	}
+	   g_alloc->kernel.slab_ctx = kernel_slab;
+	 */
 
 	/* Ready to be used */
 	g_alloc->ready = 1;
