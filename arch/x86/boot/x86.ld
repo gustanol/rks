@@ -41,6 +41,7 @@ SECTIONS
 		BOOTSTRAP_ARENA_END = .;
 	}
 
+	/* Align the end of bootstrap code */
 	. = ALIGN(0x1000);
 
 	/* Shift VMA to higher half */
@@ -83,6 +84,9 @@ SECTIONS
 		    KEEP(*(.subsys.registry .subsys.registry*))
 	    __subsys_backend_registry_end = .;
 	}
+
+	/* Align up the end 2MiB */
+	. = ALIGN(0x200000);
 
 	/* VMA kernel end symbol */
 	KERNEL_END = .;
