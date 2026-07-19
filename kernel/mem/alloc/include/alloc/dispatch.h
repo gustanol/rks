@@ -12,5 +12,6 @@ kerr_t _alloc_dispatch_heap_grow ( struct heap* heap, size_t frames_needed );
 
 /* Kernel wrappers */
 void* _alloc_dispatch_k_malloc ( size_t size );
+kerr_t _alloc_dispatch_k_mfree ( void* ptr );
 
 #endif /* _KERNEL_ALLOC_DISPATCH_H */

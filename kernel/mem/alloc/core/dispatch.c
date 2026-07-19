@@ -102,6 +102,33 @@ _alloc_dispatch_k_malloc ( size_t size )
 	/* Kernel global heap state */
 	struct heap* kernel_heap = g_alloc->kernel.heap;
 
-	/* Calls the dispatcher layer */
+	/**
+         * Calls the dispatcher layer
+         *
+         * Organize the logic here for other allocators
+         **/
 	return _alloc_heap_malloc ( kernel_heap, size );
+}
+
+/**
+ * Private kernel memory liberator
+ * Private dispatcher
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `void *`: Payload start
+ * Callers:
+ *   - `k_mfree`
+ **/
+kerr_t
+_alloc_dispatch_k_mfree ( void* ptr )
+{
+	struct heap* kernel_heap = g_alloc->kernel.heap;
+
+	/**
+         * Return the dispatcher
+         *
+         * Organize the logic here for other allocators
+         **/
+	return _alloc_heap_mfree ( kernel_heap, ptr );
 }
