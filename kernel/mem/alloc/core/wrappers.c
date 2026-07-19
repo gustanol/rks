@@ -122,3 +122,22 @@ k_malloc ( size_t size )
 
 	return _alloc_k_malloc ( size );
 }
+
+/**
+ * Public kernel memory liberator
+ * Public wrapper
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `void *`: Payload start
+ * Callers:
+ *   - Many
+ **/
+kerr_t
+k_mfree ( void* ptr )
+{
+	KERR_RET_IF ( ptr == NULL, KERR_INVAL );
+	KERR_RET_IF ( IS_KERR ( ptr ), KERR_INVAL );
+
+	return _alloc_dispatch_k_mfree ( ptr );
+}
