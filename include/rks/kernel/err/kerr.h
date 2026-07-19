@@ -22,20 +22,31 @@
         ( ( err ) == KERR_OK )
 
 /* Return a kerr_t on condition pass */
-#define KERR_RET_IF(cond, err) \
+#define KERR_RET_IF(cond, err, fmt, ...) \
         ({ \
-                if ( cond ) \
+                if ( cond ) { \
+                        klog_err ( fmt, ##__VA_ARGS__ ); \
                         return ( err ); \
+                } \
         })
 
 /**
  * Instead of returning the error code directly, encode it first
  * For functions that does not return a `kerr_t`
  **/
-#define KERR_RET_ENCODE_IF(cond, err) \
+#define KERR_RET_ENCODE_IF(cond, err, fmt, ...) \
         ({ \
-                if ( cond ) \
+                if ( cond ) { \
+                        klog_err ( fmt, ##__VA_ARGS__ ); \
                         return ENCODE_KERR ( err ); \
+                } \
+        })
+
+/* Forward if `obj` is already an encoded error */
+#define KERR_PROPAGATE(obj) \
+        ({ \
+                if ( IS_KERR ( obj ) ) \
+                        return GET_KERR ( obj ); \
         })
 
 /* General error types */
