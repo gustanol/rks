@@ -22,10 +22,20 @@
         ( ( err ) == KERR_OK )
 
 /* Return a kerr_t on condition pass */
-#define KERR_RETURN_IF(cond, err) \
+#define KERR_RET_IF(cond, err) \
         ({ \
                 if ( cond ) \
                         return ( err ); \
+        })
+
+/**
+ * Instead of returning the error code directly, encode it first
+ * For functions that does not return a `kerr_t`
+ **/
+#define KERR_RET_ENCODE_IF(cond, err) \
+        ({ \
+                if ( cond ) \
+                        return ENCODE_KERR ( err ); \
         })
 
 /* General error types */
