@@ -1,5 +1,6 @@
 #include <alloc/dispatch.h>
 #include <rks/kernel/mem/alloc.h>
+#include <rks/kernel/mem/alloc/allocators/heap.h>
 
 /**
  * Public heap context creator
