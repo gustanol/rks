@@ -2,25 +2,16 @@
 #include <arch/const.h>
 #include <arch/mem/early_alloc.h>
 #include <pmm/backend.h>
-#include <rks/kernel/init/subsystem.h>
+#include <rks/kernel/mem/pmm/frames.h>
 #include <rks/kernel/mem/vmm/types.h>
 #include <rks/lib/bitwise.h>
 
-/* Function prototypes
- * =================== */
-static void __bitmap_init ( const struct pmm_init_backend_ctx* ctx );
-
-/* Operations
- * ========== */
-static paddr_t _bitmap_alloc_frame ( u32 total_frames );
-static kerr_t _bitmap_free_frame ( paddr_t phys_addr, u32 total_frames );
-static u32 _bitmap_free_region ( paddr_t phys_addr, size_t size,
-                                 u32 total_frames );
-static u32 _bitmap_fill_region ( paddr_t phys_addr, size_t size,
-                                 u32 total_frames );
-
-/* Global context struct */
-static struct bitmap_ctx g_bitmap;
+/* Prototypes */
+static PMM_BACKEND_INIT ( __bitmap_init );
+static PMM_BACKEND_ALLOC_FRAME ( _bitmap_alloc_frame );
+static PMM_BACKEND_FREE_FRAME ( _bitmap_free_frame );
+static PMM_BACKEND_FILL_REGION ( _bitmap_fill_frame );
+static PMM_BACKEND_FREE_REGION ( _bitmap_free_frame );
 
 /* PMM operations */
 static const struct pmm_ops bitmap_ops = {
@@ -30,8 +21,24 @@ static const struct pmm_ops bitmap_ops = {
 	.fill_region = _bitmap_region_used,
 };
 
+/* PMM backend context structure */
+static const struct pmm_backend bitmap_backend = {
+
+	/* *INDENT-OFF* */
+
+	.base = {
+		 .name = "pmm_bitmap",
+		 .tag = SUBSYS_TAG_PMM,
+	},
+
+	/* *INDENT-ON* */
+
+	.init = &__bitmap_init,
+	ops = &bitmap_ops,
+};
+
 /* Register it as a PMM backend */
-REGISTER_PMM_BACKEND ( "bitmap_pmm", __bitmap_init, &bitmap_ops );
+REGISTER_PMM_BACKEND ( bitmap_backend );
 
 /**
  * PMM bitmap backend initializer function
@@ -43,24 +50,25 @@ REGISTER_PMM_BACKEND ( "bitmap_pmm", __bitmap_init, &bitmap_ops );
  * Callers:
  *   - `pmm_init`
  **/
-void
-__bitmap_init ( const struct pmm_init_backend_ctx* ctx )
+PMM_BACKEND_INIT ( __bitmap_init )
 {
-	/*
-	 * Calculates the bitmap size in bytes
+
+	/**
+	 * Bitmap size in bytes
 	 *
 	 * NOTE: One block is represented by one bit
 	 * We need to convert it to byte size
-	 */
-	g_bitmap.size = BIT_TO_BYTE_SIZE ( ctx->frames_total );
+	 **/
+	g_bitmap.size = BIT_TO_BYTE_SIZE ( ctx->total_frames );
 
-	/* Allocates the bitmap pointer */
+	/* Allocate the bitmap */
 	g_bitmap.ptr = ( char * ) early_alloc ( g_bitmap.size );
 
 	/* Sets this region as used */
-	_bitmap_fill_region ( ( paddr_t )
-	                      ( ( vaddr_t ) g_bitmap.ptr -
-	                        ( vaddr_t ) HHDM_BASE ), g_bitmap.size );
+	_bitmap_fill_region ( g_bitmap.ptr, g_bitmap.size, ctx->total_frames );
+
+	/* Everything's okay */
+	return KERR_OK;
 }
 
 /**
@@ -73,26 +81,26 @@ __bitmap_init ( const struct pmm_init_backend_ctx* ctx )
  * Callers:
  *   - PMM implementations
  **/
-paddr_t
-_bitmap_alloc_frame ( u32 total_frames )
+PMM_ALLOC_FRAME ( _bitmap_alloc_frame )
 {
-	/* Gets the index of the first available physical frame */
-	u32 frame_idx = FIND_FIRST_ZERO_BIT ( g_bitmap.ptr, g_bitmap.size );
+
+	/* Index of the first available physical frame */
+	long frame_idx = FIND_FIRST_ZERO_BIT ( g_bitmap.ptr, g_bitmap.size );
 
 	/* No available memory */
-	if ( frame_idx < 0 )
-		return ENCODE_KERR ( KERR_NOMEM );
+	KERR_RET_ENCODE_IF ( frame_idx < 0, KERR_NOMEM,
+	                     "No free physical frame" );
 
 	/* Frame out of boundary */
-	if ( frame_idx > total_frames )
-		return ENCODE_KERR ( KERR_INTERNAL );
+	KERR_RET_ENCODE_IF ( frame_idx > total_frames, KERR_INTERNAL,
+	                     "Frame '%l' out of bounds", frame_idx );
 
 	/* Mark this frame as used */
 	BITMAP_SET_BIT ( g_bitmap.ptr, frame_idx );
 
 	/* Verify if the bit was set */
-	if ( !BITMAP_TEST_BIT ( g_bitmap.ptr, frame_idx ) )
-		return ENCODE_KERR ( KERR_INTERNAL );
+	KERR_RET_ENCODE_IF ( !BITMAP_TEST_BIT ( g_bitmap.ptr, frame_idx ),
+	                     KERR_INTERNAL, "Frame was not allocated" );
 
 	/* Page physical address */
 	return ( frame_idx * FRAME_SIZE );
@@ -109,58 +117,25 @@ _bitmap_alloc_frame ( u32 total_frames )
  * Callers:
  *   - PMM implementations
  **/
-kerr_t
-_bitmap_free_frame ( paddr_t phys_addr, u32 total_frames )
+PMM_BACKEND_FREE_FRAME ( _bitmap_free_frame )
 {
+
 	/* Physical frame index */
 	u32 frame_idx = phys_addr / FRAME_SIZE;
 
-	/* Invalid physical address */
-	if ( frame_idx > total_frames )
-		return KERR_INVAL;
+	/* Frame out of boundary */
+	KERR_RET_ENCODE_IF ( frame_idx > total_frames, KERR_INVAL,
+	                     "Frame '%l' out of bounds", frame_idx );
 
 	/* Mark this frame as used */
 	BITMAP_CLEAR_BIT ( g_bitmap.ptr, frame_idx );
 
 	/* Verify if the bit was cleared */
-	if ( BITMAP_TEST_BIT ( g_bitmap.ptr, frame_idx ) )
-		return KERR_INTERNAL;
+	KERR_RET_ENCODE_IF ( BITMAP_TEST_BIT ( g_bitmap.ptr, frame_idx ),
+	                     KERR_INTERNAL, "Frame was not freed" );
 
-	/* Otherwise, success */
+	/* Success */
 	return KERR_OK;
-}
-
-/**
- * Bitmap region map freer
- * Subsystem backend function
- *
- * Return -> `u32`: Successfully freed frames
- * Arguments:
- *   1. `paddr_t phys_addr`: Region base physical address
- *   2. `size_t size`: Region size
- *   3. `u32 total_frames`: Total frames provided by dispatch layer
- * Callers:
- *   - PMM imprementations
- **/
-u32
-_bitmap_free_region ( paddr_t phys_addr, size_t size, u32 total_frames )
-{
-	/* Starting index of the physical frame */
-	u32 frame_idx = phys_addr / FRAME_SIZE;
-
-	/* Amount of frames this region has */
-	u32 frame_count = size / FRAME_SIZE;
-
-	/* Region out of boundary */
-	if ( frame_idx + frame_count > total_frames )
-		return ENCODE_KERR ( KERR_INVAL );
-
-	/* Clear this region on the bitmap */
-	u32 cleared_frames =
-	        BITMAP_CLEAR_REGION ( g_bitmap.ptr, frame_idx, frame_count );
-
-	/* The amount of frames that were correctly cleared */
-	return cleared_frames;
 }
 
 /**
@@ -175,23 +150,58 @@ _bitmap_free_region ( paddr_t phys_addr, size_t size, u32 total_frames )
  * Callers:
  *   - PMM imprementations
  **/
-u32
-_bitmap_fill_region ( paddr_t phys_addr, size_t size, u32 total_frames )
+PMM_BACKEND_FILL_REGION ( _bitmap_fill_region )
 {
+
 	/* Physical frame starting index */
 	u32 frame_idx = phys_addr / FRAME_SIZE;
 
 	/* Frames amount */
-	u32 frame_count = size / FRAME_SIZE;
+	u32 frame_count = FRAMES_BY_SIZE ( size );
 
 	/* Region out of boundary */
-	if ( frame_idx + frame_count > total_frames )
-		return ENCODE_KERR ( KERR_INVAL );
+	KERR_RET_ENCODE_IF ( frame_idx + frame_count > total_frames, KERR_INVAL,
+	                     "Limit '%l' out of bounds",
+	                     frame_idx + frame_count );
 
 	/* Set all the bits of this region */
-	u32 set_frames =
+	size_t set_frames =
 	        BITMAP_SET_REGION ( g_bitmap.ptr, frame_idx, frame_count );
 
 	/* The amount of frames that were correctly set */
 	return set_frames;
+}
+
+/**
+ * Bitmap region map freer
+ * Subsystem backend function
+ *
+ * Return -> `u32`: Successfully freed frames
+ * Arguments:
+ *   1. `paddr_t phys_addr`: Region base physical address
+ *   2. `size_t size`: Region size
+ *   3. `u32 total_frames`: Total frames provided by dispatch layer
+ * Callers:
+ *   - PMM imprementations
+ **/
+PMM_BACKEND_FREE_REGION ( _bitmap_free_region )
+{
+
+	/* Starting index of the physical frame */
+	u32 frame_idx = phys_addr / FRAME_SIZE;
+
+	/* Amount of frames this region has */
+	u32 frame_count = size / FRAME_SIZE;
+
+	/* Region out of boundary */
+	KERR_RET_ENCODE_IF ( frame_idx + frame_count > total_frames, KERR_INVAL,
+	                     "Limit '%l' out of bounds",
+	                     frame_idx + frame_count );
+
+	/* Clear this region on the bitmap */
+	size_t cleared_frames =
+	        BITMAP_CLEAR_REGION ( g_bitmap.ptr, frame_idx, frame_count );
+
+	/* The amount of frames that were correctly cleared */
+	return cleared_frames;
 }
