@@ -1,5 +1,13 @@
 #include <pmm/dispatch.h>
 #include <pmm/internal.h>
+#include <rks/kernel/mem/pmm/frames.h>
+
+/* Inline function to get the `pmm_ops` pointer */
+static inline struct pmm_ops*
+get_ops ( void )
+{
+	return ( struct pmm_ops ) g_pmm->ops;
+}
 
 /**
  * Private physical frame allocator
@@ -14,10 +22,11 @@
 paddr_t
 _pmm_dispatch_alloc_frame ( void )
 {
+
 	u32 total_frames = g_pmm->frames.total;
 
 	/* Allocates a new physical frame */
-	paddr_t phys_addr = g_pmm->ops->alloc_frame ( total_frames );
+	paddr_t phys_addr = get_ops (  )->alloc_frame ( total_frames );
 
 	/* If correctly allocated, there's no kerr_t */
 	if ( !IS_KERR ( phys_addr ) )
@@ -42,13 +51,14 @@ _pmm_dispatch_alloc_frame ( void )
 kerr_t
 _pmm_dispatch_free_frame ( paddr_t phys_addr )
 {
+
 	u32 total_frames = g_pmm->frames.total;
 
 	/* Frees the requested frame */
-	kerr_t ret = g_pmm->ops->free_frame ( phys_addr, total_frames );
+	kerr_t ret = get_ops (  )->free_frame ( phys_addr, total_frames );
 
 	/* If correct freed */
-	if ( ret == KERR_OK )
+	if ( IS_RET_OK ( ret ) )
 
 	        /* Updates the amount of frames used */
 		g_pmm->frames.used--;
@@ -75,7 +85,7 @@ _pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
 
 	/* Tries to free this region */
 	u32 cleared_frames =
-	        g_pmm->ops->free_region ( phys_addr, size, total_frames );
+	        get_ops (  )->free_region ( phys_addr, size, total_frames );
 
 	/* No returning error */
 	if ( !IS_KERR ( cleared_frames ) )
@@ -104,7 +114,7 @@ _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t** size )
 
 	/* Tries to fill this region */
 	u32 set_frames =
-	        g_pmm->ops->fill_region ( phys_addr, size, total_frames );
+	        get_ops (  )->fill_region ( phys_addr, size, total_frames );
 
 	/* No returning error */
 	if ( !IS_KERR ( set_frames ) )
@@ -116,10 +126,10 @@ _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t** size )
 }
 
 /**
- * Public physical memory getter
- * Public wrapper
+ * Private physical memory getter
+ * Private dispatcher
  *
- * Return -> `size_t`: The total memory size
+ * Return -> `size_t`: Total memory size
  * Arguments:
  *   1. `void`
  * Callers:
@@ -133,4 +143,24 @@ _pmm_dispatch_get_total_memory ( void )
 
 	/* Return it back */
 	return total_memory;
+}
+
+/**
+ * Private physical available memory getter
+ * Private dispatcher
+ *
+ * Return -> `size_t`: Total memory size
+ * Arguments:
+ *   1. `void`
+ * Callers:
+ *   - `pmm_get_avaiable_memory`
+ **/
+size_t
+_pmm_dispatch_get_available_memory ( void )
+{
+	size_t total_memory = g_pmm->memory.total;
+	u32 frames_used = g_pmm->frames.used;
+
+	/* Return it */
+	return total_memory - SIZE_BY_FRAMES ( frames_used );
 }
