@@ -42,8 +42,7 @@ _heap_create ( void )
 	        __heap_alloc_and_map ( FRAMES_BY_SIZE ( HEAP_INITIAL_SIZE ) );
 
 	/* Return any error */
-	if ( IS_KERR ( virt_heap_base ) )
-		return virt_heap_base;  /* Already encoded */
+	KERR_PROPAGATE_ENCODE ( virt_heap_base );
 
 	/* This heap struct starts at the start of this allocation */
 	struct heap* this_heap = virt_heap_base;
@@ -214,10 +213,6 @@ kerr_t
 _heap_mfree ( void* ptr )
 {
 
-	/* If pointer is an actual address, return the invalid argument error */
-	if ( ptr == NULL || IS_KERR ( ptr ) )
-		return KERR_INVAL;
-
 	/* Gets its header metadata */
 	struct chunk_header* this_header = this_header_from_payload ( ptr );
 
@@ -333,18 +328,16 @@ __heap_alloc_and_map ( size_t frames_needed )
 {
 
 	/* Tries to allocate the requested amount of frames */
-	paddr_t phys_addr = pmm_alloc_frames ( frames_needed );
+	paddr_t phys_addr = pmm_alloc_region ( frames_needed );
 
 	/* Physical frames not allocated correctly */
-	if ( IS_KERR ( phys_addr ) )
-		return phys_addr;
+	KERR_PROPAGATE_ENCODE ( phys_addr );
 
 	/* Physical -> Virtual Address */
 	vaddr_t virt_addr = vmm_phys_to_virt ( phys_addr );
 
 	/* Return any error */
-	if ( IS_KERR ( virt_addr ) )
-		return virt_heap_base;
+	KERR_PROPAGATE_ENCODE ( virt_addr );
 
 	/* Return the mapped virtual address */
 	return virt_addr;
