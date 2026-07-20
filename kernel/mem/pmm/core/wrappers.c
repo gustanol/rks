@@ -18,6 +18,16 @@ pmm_alloc_frame ( void )
 	return _pmm_dispatch_alloc_frame ( page );
 }
 
+paddr_t
+pmm_alloc_frames ( size_t frames_needed )
+{
+
+	KERR_RET_ENCODE_IF ( frames_needed == NULL, KERR_INVAL, "" );
+	KERR_RET_ENCODE_IF ( IS_KERR ( frames_needed ), KERR_INVAL, "" );
+
+	return _pmm_dispatch_alloc_frames ( frames_needed );
+}
+
 /**
  * Public frame liberator
  * Public wrapper
@@ -44,14 +54,14 @@ pmm_free_frame ( paddr_t phys_addr )
  * Public region map setter
  * Public wrapper
  *
- * Return -> `u32`: Filled frames
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `paddr_t phys_addr`: Region physical base address
  *   2. `size_t size`: Region size
  * Callers:
  *   - Many
  **/
-size_t
+kerr_t
 pmm_fill_region ( paddr_t phys_addr, size_t size )
 {
 
@@ -72,14 +82,14 @@ pmm_fill_region ( paddr_t phys_addr, size_t size )
  * Public region map freer
  * Public wrapper
  *
- * Return -> `u32`: Freed frames
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `paddr_t phys_addr`: Region physical base address
  *   2. `size_t size`: Region size
  * Callers:
  *   - Many
  **/
-size_t
+kerr_t
 pmm_free_region ( paddr_t phys_addr, size_t size )
 {
 

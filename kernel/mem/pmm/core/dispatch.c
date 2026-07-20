@@ -63,44 +63,15 @@ _pmm_dispatch_free_frame ( paddr_t phys_addr )
 	        /* Updates the amount of frames used */
 		g_pmm->frames.used--;
 
-	/* Returns it */
+	/* Return it */
 	return ret;
-}
-
-/**
- * Private region map freer
- * Private dispatcher
- *
- * Return -> `u32`: Successfully cleared frames
- * Arguments:
- *   1. `paddr_t phys_addr`: Region base physical address
- *   2. `size_t size`: Region size
- * Callers:
- *   - `pmm_region_free`
- **/
-u32
-_pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
-{
-	u32 total_frames = g_pmm->frames.total;
-
-	/* Tries to free this region */
-	u32 cleared_frames =
-	        get_ops (  )->free_region ( phys_addr, size, total_frames );
-
-	/* No returning error */
-	if ( !IS_KERR ( cleared_frames ) )
-
-	        /* Decreases the amount of used frames */
-		g_pmm->frames.used -= size;
-
-	return cleared_frames;
 }
 
 /**
  * Private region map setter
  * Private dispatcher
  *
- * Return -> `u32`: Successfully set frames
+ * Return -> `kerr_t`: Global error type
  * Arguments:
  *   1. `paddr_t phys_addr`: Region base physical address
  *   2. `size_t size`: Region size
@@ -108,21 +79,51 @@ _pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
  *   - `pmm_region_used`
  **/
 kerr_t
-_pmm_dispatch_fill_region ( paddr_t phys_addr, size_t** size )
+_pmm_dispatch_fill_region ( paddr_t phys_addr, size_t size )
 {
+
 	u32 total_frames = g_pmm->frames.total;
 
 	/* Tries to fill this region */
-	u32 set_frames =
+	kerr_t ret =
 	        get_ops (  )->fill_region ( phys_addr, size, total_frames );
 
 	/* No returning error */
-	if ( !IS_KERR ( set_frames ) )
+	if ( IS_RET_OK ( ret ) )
 
 	        /* Increases the amount of used frames */
 		g_pmm->frames.used += size;
 
-	return set_frames;
+	return ret;
+}
+
+/**
+ * Private region map freer
+ * Private dispatcher
+ *
+ * Return -> `kerr_t`: Global error type
+ * Arguments:
+ *   1. `paddr_t phys_addr`: Region base physical address
+ *   2. `size_t size`: Region size
+ * Callers:
+ *   - `pmm_region_free`
+ **/
+kerr_t
+_pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
+{
+	u32 total_frames = g_pmm->frames.total;
+
+	/* Tries to free this region */
+	kerr_t ret =
+	        get_ops (  )->free_region ( phys_addr, size, total_frames );
+
+	/* No returning error */
+	if ( IS_RET_OK ( ret ) )
+
+	        /* Decreases the amount of used frames */
+		g_pmm->frames.used -= size;
+
+	return ret;
 }
 
 /**

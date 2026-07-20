@@ -26,10 +26,10 @@
         kerr_t name ( paddr_t phys_addr, u32 total_frames )
 
 #define PMM_BACKEND_FILL_REGION(name) \
-        size_t name ( paddr_t phys_addr, size_t size, u32 total_frames )
+        kerr_t name ( paddr_t phys_addr, size_t size, u32 total_frames )
 
 #define PMM_BACKEND_FREE_REGION(name) \
-        size_t name ( paddr_t phys_addr, size_t size, u32 total_frames )
+        kerr_t name ( paddr_t phys_addr, size_t size, u32 total_frames )
 
 /* PMM backend operations */
 struct pmm_ops

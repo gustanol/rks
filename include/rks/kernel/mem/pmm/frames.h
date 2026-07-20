@@ -16,7 +16,7 @@ paddr_t pmm_alloc_frame ( void );
 paddr_t pmm_alloc_frames ( size_t frames_needed );
 kerr_t pmm_free_frame ( paddr_t phys_addr );
 
-u32 pmm_free_region ( paddr_t phys_addr, size_t size );
-u32 pmm_fill_region ( paddr_t phys_addr, size_t size );
+kerr_t pmm_free_region ( paddr_t phys_addr, size_t size );
+kerr_t pmm_fill_region ( paddr_t phys_addr, size_t size );
 
 #endif /* _KERNEL_PMM_FRAMES_H */
