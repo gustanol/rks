@@ -102,7 +102,7 @@ pmm_init ( struct mmap_tag* mmap )
          * Mark the whole kernel size as used
          * Note this already includes bootstrap region
          **/
-	g_pmm->ops->fill_region ( KERNEL_START - HHDM_BASE,
+	g_pmm->ops->fill_region ( KERNEL_START - KERNEL_VIRT_OFF,
 	                          KERNEL_END - KERNEL_START,
 	                          g_pmm->frame.total );
 

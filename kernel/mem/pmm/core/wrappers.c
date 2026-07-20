@@ -1,5 +1,6 @@
 #include <pmm/dispatch.h>
-#include <rks/kernel/mem/pmm.h>
+#include <rks/kernel/mem/pmm/frames.h>
+#include <rks/kernel/mem/pmm/memory.h>
 
 /**
  * Public frame allocator
@@ -30,24 +31,13 @@ pmm_alloc_frame ( void )
 kerr_t
 pmm_free_frame ( paddr_t phys_addr )
 {
-	return _pmm_dispatch_free_frame ( phys_addr );
-}
 
-/**
- * Public region map freer
- * Public wrapper
- *
- * Return -> `u32`: Freed frames
- * Arguments:
- *   1. `paddr_t phys_addr`: Region physical base address
- *   2. `size_t size`: Region size
- * Callers:
- *   - Many
- **/
-u32
-pmm_free_region ( paddr_t phys_addr, size_t size )
-{
-	return _pmm_dispatch_free_region ( phys_addr, size );
+	KERR_RET_IF ( phys_addr == NULL, KERR_INVAL,
+	              "Physical address is NULL" );
+	KERR_RET_IF ( IS_KERR ( heap ), KERR_INVAL,
+	              "Physical address is KERR" );
+
+	return _pmm_dispatch_free_frame ( phys_addr );
 }
 
 /**
@@ -61,10 +51,49 @@ pmm_free_region ( paddr_t phys_addr, size_t size )
  * Callers:
  *   - Many
  **/
-u32
+size_t
 pmm_fill_region ( paddr_t phys_addr, size_t size )
 {
+
+	KERR_RET_ENCODE_IF ( phys_addr == NULL, KERR_INVAL,
+	                     "Physical address is NULL" );
+	KERR_RET_ENCODE_IF ( IS_KERR ( phys_addr ), KERR_INVAL,
+	                     "Physical address is KERR" );
+
+	KERR_RET_ENCODE_IF ( size == NULL, KERR_INVAL,
+	                     "Size of the region to be filled is NULL" );
+	KERR_RET_ENCODE_IF ( IS_KERR ( size ), KERR_INVAL,
+	                     "Size of the region to be filled is KERR" );
+
 	return _pmm_dispatch_fill_region ( phys_addr, size );
+}
+
+/**
+ * Public region map freer
+ * Public wrapper
+ *
+ * Return -> `u32`: Freed frames
+ * Arguments:
+ *   1. `paddr_t phys_addr`: Region physical base address
+ *   2. `size_t size`: Region size
+ * Callers:
+ *   - Many
+ **/
+size_t
+pmm_free_region ( paddr_t phys_addr, size_t size )
+{
+
+	KERR_RET_ENCODE_IF ( phys_addr == NULL, KERR_INVAL,
+	                     "Physical address is NULL" );
+	KERR_RET_ENCODE_IF ( IS_KERR ( phys_addr ), KERR_INVAL,
+	                     "Physical address is KERR" );
+
+	KERR_RET_ENCODE_IF ( size == NULL, KERR_INVAL,
+	                     "Size of the region to be freed is NULL" );
+	KERR_RET_ENCODE_IF ( IS_KERR ( size ), KERR_INVAL,
+	                     "Size of the region to be freed is KERR" );
+
+	return _pmm_dispatch_free_region ( phys_addr, size );
 }
 
 /**
@@ -80,6 +109,21 @@ pmm_fill_region ( paddr_t phys_addr, size_t size )
 size_t
 pmm_get_total_memory ( void )
 {
-	/* Gets the total memory size and returns it */
 	return _pmm_dispatch_get_total_memory (  );
+}
+
+/**
+ * Public helper to return the available memory size
+ * Public wrapper
+ *
+ * Return -> `size_t`: Available memory
+ * Arguments:
+ *   1. `void`
+ * Callers:
+ *   - Many
+ **/
+size_t
+pmm_get_available_memory ( void )
+{
+	return _pmm_dispatch_get_available_memory (  );
 }
