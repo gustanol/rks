@@ -18,16 +18,6 @@ pmm_alloc_frame ( void )
 	return _pmm_dispatch_alloc_frame ( page );
 }
 
-paddr_t
-pmm_alloc_frames ( size_t frames_needed )
-{
-
-	KERR_RET_ENCODE_IF ( frames_needed == NULL, KERR_INVAL, "" );
-	KERR_RET_ENCODE_IF ( IS_KERR ( frames_needed ), KERR_INVAL, "" );
-
-	return _pmm_dispatch_alloc_frames ( frames_needed );
-}
-
 /**
  * Public frame liberator
  * Public wrapper
@@ -48,6 +38,31 @@ pmm_free_frame ( paddr_t phys_addr )
 	              "Physical address is KERR" );
 
 	return _pmm_dispatch_free_frame ( phys_addr );
+}
+
+/**
+ * Public physical contiguous region allocator
+ * Public wrapper
+ *
+ * Return -> `paddr_t`: Region start physical address
+ * Arguments:
+ *   1. `size_t frames_needed`: Region size in frames
+ * Callers:
+ *   - Many
+ **/
+paddr_t
+pmm_alloc_region ( size_t frames_needed )
+{
+
+	KERR_RET_ENCODE_IF ( frames_needed == NULL, KERR_INVAL,
+	                     "Not a valid value as region size: %d\n",
+	                     frames_needed );
+
+	KERR_RET_ENCODE_IF ( IS_KERR ( frames_needed ), KERR_INVAL,
+	                     "Frames needed value is a KERR: %s\n",
+	                     kerr_str ( GET_KERR ( frames_needed ) ) );
+
+	return _pmm_dispatch_alloc_region ( frames_needed );
 }
 
 /**

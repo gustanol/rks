@@ -68,6 +68,32 @@ _pmm_dispatch_free_frame ( paddr_t phys_addr )
 }
 
 /**
+ * Private physical contiguous region allocator
+ * Private dispatcher
+ *
+ * Return -> `paddr_t`: Region start physical address
+ * Arguments:
+ *   1. `size_t frames_needed`: Region size in frames
+ * Callers:
+ *   - `pmm_alloc_region`
+ **/
+paddr_t
+_pmm_dispatch_alloc_region ( size_t frames_needed )
+{
+	u32 total_frames = g_pmm->frames.total;
+
+	/* Region start */
+	padd_t phys_addr =
+	        get_ops (  )->alloc_region ( phys_addr, total_frames );
+
+	/* Just update the global state on correct allocation */
+	if ( !IS_KERR ( phys_addr ) )
+		g_pmm->frames.used += frames_needed;
+
+	return phys_addr;
+}
+
+/**
  * Private region map setter
  * Private dispatcher
  *

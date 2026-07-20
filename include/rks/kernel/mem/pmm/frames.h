@@ -13,9 +13,8 @@
         ( ( FRAME_SIZE ) * ( n ) )
 
 paddr_t pmm_alloc_frame ( void );
-paddr_t pmm_alloc_frames ( size_t frames_needed );
 kerr_t pmm_free_frame ( paddr_t phys_addr );
-
+paddr_t pmm_alloc_region ( size_t frames_needed );
 kerr_t pmm_free_region ( paddr_t phys_addr, size_t size );
 kerr_t pmm_fill_region ( paddr_t phys_addr, size_t size );
 
