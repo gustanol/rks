@@ -25,6 +25,9 @@
 #define PMM_BACKEND_FREE_FRAME(name) \
         kerr_t name ( paddr_t phys_addr, u32 total_frames )
 
+#define PMM_BACKEND_ALLOC_REGION(name) \
+        paddr_t name ( size_t frames_needed, u32 total_frames )
+
 #define PMM_BACKEND_FILL_REGION(name) \
         kerr_t name ( paddr_t phys_addr, size_t size, u32 total_frames )
 
@@ -39,6 +42,9 @@ struct pmm_ops
 
 	/* Frees a single frame */
 	PMM_BACKEND_FREE_FRAME ( ( *free_frame ) );
+
+	/* Allocates a contiguous memory region */
+	PMM_BACKEND_ALLOC_REGION ( ( *alloc_region ) );
 
 	/* Fills a contiguous memory region */
 	PMM_BACKEND_FILL_REGION ( ( *fill_region ) );

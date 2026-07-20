@@ -10,6 +10,7 @@
 static PMM_BACKEND_INIT ( __bitmap_init );
 static PMM_BACKEND_ALLOC_FRAME ( _bitmap_alloc_frame );
 static PMM_BACKEND_FREE_FRAME ( _bitmap_free_frame );
+static PMM_BACKEND_ALLOC_REGION ( _bitmap_alloc_region );
 static PMM_BACKEND_FILL_REGION ( _bitmap_fill_frame );
 static PMM_BACKEND_FREE_REGION ( _bitmap_free_frame );
 
@@ -17,6 +18,7 @@ static PMM_BACKEND_FREE_REGION ( _bitmap_free_frame );
 static const struct pmm_ops bitmap_ops = {
 	.alloc_frame = _bitmap_alloc_frame,
 	.free_frame = _bitmap_free_frame,
+	.alloc_region = _bitmap_alloc_region,
 	.free_region = _bitmap_region_free,
 	.fill_region = _bitmap_region_used,
 };
@@ -128,6 +130,36 @@ PMM_BACKEND_FREE_FRAME ( _bitmap_free_frame )
 
 	/* Success */
 	return KERR_OK;
+}
+
+/**
+ * Bitmap contiguous region allocator
+ * Subsystem backend function
+ *
+ * Return -> `paddr_t`: Starter region physical address
+ * Arguments:
+ *   1. `size_t frames_needed`: Amount of frames this region must have
+ *   2. `u32 total_frames`: Total amount of memory frames
+ * Callers:
+ *   - PMM implementations
+ **/
+PMM_BACKEND_ALLOC_REGION ( _bitmap_alloc_region )
+{
+
+	/* First region frame index */
+	long region_start =
+	        FIND_CONTIGUOUS_ZERO_REGION ( g_bitmap.ptr, g_bitmap.size,
+	                                      frames_needed );
+
+	/* No available memory */
+	KERR_RET_ENCODE_IF ( region_start < 0, KERR_NOMEM,
+	                     "No free physical frame\n" );
+
+	/* Mark the found region as used */
+	BITMAP_SET_REGION ( g_bitmap.ptr, region_start, frames_needed );
+
+	/* Return the starter physical address */
+	return ( region_start * FRAME_SIZE );
 }
 
 /**
