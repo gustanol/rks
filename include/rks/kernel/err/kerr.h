@@ -49,6 +49,13 @@
                         return GET_KERR ( obj ); \
         })
 
+/* If `obj` is a KERR, just return it (it's already encoded) */
+#define KERR_PROPAGATE_ENCODE(obj) \
+        ({ \
+                if ( IS_KERR ( obj ) ) \
+                        return ( obj ); \
+        })
+
 /* General error types */
 typedef enum
 {
