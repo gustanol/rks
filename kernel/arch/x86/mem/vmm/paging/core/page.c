@@ -69,7 +69,7 @@ _paging_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 
 	/* PT entry already set */
 	if ( IS_PRESENT ( *pt_entry ) )
-		return RKERR_EXIST;
+		return KERR_REXIST;
 
 	/* Passes the physical address to PT entry with its flags */
 	*pt_entry = phys_addr | ( PAGE_PRESENT & flags );
