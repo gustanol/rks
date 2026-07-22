@@ -1,4 +1,5 @@
 cache/
+.zig-cache/
 build/
 debug/
 *.o

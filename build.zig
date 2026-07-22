@@ -19,13 +19,13 @@ pub fn build(b: *std.Build) void {
 
     // This target options
     const target = b.resolveTargetQuery(.{
-        .cpu_target = cpu_arch, // Chosen architecture
+        .cpu_arch = cpu_arch, // Chosen architecture
         .os_tag = .freestanding,
         .abi = .none,
     });
 
     // Executable options
-    const exec = b.addExecutable(.{
+    const kernel_exec = b.addExecutable(.{
         .name = "rks",
         .root_module = b.createModule(.{
             .target = target,
@@ -44,9 +44,8 @@ pub fn build(b: *std.Build) void {
         "-Wall",
         "-Wextra",
         "-std=gnu11", // GNU extensions
-        "-D__KERNEL__",
     };
 
-    kernel_build.addKernel(b, exec, global_cflags);
-    b.installArtifact(exec);
+    kernel_build.addKernel(b, kernel_exec, global_cflags);
+    b.installArtifact(kernel_exec);
 }

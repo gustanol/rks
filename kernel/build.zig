@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const arch = @import("arch/sources.zig");
-const console = @import("console/sources.zig");
-const err = @import("err/sources.zig");
-const init = @import("init/sources.zig");
-const mem = @import("mem/sources.zig");
+const arch = @import("arch/build.zig");
+const console = @import("console/build.zig");
+const err = @import("err/build.zig");
+const init = @import("init/build.zig");
+const mem = @import("mem/build.zig");
 
 pub fn addKernel(
     b: *std.Build,
