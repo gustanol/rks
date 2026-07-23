@@ -1,40 +1,45 @@
-[TYPE][SCOPE]: [SHORT_DESCRIPTION]
+<type>(<scope>): <short description>
 
-[LONG_DESCRIPTION]
+<long description>
 
-[ISSUES]
+- <TODO>
 
-[REFERENCE_SPECIFICATION]
-
----
-
-TYPE: Type of change. Common values:
-- FEAT: a new feature
-- FIX: patches a bug
-- DOCS: documentation-only changes
-- REFACTOR: code changes that neither fix a bug nor add a feature
-- PERF: improves performance
-- TEST: adds or correct tests
-- CHORE: changes to the build process or auxiliary tools
+<commit reference>
 
 ---
 
-SCOPE [OPTIONAL]: Specific affected project area
+type: commit type. Common values:
+- feat: a new feature
+- fix: patches a bug
+- docs: documentation-only changes
+- refactor: code changes that neither fix a bug nor add a feature
+- perf: improves performance
+- test: adds or correct tests
+- chore: changes to the build process or auxiliary tools
 
 ---
 
-SHORT_DESCRIPTION: Introduction commit description that must not exceed 50 characters
+scope (optional): Specific affected project area. e.g.,
+- mem/vmm
+- kernel
+- kerr
+- arch/x86/cpu
 
 ---
 
-LONG_DESCRIPTION: Explanation (why) of changes. Use multiple lines. Each one of them must not exceed 70 characters
+short description: Introduction commit description. It should not exceed 50 characters
 
 ---
 
-ISSUES [OPTIONAL]: Specific must-fix issues for next changes
+long description: Explanation (why) of changes. Multiple lines can be used.
+It's not recommended to exceed 70 characters per line.
 
 ---
 
-REFERENCE_SPECIFICATION: Keep this style:
+TODO (optional): Things to do next.
 
-USERNAME: DATE (Using ISO Format - YYYY-MM-dd)
+---
+
+commit reference:
+
+<username>: <date> (ISO 8601 -> YYYY-MM-dd)
