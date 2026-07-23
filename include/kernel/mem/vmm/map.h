@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include <rks/kernel/mem/pmm/types.h>
+#include <rks/kernel/err/kerr.h>
 
 /* Generic VMM flags */
 enum vmm_flags

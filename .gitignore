@@ -25,7 +25,7 @@ tags
 .build.sources
 
 # Auto-generated header file
-include/rks/autoconf.h
+include/autoconf.h
 
 # Copied architecture include directory
 include/arch

@@ -1,12 +1,13 @@
 #ifndef _KERNEL_PMM_TYPES_H
 #define _KERNEL_PMM_TYPES_H
 
-#include <rks/kernel/types.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /* Define page size as the same size as physical frames */
 #define FRAME_SIZE PAGE_SIZE
 
 /* Physical address type */
-typedef u64 paddr_t;
+typedef uint64_t paddr_t;
 
 #endif /* _KERNEL_PMM_TYPES_H */
