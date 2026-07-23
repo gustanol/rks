@@ -1,7 +1,7 @@
 const std = @import("std");
 
 /// Child directories
-const kernel_build = @import("kernel/build.zig");
+const kernel_build = @import("kernel/kernel.build.zig");
 
 pub fn build(b: *std.Build) void {
 
