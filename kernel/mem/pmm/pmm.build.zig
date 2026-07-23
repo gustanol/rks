@@ -1,8 +1,8 @@
 const std = @import("std");
 
 pub const Config = struct {
-    bitmap: bool = true,
-    buddy: bool = false,
+    bitmap: u32,
+    buddy: u32,
 };
 
 pub fn addSubsystem(
@@ -25,8 +25,8 @@ pub fn addSubsystem(
     // PMM internal CFLAGS
     const pmm_flags = mergeFlags(b, global_flags, &.{
         "-I", b.fmt("{s}/include", .{path}),
-        "-D", b.fmt("PMM_ENABLE_BITMAP={d}", if (config.bitmap) 1 else 0),
-        "-D", b.fmt("PMM_ENABLE_BUDDY={d}", if (config.buddy) 1 else 0),
+        "-D", b.fmt("PMM_ENABLE_BITMAP={d}", .{config.bitmap}),
+        "-D", b.fmt("PMM_ENABLE_BUDDY={d}", .{config.buddy}),
     });
 
     // Add to kernel global executable
@@ -37,13 +37,9 @@ pub fn addSubsystem(
 
     // Bitmap backend sources
     if (config.bitmap) {
-        const bitmap_flags = mergeFlags(b, pmm_flags, &.{
-            "-DBITMAP_BACKEND_ACTIVE=1",
-        });
-
         kernel.addCSourceFile(.{
             .file = b.path(b.fmt("{s}/backend/bitmap/bitmap.c", .{path})),
-            .flags = bitmap_flags,
+            .flags = pmm_flags,
         });
     }
 }
