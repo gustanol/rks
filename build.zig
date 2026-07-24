@@ -24,12 +24,15 @@ pub fn build(b: *std.Build) void {
         .abi = .none,
     });
 
+    // Optimize options
+    const optimize = b.standardOptimizeOption(.{});
+
     // Executable options
     const kernel_exec = b.addExecutable(.{
         .name = "rks",
         .root_module = b.createModule(.{
             .target = target,
-            .optimize = b.standardOptimizeOption(.{}),
+            .optimize = optimize,
         }),
     });
 
@@ -40,7 +43,6 @@ pub fn build(b: *std.Build) void {
         "-fno-pic",
         "-fno-pie",
         "-mno-red-zone",
-        "-mcmodel=kernel",
         "-Wall",
         "-Wextra",
         "-std=gnu11", // GNU extensions
