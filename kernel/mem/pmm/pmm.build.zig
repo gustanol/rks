@@ -1,8 +1,9 @@
 const std = @import("std");
+const helpers = @import("../../../scripts/zig/helpers.zig");
 
 pub const Config = struct {
-    bitmap: u32,
-    buddy: u32,
+    bitmap: u32 = 1,
+    buddy: u32 = 1,
 };
 
 pub fn addSubsystem(
@@ -13,7 +14,9 @@ pub fn addSubsystem(
     const path = "kernel/mem/pmm";
 
     // Load local pmm.config.json (or default)
-    const config = loadConfig(b, path);
+    const config_file = helpers.config.loadLocalConfigFile(
+        Config, b, b.fmt("{s}/pmm.config.json", .{path})
+    );
 
     // PMM core source files
     const core_sources = &[_][]const u8{
@@ -23,51 +26,23 @@ pub fn addSubsystem(
     };
 
     // PMM internal CFLAGS
-    const pmm_flags = mergeFlags(b, global_flags, &.{
+    const pmm_flags = helpers.flags.mergeFlags(b, global_flags, &.{
         "-I", b.fmt("{s}/include", .{path}),
-        "-D", b.fmt("PMM_ENABLE_BITMAP={d}", .{config.bitmap}),
-        "-D", b.fmt("PMM_ENABLE_BUDDY={d}", .{config.buddy}),
+        "-D", b.fmt("PMM_ENABLE_BITMAP={d}", .{config_file.bitmap}),
+        "-D", b.fmt("PMM_ENABLE_BUDDY={d}", .{config_file.buddy}),
     });
 
     // Add to kernel global executable
-    kernel.addCSourceFiles(.{
+    kernel.root_module.addCSourceFiles(.{
         .files = core_sources,
         .flags = pmm_flags
     });
 
     // Bitmap backend sources
-    if (config.bitmap) {
-        kernel.addCSourceFile(.{
+    if (config_file.bitmap == 1) {
+        kernel.root_module.addCSourceFile(.{
             .file = b.path(b.fmt("{s}/backend/bitmap/bitmap.c", .{path})),
             .flags = pmm_flags,
         });
     }
-}
-
-fn loadConfig(b: *std.Build, path: []const u8) Config {
-    const local_path = b.fmt("{s}/pmm.config.json", .{path});
-    const default_path = b.fmt("{s}/pmm.config.default.json", .{path});
-
-    const file = b.build_root.handle.openFile(local_path, .{}) catch
-        b.build_root.handle.openFile(default_path, .{}) catch return .{};
-    defer file.close();
-
-    const contents = file.readToEndAlloc(b.allocator, 1024 * 64) catch return .{};
-    const parsed = std.json.parseFromSlice(Config, b.allocator, contents, .{}) catch return .{};
-    return parsed.value;
-}
-
-fn mergeFlags(
-    b: *std.Build,
-    global_flags: []const []const u8,
-    extra_flags: []const []const u8,
-) []const []const u8 {
-
-    return std.mem.concat(
-        b.allocator,
-        []const u8,
-        &.{ global_flags, extra_flags },
-
-        // Out Of Memory error
-    ) catch @panic("OOM merging build flags");
 }
