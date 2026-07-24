@@ -1,10 +1,10 @@
-#include <rks/kernel/init/subsystem.h>
-#include <rks/kernel/mem/pmm.h>
+#include <kernel/kerr/kerr.h>
+#include <kernel/init/subsystem.h>
+#include <kernel/mem/alloc.h>
 
 /* Subsystems section limits */
 extern struct subsys_backend* __registry_subsystem_start;
 extern struct subsys_backend* __registry_subsystem_end;
-
 
 /**
  * Subsystem backend locator
@@ -12,13 +12,14 @@ extern struct subsys_backend* __registry_subsystem_end;
  *
  * Return -> `struct subsys_backend *`: Backend state pointer
  * Arguments:
- *   1. `u32 tag`: Subsystem tag
+ *   1. `uint32_t tag`: Subsystem tag
  * Callers:
  *   - Subsystems implemenations
  **/
 struct subsys_backend*
-subsys_find_backend ( u32 tag )
+subsys_find_backend ( uint32_t tag )
 {
+
 	/* Stores the found backend (or NULL) */
 	struct subsys_backend* found = NULL;
 
@@ -30,7 +31,6 @@ subsys_find_backend ( u32 tag )
 		/* Verifies if the current tag is equal to the one we're aiming */
 		if ( backend->tag == tag )
 		{
-			/* Fills out the `found` pointer */
 			found = backend;
 			break;
 		}
@@ -44,37 +44,59 @@ subsys_find_backend ( u32 tag )
  * Multiple subsystem backends locator
  * Public helper
  *
- * Return -> `size_t`: Amount of the backends found
+ * Return -> `struct backends_list *`: List of found backends
  * Arguments:
- *   1. `u32 tag`: Subsystem tag
- *   2. `struct subsys_backend** arr`: Array of backend pointers
- *   3. `size_t len`: Amount of backends to be found
+ *   1. `uint32_t tag`: Subsystem tag
  * Callers:
  *   - Subsystems internal implementations
+ *
+ * - This function shouldn't be called before MM setup
  **/
-size_t
-subsys_find_multiple_backends ( u32 tag, struct subsys_backend** arr,
-                                size_t len )
+struct backends_list*
+subsys_find_multiple_backends ( uint32_t tag )
 {
-	/* Backends counter */
-	size_t count = 0;
 
-	/* Iteration throughout the section */
+	/* Allocate the return type */
+	struct backends_list* list =
+	        ( struct backends_list * )
+	        k_malloc ( sizeof ( struct backends_list ) );
+
+	/* Stop on error */
+	if ( IS_KERR ( list ) )
+		return NULL;
+
+	/* Start the count at zero */
+	list->count = 0;
+
+	/* First iteration to get the backend count */
 	for ( struct subsys_backend * backend = __registry_subsystems_start;
 	      backend < __registry_subsystems_end; backend++ )
-	{
-		/* Compare tags */
-		if ( backend->tag == tag )
-		{
-			/* For each case, fill the pointer array with the current backend */
-			arr[count++] = backend;
 
-			/* Only break after all fillings */
-			if ( count >= len )
-				break;
-		}
+	        /* Compare tags */
+		if ( backend->tag == tag )
+			list->count++;
+
+	/* Allocate the array of pointers */
+	list->arr =
+	        k_malloc ( sizeof ( struct subsys_backend * ) * list->count );
+
+	/* Again, stop on error */
+	if ( IS_KERR ( list ) )
+		return NULL;
+
+	/* Second iteration to set all backends */
+	for ( struct subsys_backend * backend =
+	      __registry_subsystems_start, uint32_t i = 0;
+	      backend < __registry_subsystems_end; backend++ )
+	{
+		if ( backend->tag == tag )
+			list->arr[i++] = backend;
+
+		/* Only break after all fillings */
+		if ( i >= len )
+			break;
 	}
 
-	/* Return the count */
-	return count;
+	/* Return the dynamic list */
+	return list;
 }

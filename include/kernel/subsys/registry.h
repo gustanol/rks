@@ -1,26 +1,30 @@
 #ifndef _KERNEL_SUBSYS_REGISTRY_H
 #define _KERNEL_SUBSYS_REGISTRY_H
 
-#include <rks/kernel/types.h>
-#include <rks/lib/compiler/builtins.h>
+#include <stddef.h>
+#include <stdint.h>
 
-/* Generic macro to register a new subsystem backend
- * ================================================= */
+/* Generic macro to register a new subsystem backend */
 #define REGISTER_SUBSYSTEM_BACKEND(BASE) \
         __attribute__ ( ( section ( ".subsys.registry" ), used ) ) \
-        const struct subsys_backend *const CONCAT ( __REG_BACKEND, BASE ) = &( BASE );
+        const struct subsys_backend *const __REG_BACKEND ## BASE = &( BASE );
 
 /* Subsystem backend descriptor */
 struct subsys_backend
 {
 	const char* name;
-	u32 tag;
+	uint32_t tag;
 };
 
-/* Prototypes
- * ========== */
-struct subsys_backend* subsys_find_backend ( u32 tag );
-size_t subsys_find_multiple_backends ( u32 tag, struct subsys_backend** arr,
-                                       size_t len );
+/* Return type for multiple backends lookup */
+struct backends_list
+{
+	struct subsys_backend** arr;
+	size_t count;
+};
+
+/* Prototypes */
+struct subsys_backend* subsys_find_backend ( uint32_t tag );
+struct backends_list* subsys_find_multiple_backends ( uint32_t tag );
 
 #endif /* _KERNEL_SUBSYS_REGISTRY_H */
