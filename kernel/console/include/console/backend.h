@@ -9,7 +9,7 @@
 #define SUBSYS_TAG_CONSOLE 0x434F4E534F4C45
 
 /* Console backend registration macro */
-#define REGISTER_ALLOC_BACKEND(BACKEND) \
+#define REGISTER_CONSOLE_BACKEND(BACKEND) \
         ({ \
                 const struct console_backend* __tmp = &( BACKEND ); \
                 REGISTER_SUBSYSTEM_BACKEND ( &__tmp->base ); \
