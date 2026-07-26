@@ -6,6 +6,7 @@
 
 #define VGA_HEIGHT 25
 #define VGA_WIDTH 80
+#define VGA_DEFAULT_COLOR 0x0F
 #define VGA_MADDR 0xB8000
 
 /* VGA screen cell */
@@ -22,10 +23,28 @@ struct vga_ctx
 	{
 
 		/* Array of cells */
-		struct vga_cell** ptr;
+		struct vga_cell* ptr;
 
-		/* Amount of cells */
-		size_t cell_count;
+		struct
+		{
+
+			/* Dimensions */
+			size_t width;
+			size_t height;
+
+			/* Amount of cells */
+			size_t cell_count;
+
+			/* Current color byte */
+			uint8_t current_color;
+		} attr;
+
+		struct
+		{
+			uint32_t x;
+			uint32_t y;
+		} coordinates;
+
 	} screen;
 
 	/* Actual memory address to flush */
