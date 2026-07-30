@@ -1,17 +1,57 @@
 #include <terminal/internal.h>
 
-/*
+/* Defines manager operations */
+struct manager_ops ops
+{
+	.putc = _terminal_manager_putc,
+	.puts = _terminal_manager_puts,
+	.clear = _terminal_manager_clear,
+};
+
+/* Keep it as a const pointer */
+struct manager_ops const* ops_ptr = &ops;
+
+/**
+ * Terminal manager initializer function
+ * Manager function
+ *
+ * Return -> `kerr_t`
+ * Arguments:
+ *   - `void`
+ * Callers:
+ *   - `terminal_init`
+ **/
 kerr_t
 terminal_manager_init ( void )
 {
-}
-*/
 
+	/* ALLOCATE A NEW CHUNK WHEN THE FUNCTION IS READY */
+
+	/* Set the operations to be used by higher layers */
+	g_terminal->tty.manager_ops = ops_ptr;
+
+	/* Everthing's okay */
+	return KERR_OK;
+}
+
+/**
+ * Terminal manager function to add a new character
+ * Manager function
+ *
+ * Return -> `void`
+ * Arguments:
+ *   - `struct tty_history* history`: TTY chunk content history
+ *   - `char c`: Character to be put in
+ * Callers:
+ *   - `_terminal_dispatch_putc`
+ **/
 void
 _terminal_manager_putc ( struct tty_history* history, char c )
 {
 	switch ( c )
 	{
+
+		/* Treat newlines */
 	    case '\n':
 	    {
 		    history->attributes.line_count++;

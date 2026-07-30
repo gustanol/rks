@@ -64,8 +64,18 @@ struct tty
 	size_t viewport_top;
 };
 
+/* Manager operation functions (layer after dispatch) */
 struct manager_ops
 {
+
+	/* Put new character */
+	void ( *putc ) ( struct tty_history *, char );
+
+	/* Put new string */
+	void ( *puts ) ( struct tty_history *, char * );
+
+	/* Clears all TTY history */
+	void ( *clear ) ( struct tty_history * );
 };
 
 /* Operations */
