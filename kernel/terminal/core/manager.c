@@ -75,3 +75,24 @@ _terminal_manager_putc ( struct tty_history* history, char c )
 	/* Write the character at the current line cell */
 	current_line->cells.base[current_chunk->linex.cells.current++] = c;
 }
+
+/**
+ * Terminal manager function to add a new null-terminated string
+ * Manager function
+ *
+ * Return -> `void`
+ * Arguments:
+ *   - `struct tty_history* history`: TTY history to be modified
+ *   - `char* c`: Null-terminated string to be added
+ * Callers:
+ *   - `terminal_dispatch_puts`
+ **/
+void
+_terminal_manager_puts ( struct tty_history* history, char* s )
+{
+
+	/* PARSE SPECIAL CASES BEFORE CALLING `PUTC` */
+
+	for ( uint32_t i = 0; s[i] != '\0'; i++ )
+		_terminal_manager_putc ( s[i] );
+}
