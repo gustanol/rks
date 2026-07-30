@@ -12,6 +12,9 @@ struct manager_ops ops
 /* Keep it as a const pointer */
 struct manager_ops const* ops_ptr = &ops;
 
+/* Static operations */
+static void _terminal_manager_render ( struct tty_history* history );
+
 /**
  * Terminal manager initializer function
  * Manager function
@@ -137,4 +140,47 @@ _terminal_manager_clear ( struct tty_history* history )
 
 	/* Just like the current capability */
 	history->chunks.capability = 0;
+}
+
+/**
+ * Terminal manager function used to render content
+ * Static manager function
+ *
+ * Return -> `void`
+ * Arguments:
+ *   - `struct tty_history* history`: TTY history to be used
+ * Callers:
+ *   - Internal Terminal manager functions (static)
+ **/
+void
+_terminal_manager_render ( struct tty_history* history )
+{
+
+	/* Get the chunk at viewport top */
+	struct tty_chunk* top_chunk = history->chunk
+		.base[TTY_GET_CHUNK_IDX ( history->attributes.viewport_top )];
+
+	/* Do nothing when the viewport chunk has no dirty lines */
+	if ( top_chunk->lines.dirty == 0 )
+		return;
+
+	/* Amount of chunks viewport requires */
+	size_t viewport_chunks_limit =
+		TTY_VIEWPORT_CHUNKS ( history->attributes.height );
+
+	/* Temporary buffer used to store the viewport content and pass to backends */
+	char buf[viewport_chunks_limit * TTY_CHUNK_LINES * TTY_LINE_CELLS];
+
+	/* Iterate for each line in each viewport chunk */
+	for ( uint32_t chunk = 0; chunk < viewport_chunks_limit; chunk++ )
+		for ( uint32_t line = 0; line < TTY_CHUNK_LINES; line++,
+			history->chunks.base[chunk]->lines.dirty-- )
+
+			/* Copy the current line to the buffer */
+			buf[chunk * TTY_LINE_CELLS + line] = history->chunks.base[chunk]->lines.base;
+
+	/* Pass this buffer to every registered backend */
+	for ( uint32_t backend = 0; backend < g_terminal->backends.count; backend++ )
+		g_terminal->backends.ops_list[backend]->
+			flush ( &buf, TTY_LINE_CELLS, TTY_CHUNK_LINES * viewport_chunks_limit );
 }

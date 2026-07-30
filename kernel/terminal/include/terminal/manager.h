@@ -8,6 +8,8 @@
 #define TTY_GET_CHUNK_IDX(LINE_COUNT) \
         ( ( LINE_COUNT ) / ( TTY_CHUNK_LINES ) )
 
+#define TTY_VIEWPORT_CHUNKS(HEIGHT) TTY_GET_CHUNK_IDX ( HEIGHT ) 
+
 /* Line descriptor */
 struct tty_line
 {
@@ -29,7 +31,7 @@ struct tty_chunk
 		struct tty_line base[TTY_CHUNK_LINES];
 
 		/* Amount of used lines */
-		uint32_t used;
+		uint32_t dirty;
 	} lines;
 };
 
@@ -52,6 +54,7 @@ struct tty_history
 	struct
 	{
 		uint32_t line_count;
+		uint32_t viewport_top;
 		uint32_t width;
 		uint32_t height;
 	} attributes;
@@ -61,7 +64,6 @@ struct tty_history
 struct tty
 {
 	struct tty_history* history;
-	uint32_t viewport_top;
 };
 
 /* Manager operation functions (layer after dispatch) */

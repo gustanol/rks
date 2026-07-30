@@ -40,7 +40,7 @@
         void name ( char* s )
 
 #define TERMINAL_BACKEND_FLUSH(name) \
-        void name ( void )
+        void name ( char* buf, uint32_t width, uint32_t height )
 
 #define TERMINAL_BACKEND_CLEAR(name) \
         void name ( void )
