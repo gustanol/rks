@@ -34,7 +34,7 @@
 
 /* Wrapping */
 -nbbo
--l80
+-l85
 -gts
 
 /* Others */
