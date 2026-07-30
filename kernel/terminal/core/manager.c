@@ -1,3 +1,4 @@
+#include <string.h>
 #include <terminal/internal.h>
 
 /* Defines manager operations */
@@ -85,7 +86,7 @@ _terminal_manager_putc ( struct tty_history* history, char c )
  *   - `struct tty_history* history`: TTY history to be modified
  *   - `char* c`: Null-terminated string to be added
  * Callers:
- *   - `terminal_dispatch_puts`
+ *   - `_terminal_dispatch_puts`
  **/
 void
 _terminal_manager_puts ( struct tty_history* history, char* s )
@@ -95,4 +96,45 @@ _terminal_manager_puts ( struct tty_history* history, char* s )
 
 	for ( uint32_t i = 0; s[i] != '\0'; i++ )
 		_terminal_manager_putc ( s[i] );
+}
+
+/**
+ * Terminal manager function to clear all TTY history
+ * Manager function
+ *
+ * Return -> `void`
+ * Arguments:
+ *   - `struct tty_history* history`: TTY history to be cleared up
+ * Callers:
+ *   - `_terminal_dispatch_clear`
+ **/
+void
+_terminal_manager_clear ( struct tty_history* history )
+{
+
+	/**
+	 * Sets all chunks to zero
+	 * By setting them as zero, they are cleared after all
+	 *
+	 * This can be made by an iteration for each allocated chunk
+	 **/
+	for ( uint32_t i = 0; i < history->chunks.count; i++ )
+
+		/* Zero the `i` chunk, including all their lines */
+		memset ( history->chunks.base[i], 0, sizeof ( struct tty_chunk ) );
+
+	/**
+	 * Zero the chunk base pointer at TTY history context
+	 *
+	 * Note it's an array of `struct tty_chunk *`
+	 * Zero all its size
+	 **/
+	memset ( history->chunks.base, 0,
+		sizeof ( struct tty_chunk* ) * history->chunks.capability );
+
+	/* Set the current chunk count as zero */
+	history->chunks.count = 0;
+
+	/* Just like the current capability */
+	history->chunks.capability = 0;
 }

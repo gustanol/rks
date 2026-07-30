@@ -14,8 +14,8 @@ struct tty_line
 	struct
 	{
 		char* base;
-		size_t count;
-		size_t current;
+	 	uint32_t count;
+		uint32_t current;
 	} cells;
 };
 
@@ -29,7 +29,7 @@ struct tty_chunk
 		struct tty_line base[TTY_CHUNK_LINES];
 
 		/* Amount of used lines */
-		size_t used;
+		uint32_t used;
 	} lines;
 };
 
@@ -43,17 +43,17 @@ struct tty_history
 		struct tty_chunk** base;
 
 		/* Count of allocated chunks */
-		size_t count;
+		uint32_t count;
 
 		/* Maximum chunks that can be allocated */
-		size_t capability;
+		uint32_t capability;
 	} chunks;
 
 	struct
 	{
-		size_t line_count;
-		size_t width;
-		size_t height;
+		uint32_t line_count;
+		uint32_t width;
+		uint32_t height;
 	} attributes;
 };
 
@@ -61,7 +61,7 @@ struct tty_history
 struct tty
 {
 	struct tty_history* history;
-	size_t viewport_top;
+	uint32_t viewport_top;
 };
 
 /* Manager operation functions (layer after dispatch) */
