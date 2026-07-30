@@ -2,7 +2,7 @@
 #include <kernel/terminal/init.h>
 #include <kernel/mem/alloc.h>
 
-struct terminal_ctx i_terminal;
+struct terminal i_terminal;
 
 kerr_t
 terminal_init ( struct framebuffer_info* fb )
