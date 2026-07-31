@@ -1,5 +1,173 @@
 #include <string.h>
 #include <terminal/internal.h>
+#include <terminal/manager.h>
+
+/* PROBABLY, FIXED DIMENSIONS WON'T BE USED IN THE FUTURE */
+#define TTY_CHUNK_LINES 64
+#define TTY_CHUNK_CELLS 80
+
+/**
+ * Color descriptor
+ * They're gonna be stored with each cell
+ *
+ * Note it's gonna be interpreted individually by each backend,
+ * Whose can decide implementing it or no
+ **/
+typedef struct
+{
+
+	/* Type RGB */
+	uint8_t r, g, b;
+} COLOR;
+
+/* Cell style descriptor */
+typedef struct
+{
+	COLOR fg; /* Foreground */
+	COLOR bg; /* Background */
+} STYLE;
+
+/* Default cell style */
+STYLE default_style = {
+
+	/* *INDENT-OFF* */
+
+	.fg = {
+		.r = 255,
+		.g = 255,
+		.b = 255,
+	},
+
+	.bg = {
+		.r = 0,
+		.g = 0,
+		.b = 0,
+	},
+
+	/* *INDENT-ON* */
+};
+
+/* Cell descriptor */
+typedef struct
+{
+	STYLE style;
+	char c;   /* Character */
+} CELL;
+
+/* Line descriptor */
+typedef struct
+{
+	struct
+	{
+		CELL base[TTY_CHUNK_CELLS];
+		uint32_t current;
+	} cells;
+
+	/* Is this line dirty? */
+	bool dirty;
+} LINE;
+
+/* Chunk of lines */
+typedef struct
+{
+	struct
+	{
+
+		/* Array of lines descriptors */
+		LINE base[TTY_CHUNK_LINES];
+
+		/* Current available line */
+		uint32_t current;
+	} lines;
+} CHUNK;
+
+/* History containing all chunks */
+typedef struct
+{
+	struct
+	{
+
+		/* Array of chunks */
+		CHUNK** base;
+
+		/* Count of allocated chunks */
+		uint32_t count;
+
+		/* Maximum chunks that can be allocated */
+		uint32_t capability;
+	} chunks;
+
+	struct
+	{
+		uint32_t line_count;
+		uint32_t viewport_top;
+		uint32_t width;
+		uint32_t height;
+	} attributes;
+} HISTORY;
+
+/**
+ * TTY chunk getter by line index
+ * Internal inline function
+ *
+ * Return -> `CHUNK *`: Chunk base pointer
+ * Arguments:
+ *   1. `uint32_t line`: Line index
+ *   2. `HISTORY* history`: TTY history
+ **/
+static inline CHUNK*
+tty_get_chunk_by_line ( uint32_t line, HISTORY* history )
+{
+
+	/* Only returns if the index is valid */
+	return ( line / TTY_CHUNK_LINES < history->chunks.count )
+		? history->chunks.base[line / TTY_CHUNKS_LINES]
+		: NULL;
+}
+
+/**
+ * TTY viewport top chunk getter by screen height
+ * Internal inline function
+ *
+ * Return -> `CHUNK *`: Chunk base pointer
+ * Arguments:
+ *   1. `uint32_t height`: Screen height
+ *   2. `HISTORY* history`: TTY history
+ **/
+static inline CHUNK*
+tty_get_viewport_top_chunk ( uint32_t height, HISTORY* history )
+{
+	return tty_get_chunk_by_line ( height, history );
+}
+
+/**
+ * TTY line offset within a chunk calculator
+ * Internal inline function
+ *
+ * Return -> `LINE *`: Line base pointer
+ * Arguments:
+ *   1. `uint32_t line_count`: Total line count
+ *   2. `CHUNK* chunk`: Chunk base pointer
+ **/
+static inline LINE* 
+tty_get_offset_line ( uint32_t line_count, CHUNK* chunk )
+{
+	return &chunk->lines.base[line_count % TTY_CHUNK_LINES];
+}
+
+/**
+ * TTY current cell getter
+ * Internal inline function
+ *
+ * Return -> `CELL *`
+ * Arguments:
+ *   1. `LINE* line`: Line base pointer
+ **/
+static inline CELL*
+tty_get_current_cell ( LINE* line )
+{
+	return &line->cells.base[line->cells.current++];
+}
 
 /* Defines manager operations */
 struct manager_ops ops
@@ -11,9 +179,6 @@ struct manager_ops ops
 
 /* Keep it as a const pointer */
 struct manager_ops const* ops_ptr = &ops;
-
-/* Static operations */
-static void _terminal_manager_render ( struct tty_history* history );
 
 /**
  * Terminal manager initializer function
@@ -44,13 +209,13 @@ terminal_manager_init ( void )
  *
  * Return -> `void`
  * Arguments:
- *   - `struct tty_history* history`: TTY chunk content history
+ *   - `HISTORY* history`: TTY chunk content history
  *   - `char c`: Character to be put in
  * Callers:
  *   - `_terminal_dispatch_putc`
  **/
 void
-_terminal_manager_putc ( struct tty_history* history, char c )
+_terminal_manager_putc ( HISTORY* history, char c )
 {
 	switch ( c )
 	{
@@ -67,17 +232,20 @@ _terminal_manager_putc ( struct tty_history* history, char c )
 	/* ADD VERIFICATION FOR OVERFLOW AND ALLOCATE NEW CHUNKS WHEN NEEDED */
 
 	/* Get the current chunk based on the global line count */
-	struct tty_chunk* current_chunk =
-	        history->
-	        chunks.base[TTY_GET_CHUNK_IDX ( history->attributes.line_count )];
+	CHUNK* current_chunk =
+		tty_get_chunk_by_line ( history->attributes.line_count, history );
 
 	/* Get the current line within the current chunk */
-	struct tty_line* current_line =
-	        &current_chunk->lines.base[history->attributes.line_count %
-	                                   TTY_CHUNK_LINES];
+	LINE* current_line =
+		tty_get_offset_line ( history->attributes.line_count, current_chunk );
+
+	/* Cell to write the character to */
+	CELL* cell = tty_get_current_cell ( current_line );
 
 	/* Write the character at the current line cell */
-	current_line->cells.base[current_chunk->linex.cells.current++] = c;
+	cell->c = c;
+	cell->style = default_style;
+	current_line->dirty = true;
 }
 
 /**
@@ -86,13 +254,13 @@ _terminal_manager_putc ( struct tty_history* history, char c )
  *
  * Return -> `void`
  * Arguments:
- *   - `struct tty_history* history`: TTY history to be modified
- *   - `char* c`: Null-terminated string to be added
+ *   - `HISTORY* history`: TTY history to be modified
+ *   - `char* s`: Null-terminated string to be added
  * Callers:
  *   - `_terminal_dispatch_puts`
  **/
 void
-_terminal_manager_puts ( struct tty_history* history, char* s )
+_terminal_manager_puts ( HISTORY* history, char* s )
 {
 
 	/* PARSE SPECIAL CASES BEFORE CALLING `PUTC` */
@@ -107,12 +275,12 @@ _terminal_manager_puts ( struct tty_history* history, char* s )
  *
  * Return -> `void`
  * Arguments:
- *   - `struct tty_history* history`: TTY history to be cleared up
+ *   - `HISTORY* history`: TTY history to be cleared up
  * Callers:
  *   - `_terminal_dispatch_clear`
  **/
 void
-_terminal_manager_clear ( struct tty_history* history )
+_terminal_manager_clear ( HISTORY* history )
 {
 
 	/**
@@ -124,7 +292,7 @@ _terminal_manager_clear ( struct tty_history* history )
 	for ( uint32_t i = 0; i < history->chunks.count; i++ )
 
 		/* Zero the `i` chunk, including all their lines */
-		memset ( history->chunks.base[i], 0, sizeof ( struct tty_chunk ) );
+		memset ( history->chunks.base[i], 0, sizeof ( CHUNK ) );
 
 	/**
 	 * Zero the chunk base pointer at TTY history context
@@ -133,7 +301,7 @@ _terminal_manager_clear ( struct tty_history* history )
 	 * Zero all its size
 	 **/
 	memset ( history->chunks.base, 0,
-		sizeof ( struct tty_chunk* ) * history->chunks.capability );
+		sizeof ( CHUNK* ) * history->chunks.capability );
 
 	/* Set the current chunk count as zero */
 	history->chunks.count = 0;
@@ -148,16 +316,16 @@ _terminal_manager_clear ( struct tty_history* history )
  *
  * Return -> `void`
  * Arguments:
- *   - `struct tty_history* history`: TTY history to be used
+ *   - `HISTORY* history`: TTY history to be used
  * Callers:
  *   - Internal Terminal manager functions (static)
  **/
 void
-_terminal_manager_render ( struct tty_history* history )
+_terminal_manager_render ( HISTORY* history )
 {
 
 	/* Get the chunk at viewport top */
-	struct tty_chunk* top_chunk = history->chunk
+	CHUNK* top_chunk = history->chunk
 		.base[TTY_GET_CHUNK_IDX ( history->attributes.viewport_top )];
 
 	/* Do nothing when the viewport chunk has no dirty lines */

@@ -4,80 +4,27 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define TTY_CHUNK_LINES 64
-#define TTY_GET_CHUNK_IDX(LINE_COUNT) \
-        ( ( LINE_COUNT ) / ( TTY_CHUNK_LINES ) )
-
-#define TTY_VIEWPORT_CHUNKS(HEIGHT) TTY_GET_CHUNK_IDX ( HEIGHT ) 
-
-/* Line descriptor */
-struct tty_line
-{
-	struct
-	{
-		char* base;
-	 	uint32_t count;
-		uint32_t current;
-	} cells;
-};
-
-/* Chunk of lines */
-struct tty_chunk
-{
-	struct
-	{
-
-		/* Array of lines descriptors */
-		struct tty_line base[TTY_CHUNK_LINES];
-
-		/* Amount of used lines */
-		uint32_t dirty;
-	} lines;
-};
-
-/* History containing all chunks */
-struct tty_history
-{
-	struct
-	{
-
-		/* Array of chunks */
-		struct tty_chunk** base;
-
-		/* Count of allocated chunks */
-		uint32_t count;
-
-		/* Maximum chunks that can be allocated */
-		uint32_t capability;
-	} chunks;
-
-	struct
-	{
-		uint32_t line_count;
-		uint32_t viewport_top;
-		uint32_t width;
-		uint32_t height;
-	} attributes;
-};
-
 /* Virtual terminal global state */
-struct tty
+typedef struct tty
 {
-	struct tty_history* history;
-};
+	HISTORY* history;
+} TTY;
 
 /* Manager operation functions (layer after dispatch) */
 struct manager_ops
 {
 
-	/* Put new character */
-	void ( *putc ) ( struct tty_history *, char );
+	/* Put a new character */
+	void ( *putc ) ( HISTORY *, char );
 
-	/* Put new string */
-	void ( *puts ) ( struct tty_history *, char * );
+	/* Put a new string */
+	void ( *puts ) ( HISTORY *, char * );
 
 	/* Clears all TTY history */
-	void ( *clear ) ( struct tty_history * );
+	void ( *clear ) ( HISTORY * );
+
+	/* Renders all viewport dirty lines */
+	void ( *render ) ( HISTORY * )
 };
 
 /* Operations */
