@@ -4,11 +4,12 @@
 
 /* Comments */
 -bbb
+-d0
 
 /* Statements */
 -bl
 -bli0
--cli4
+-cli8
 -cbi0
 -prs
 -ut
@@ -17,7 +18,7 @@
 
 /* Declarations */
 -bc
--nbfda
+-hnl
 -bls
 -blf
 -sar
@@ -25,7 +26,8 @@
 -saw
 
 /* Indentation */
--i8
+-ts4
+-i4
 -lp
 -ip5
 -as
@@ -33,9 +35,10 @@
 -lps
 
 /* Wrapping */
--nbbo
--l85
--gts
+-nlp
+-ci4
+-l100
+-nbfda
 
 /* Others */
 -psl
