@@ -293,16 +293,11 @@ _terminal_manager_clear ( HISTORY* history )
 	 **/
 	for ( uint32_t i = 0; i < history->chunks.count; i++ )
 
-	    /* Zero the `i` chunk, including all their lines */
-		memset ( history->chunks.base[i], 0, sizeof ( CHUNK ) );
+	    /* Frees this chunk */
+		k_mfree ( history->chunks.base[i] );
 
-	/**
-	 * Zero the chunk base pointer at TTY history context
-	 *
-	 * Note it's an array of `struct tty_chunk *`
-	 * Zero all its size
-	 **/
-	memset ( history->chunks.base, 0, sizeof ( CHUNK * ) * history->chunks.capability );
+	/* Frees the chunk array base pointer */
+	k_mfree ( history->chunks.base );
 
 	/* Set the current chunk count as zero */
 	history->chunks.count = 0;
