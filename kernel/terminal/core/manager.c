@@ -170,7 +170,8 @@ tty_get_offset_line ( uint32_t line_count, CHUNK* chunk )
 static inline CELL*
 tty_get_current_cell ( LINE* line )
 {
-	return &line->cells.base[line->cells.current++];
+	return ( line->cells.current <
+	    TTY_LINE_CELLS ) ? &line->cells.base[line->cells.current++] : NULL;
 }
 
 /* Defines manager operations */
@@ -220,34 +221,52 @@ terminal_manager_init ( void )
 void
 _terminal_manager_putc ( HISTORY* history, char c )
 {
-	switch ( c )
-	{
 
-				/* Treat newlines */
-			case '\n':
-			{
-				history->attributes.line_count++;
-				_terminal_manager_handle_overflow ( history );
-				return;
-			}
-	}
-
-	/* ADD VERIFICATION FOR OVERFLOW AND ALLOCATE NEW CHUNKS WHEN NEEDED */
+	CHUNK* chunk;
+	LINE* line;
+	CELL* cell;
 
 	/* Get the current chunk based on the global line count */
-	CHUNK* current_chunk = tty_get_chunk_by_line ( history->attributes.line_count, history );
+	chunk = tty_get_chunk_by_line ( history->attributes.line_count, history );
 
 	/* Get the current line within the current chunk */
-	LINE* current_line = tty_get_offset_line ( history->attributes.line_count,
-	    current_chunk );
+	line = tty_get_offset_line ( history->attributes.line_count, chunk );
 
 	/* Cell to write the character to */
-	CELL* cell = tty_get_current_cell ( current_line );
+	cell = tty_get_current_cell ( line );
 
-	/* Write the character at the current line cell */
+	/* If `cell == NULL`, the line is full */
+	if ( cell == NULL )
+	{
+
+		/* Advances the line count */
+		history->attributes.line_count++;
+
+		/**
+         * Is it the last line in the chunk
+         *
+         * `history->attributes.line_count % TTY_CHUNK_LINES == 1`
+         *   - The count was already increased
+         *   - The previous line would be zero because it's a multiple of TTY_CHUNK_LINES
+         **/
+		if ( history->attributes.line_count % TTY_CHUNK_LINES == 1 )
+		{
+			chunk = _terminal_manager_alloc_chunk ( history );
+
+			/* Do nothing if it wasn't allocated */
+			if ( chunk == NULL )
+				return;
+		}
+
+		/* Update pointers */
+		line = tty_get_offset_line ( history->attributes.line_count, chunk );
+		cell = tty_get_current_cell ( line );
+	}
+
+	/* Write the character and its style after all */
 	cell->c = c;
-	cell->style = default_style;
-	current_line->dirty = true;
+	cell->style = default_style;    // CHANGE DEFAULT STYLE
+	line->dirty = true;
 }
 
 /**
