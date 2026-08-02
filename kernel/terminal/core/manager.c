@@ -4,7 +4,10 @@
 
 /* PROBABLY, FIXED DIMENSIONS WON'T BE USED IN THE FUTURE */
 #define TTY_CHUNK_LINES 64
-#define TTY_CHUNK_CELLS 80
+#define TTY_LINE_CELLS 80
+
+#define TTY_FOR_EACH_BACKEND(i, count) \
+    for ( uint32_t i = 0; i < count; i++ )
 
 /**
  * Color descriptor
@@ -17,14 +20,16 @@ typedef struct
 {
 
 	/* Type RGB */
-	uint8_t r, g, b;
+	uint8_t r,
+	  g,
+	  b;
 } COLOR;
 
 /* Cell style descriptor */
 typedef struct
 {
-	COLOR fg; /* Foreground */
-	COLOR bg; /* Background */
+	COLOR fg;                   /* Foreground */
+	COLOR bg;                   /* Background */
 } STYLE;
 
 /* Default cell style */
@@ -51,7 +56,7 @@ STYLE default_style = {
 typedef struct
 {
 	STYLE style;
-	char c;   /* Character */
+	char c;                     /* Character */
 } CELL;
 
 /* Line descriptor */
@@ -59,7 +64,7 @@ typedef struct
 {
 	struct
 	{
-		CELL base[TTY_CHUNK_CELLS];
+		CELL base[TTY_LINE_CELLS];
 		uint32_t current;
 	} cells;
 
@@ -121,23 +126,22 @@ tty_get_chunk_by_line ( uint32_t line, HISTORY* history )
 
 	/* Only returns if the index is valid */
 	return ( line / TTY_CHUNK_LINES < history->chunks.count )
-		? history->chunks.base[line / TTY_CHUNKS_LINES]
-		: NULL;
+	    ? history->chunks.base[line / TTY_CHUNKS_LINES] : NULL;
 }
 
 /**
- * TTY viewport top chunk getter by screen height
+ * TTY viewport top chunk getter by viewport top line
  * Internal inline function
  *
  * Return -> `CHUNK *`: Chunk base pointer
  * Arguments:
- *   1. `uint32_t height`: Screen height
+ *   1. `uint32_t top`: Viewport top
  *   2. `HISTORY* history`: TTY history
  **/
 static inline CHUNK*
-tty_get_viewport_top_chunk ( uint32_t height, HISTORY* history )
+tty_get_viewport_top_chunk ( uint32_t top, HISTORY* history )
 {
-	return tty_get_chunk_by_line ( height, history );
+	return tty_get_chunk_by_line ( top, history );
 }
 
 /**
@@ -149,7 +153,7 @@ tty_get_viewport_top_chunk ( uint32_t height, HISTORY* history )
  *   1. `uint32_t line_count`: Total line count
  *   2. `CHUNK* chunk`: Chunk base pointer
  **/
-static inline LINE* 
+static inline LINE*
 tty_get_offset_line ( uint32_t line_count, CHUNK* chunk )
 {
 	return &chunk->lines.base[line_count % TTY_CHUNK_LINES];
@@ -170,8 +174,7 @@ tty_get_current_cell ( LINE* line )
 }
 
 /* Defines manager operations */
-struct manager_ops ops
-{
+struct manager_ops ops = {
 	.putc = _terminal_manager_putc,
 	.puts = _terminal_manager_puts,
 	.clear = _terminal_manager_clear,
@@ -220,24 +223,23 @@ _terminal_manager_putc ( HISTORY* history, char c )
 	switch ( c )
 	{
 
-		/* Treat newlines */
-	    case '\n':
-	    {
-		    history->attributes.line_count++;
-		    _terminal_manager_handle_overflow ( history );
-		    return;
-	    }
+				/* Treat newlines */
+			case '\n':
+			{
+				history->attributes.line_count++;
+				_terminal_manager_handle_overflow ( history );
+				return;
+			}
 	}
 
 	/* ADD VERIFICATION FOR OVERFLOW AND ALLOCATE NEW CHUNKS WHEN NEEDED */
 
 	/* Get the current chunk based on the global line count */
-	CHUNK* current_chunk =
-		tty_get_chunk_by_line ( history->attributes.line_count, history );
+	CHUNK* current_chunk = tty_get_chunk_by_line ( history->attributes.line_count, history );
 
 	/* Get the current line within the current chunk */
-	LINE* current_line =
-		tty_get_offset_line ( history->attributes.line_count, current_chunk );
+	LINE* current_line = tty_get_offset_line ( history->attributes.line_count,
+	    current_chunk );
 
 	/* Cell to write the character to */
 	CELL* cell = tty_get_current_cell ( current_line );
@@ -291,7 +293,7 @@ _terminal_manager_clear ( HISTORY* history )
 	 **/
 	for ( uint32_t i = 0; i < history->chunks.count; i++ )
 
-		/* Zero the `i` chunk, including all their lines */
+	    /* Zero the `i` chunk, including all their lines */
 		memset ( history->chunks.base[i], 0, sizeof ( CHUNK ) );
 
 	/**
@@ -300,8 +302,7 @@ _terminal_manager_clear ( HISTORY* history )
 	 * Note it's an array of `struct tty_chunk *`
 	 * Zero all its size
 	 **/
-	memset ( history->chunks.base, 0,
-		sizeof ( CHUNK* ) * history->chunks.capability );
+	memset ( history->chunks.base, 0, sizeof ( CHUNK * ) * history->chunks.capability );
 
 	/* Set the current chunk count as zero */
 	history->chunks.count = 0;
@@ -324,31 +325,86 @@ void
 _terminal_manager_render ( HISTORY* history )
 {
 
-	/* Get the chunk at viewport top */
-	CHUNK* top_chunk = history->chunk
-		.base[TTY_GET_CHUNK_IDX ( history->attributes.viewport_top )];
+	uint32_t height = history->attributes.height;
+	uint32_t top = history->attributes.viewport_top;
+	CHUNK* top_chunk = tty_get_viewport_top_chunk ( top, history );
 
-	/* Do nothing when the viewport chunk has no dirty lines */
-	if ( top_chunk->lines.dirty == 0 )
+	/* Do nothing for NULL return */
+	if ( top_chunk == NULL )
 		return;
 
-	/* Amount of chunks viewport requires */
-	size_t viewport_chunks_limit =
-		TTY_VIEWPORT_CHUNKS ( history->attributes.height );
+	/* Iterate up to height limit */
+	for ( uint32_t remaining = height; remaining > 0; remaining--, top++ )
+	{
 
-	/* Temporary buffer used to store the viewport content and pass to backends */
-	char buf[viewport_chunks_limit * TTY_CHUNK_LINES * TTY_LINE_CELLS];
+		/**
+		 * Current iteration line
+		 *
+		 * Note it can be obtained by the current value of `top`
+		 * The index is obtained by making a mod operation
+		 * (`top % TTY_CHUNK_LINES`), which will result on the offset
+		 **/
+		LINE* line = tty_get_offset_line ( top, top_chunk );
 
-	/* Iterate for each line in each viewport chunk */
-	for ( uint32_t chunk = 0; chunk < viewport_chunks_limit; chunk++ )
-		for ( uint32_t line = 0; line < TTY_CHUNK_LINES; line++,
-			history->chunks.base[chunk]->lines.dirty-- )
+		/* If current line is dirty, render it */
+		if ( line->dirty )
+		{
 
-			/* Copy the current line to the buffer */
-			buf[chunk * TTY_LINE_CELLS + line] = history->chunks.base[chunk]->lines.base;
+			STYLE current_style = line->cells.base[0].style;
+			uint32_t write_from = 0;
 
-	/* Pass this buffer to every registered backend */
-	for ( uint32_t backend = 0; backend < g_terminal->backends.count; backend++ )
-		g_terminal->backends.ops_list[backend]->
-			flush ( &buf, TTY_LINE_CELLS, TTY_CHUNK_LINES * viewport_chunks_limit );
+			/* Iterate for each line character */
+			for ( uint32_t i = 1; i < TTY_LINE_CELLS; i++ )
+			{
+
+				/* We must write substrings with different styles independently */
+				if ( current_style != line->cells.base[i].style )
+				{
+
+					/**
+					 * As the current cell style is different,
+					 * We must write the last substring `til this point
+					 * And update the current style
+					 **/
+
+					/* Set `current_style` */
+					TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
+					    g_terminal->backends.ops_list[backend]->set_style ( current_style );
+
+					/**
+					 * Write the substring from `write_from` to `i`
+					 * All characters in it has the same style
+					 *
+					 * `write_from` -> Current substring start
+					 * `i` -> Current character. When style is different,
+					 *   It's the end of current substring
+					 **/
+					TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
+					    g_terminal->backends.ops_list[backend]->write_at ( write_from,
+					    &line->cells[write_from], i - write_from );
+
+					/* Update the current substring state */
+					current_style = line->cells.base[i].style;
+					write_from = i;
+				}
+			}
+
+			/* `current_style` -> Current substring style */
+			TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
+			    g_terminal->backends.ops_list[backend]->set_style ( current_style );
+
+			/* Write the rest of the line */
+			TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
+			    g_terminal->backends.ops_list[backend]->write_at ( write_from,
+			    &line->cells[write_from], TTY_LINE_CELLS );
+
+			/* All line written */
+			line->dirty = false;
+		}
+	}
+
+	/* Flush every backend buffer */
+	TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
+	    g_terminal->backends.ops_list[backend]->flush ( &buf, TTY_LINE_CELLS,
+	    TTY_CHUNK_LINES * viewport_chunks_limit );
 }

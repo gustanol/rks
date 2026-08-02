@@ -1,6 +1,8 @@
 #ifndef _KERNEL_TERMINAL_BACKEND_H
 #define _KERNEL_TERMINAL_BACKEND_H
 
+/* ADD FUNCTIONS LIKE `WRITE_AT` */
+
 #include <kernel/boot/fb.h>
 #include <kernel/container_of.h>
 #include <kernel/kerr/kerr.h>
@@ -10,30 +12,24 @@
 
 /* Terminal backend registration macro */
 #define REGISTER_TERMINAL_BACKEND(BACKEND) \
-        ({ \
-                const struct terminal_backend* __tmp = &( BACKEND ); \
-                REGISTER_SUBSYSTEM_BACKEND ( &__tmp->base ); \
-        })
+    ({ \
+        const struct terminal_backend* __tmp = &( BACKEND ); \
+        REGISTER_SUBSYSTEM_BACKEND ( &__tmp->base ); \
+    })
 
 /**
- * Terminal backend initialization entry.
+ * Terminal backend initialization entry
  *
- * @name:
- *      Name of the backend initialization function.
+ * Return -> `kerr_t`: Global error code
+ * Arguments:
+ *   1. `const struct framebuffer_info* fb`: Framebuffer global state
  *
- * Returns:
- *      KERR_NONE on success.
- *      Appropriate error code otherwise.
- *
- * Parameters:
- *      fb  Framebuffer information supplied by the terminal subsystem.
- *
- * This is the required prototype for every terminal backend.
+ * This is the required prototype for every terminal backend
  **/
 #define TERMINAL_BACKEND_INIT(name) \
         kerr_t name ( const struct framebuffer_info * fb )
 
-#define TERMINAL_BACKEND_PUTCHAR(name) \
+#define TERMINAL_BACKEND_PUTC(name) \
         void name ( char c )
 
 #define TERMINAL_BACKEND_WRITE(name) \
@@ -50,7 +46,7 @@ struct terminal_ops
 {
 
 	/* Puts a single char at the end of the screen */
-	TERMINAL_BACKEND_PUTCHAR ( ( *putchar ) );
+	TERMINAL_BACKEND_PUTC ( ( *putchar ) );
 
 	/* Writes a null-terminated string */
 	TERMINAL_BACKEND_WRITE ( ( *write ) );

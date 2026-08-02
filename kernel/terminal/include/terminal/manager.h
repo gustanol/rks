@@ -18,13 +18,13 @@ struct manager_ops
 	void ( *putc ) ( HISTORY *, char );
 
 	/* Put a new string */
-	void ( *puts ) ( HISTORY *, char * );
+	void ( *puts ) ( HISTORY *, char*  );
 
 	/* Clears all TTY history */
 	void ( *clear ) ( HISTORY * );
 
 	/* Renders all viewport dirty lines */
-	void ( *render ) ( HISTORY * )
+	void ( *render ) ( HISTORY * );
 };
 
 /* Operations */
