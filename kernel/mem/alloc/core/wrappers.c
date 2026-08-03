@@ -1,6 +1,7 @@
 #include <alloc/dispatch.h>
 #include <rks/kernel/mem/alloc.h>
 #include <rks/kernel/mem/alloc/allocators/heap.h>
+#include <string.h>
 
 /**
  * Public heap context creator
@@ -119,9 +120,33 @@ alloc_heap_grow ( HEAP* heap, size_t frames_needed )
 void*
 k_malloc ( size_t size )
 {
-	KERR_RET_IF ( size == 0, KERR_INVAL );
+	KERR_RET_ENCODE_IF ( size == 0, KERR_INVAL );
 
 	return _alloc_k_malloc ( size );
+}
+
+/**
+ * Public zero-initialized kernel memory allocator
+ * Public wrapper
+ *
+ * Return -> `void *`: Allocated payload starter pointer
+ * Arguments:
+ *   1. `size_t size`: Allocation size
+ * Callers:
+ *   - Many
+ **/
+void*
+k_calloc ( size_t size )
+{
+
+	/* Tries allocating */
+	void* ptr = k_malloc ( size );
+	KERR_RET_ENCODE_IF ( IS_KERR ( ptr ), GET_KERR ( ptr ) );
+
+	/* Initializes it to zero */
+	memset ( ptr, 0, size );
+
+	return ptr;
 }
 
 /**
