@@ -459,8 +459,7 @@ _terminal_manager_alloc_chunk ( HISTORY* history )
 		history->chunks.base = k_calloc ( sizeof ( CHUNK * ) * ( capability ) );
 
 		/* Error allocating */
-		if ( !IS_RET_OK ( history->chunks.base ) )
-			return NULL;
+		KERR_RET_IF ( IS_KERR ( history->chunks.base ), NULL, "" );
 
 		/* Copy all existent chunk pointers */
 		for ( uint32_t i = 0; i < old_capability; i++ )
@@ -472,10 +471,72 @@ _terminal_manager_alloc_chunk ( HISTORY* history )
 
 	/* Allocate a new chunk */
 	chunk = history->chunks.base[count++] = k_calloc ( sizeof ( CHUNK ) );
-	if ( !IS_RET_OK ( chunk ) )
-		return NULL;
+	KERR_RET_IF ( IS_KERR ( chunk ), NULL, "" );
 
 	/* Update counters */
 	history->chunks.count = count;
 	history->chunks.capability = capability;
+}
+
+/**
+ * Terminal manager function used to create a new TTY object
+ * Manager function
+ *
+ * Return -> `uint32_t`: TTY index
+ * Arguments:
+ *   1. `void`
+ * Callers:
+ *   - `_terminal_dispatch_create`
+ **/
+uint32_t
+_terminal_manager_create ( void )
+{
+
+	TTY* tty;
+	HISTORY* history;
+	uint32_t tty_count = g_terminal->tty.count;
+	uint32_t tty_capability = g_terminal->tty.capability;
+
+	/* Allocate a new TTY object */
+	tty = ( TTY* ) k_malloc ( sizeof ( TTY ) );
+	KERR_PROPAGATE_ENCODE ( tty );
+
+	/* Allocate a new history for this TTY object */
+	history = ( HISTORY* ) k_calloc ( sizeof ( HISTORY ) );
+	KERR_PROPAGATE_ENCODE ( history );
+
+	/* Set this history */
+	tty->history = history;
+	
+	/* If `count` and `capability` are equal, no more pointers are available */
+	if ( tty_count == tty_capability )
+	{
+		
+		/* Make a copy of old capability and update its value */
+		uint32_t old_capability = tty_capability;
+		tty_capability += 8;
+
+		/* Make a copy of TTYs pointer */
+		TTY* list_cpy = g_terminal->tty.list;
+
+		/* Allocate a new list with the new capability */
+		g_terminal->tty.list = k_calloc ( sizeof ( TTY ) * ( tty_capability ) );
+		KERR_RET_IF ( IS_KERR ( g_terminal->tty.list ), NULL, "" );
+
+		/* From the old pointer, copy all already-allocated TTY objects */
+		for ( uint32_t i = 0; i < old_capability; i++ )
+			g_terminal->tty.list[i] = base_copy[i];
+
+		/* Frees the old array */
+		k_mfree ( base_cpy );
+	}
+
+	/* Set the TTY pointer and counters */
+	g_terminal->tty.list[tty_count++] = tty;
+	g_terminal->tty.count = tty_count;
+	g_terminal->tty.capability = tty_capability;
+
+	/* Return the TTY index */
+	/* CHANGE TTY ID VALUE TYPE */
+	return tty_count;
 }
