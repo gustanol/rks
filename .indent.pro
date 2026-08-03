@@ -1,6 +1,6 @@
 /* Blank lines */
--bad
--bap
+-nbad
+-nbap
 
 /* Comments */
 -bbb
