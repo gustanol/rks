@@ -184,6 +184,9 @@ struct manager_ops ops = {
 /* Keep it as a const pointer */
 struct manager_ops const* ops_ptr = &ops;
 
+/* Static prototypes */
+static CHUNK* _terminal_manager_alloc_chunk ( HISTORY * history );
+
 /**
  * Terminal manager initializer function
  * Manager function
@@ -421,4 +424,58 @@ _terminal_manager_render ( HISTORY* history )
 	TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
 	    g_terminal->backends.ops_list[backend]->flush ( &buf, TTY_LINE_CELLS,
 	    TTY_CHUNK_LINES * viewport_chunks_limit );
+}
+
+/**
+ * Terminal manager function used to allocate new chunks
+ * Static manager function
+ *
+ * Return -> `CHUNK *`: Chunk base pointer or NULL
+ * Arguments:
+ *   - `HISTORY* history`: TTY history to be used
+ * Callers:
+ *   - Internal Terminal manager functions (static)
+ **/
+CHUNK*
+_terminal_manager_alloc_chunk ( HISTORY* history )
+{
+
+	uint32_t count = history->chunks.count;
+	uint32_t capability = history->chunks.capability;
+	CHUNK* chunk;
+
+	/* If `count == capability`, all pointers are in use */
+	if ( count == capability )
+	{
+
+		/* Store the old capability before updating it */
+		uint32_t old_capability = capability;
+		capability += 8;
+
+		/* Copy of array of chunk pointers */
+		CHUNK** base_cpy = history->chunks.base;
+
+		/* Allocate a new array */
+		history->chunks.base = k_calloc ( sizeof ( CHUNK * ) * ( capability ) );
+
+		/* Error allocating */
+		if ( !IS_RET_OK ( history->chunks.base ) )
+			return NULL;
+
+		/* Copy all existent chunk pointers */
+		for ( uint32_t i = 0; i < old_capability; i++ )
+			history->chunks.base[i] = base_copy[i];
+
+		/* Frees the old array */
+		k_mfree ( base_cpy );
+	}
+
+	/* Allocate a new chunk */
+	chunk = history->chunks.base[count++] = k_calloc ( sizeof ( CHUNK ) );
+	if ( !IS_RET_OK ( chunk ) )
+		return NULL;
+
+	/* Update counters */
+	history->chunks.count = count;
+	history->chunks.capability = capability;
 }
