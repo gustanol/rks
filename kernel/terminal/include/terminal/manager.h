@@ -17,6 +17,9 @@ struct manager_ops
 	/* Put a new character */
 	void ( *putc ) ( HISTORY *, char );
 
+	/* Write a new sized-string */
+	void ( *write ) ( HISTORY *, char* , size_t );
+
 	/* Put a new string */
 	void ( *puts ) ( HISTORY *, char*  );
 
@@ -25,6 +28,9 @@ struct manager_ops
 
 	/* Renders all viewport dirty lines */
 	void ( *render ) ( HISTORY * );
+
+	/* Creates a new TTY object */
+	  tty_id ( *create ) ( void );
 };
 
 /* Operations */

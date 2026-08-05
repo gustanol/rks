@@ -127,7 +127,7 @@ tty_get_chunk_by_line ( uint32_t line, HISTORY* history )
 {
 
 	/* Only returns if the index is valid */
-	return ( line / TTY_CHUNK_LINES < history->chunks.count )
+	return ( line / history->attributes.height < history->chunks.count )
 	    ? history->chunks.base[line / TTY_CHUNKS_LINES] : NULL;
 }
 
@@ -153,12 +153,13 @@ tty_get_viewport_top_chunk ( uint32_t top, HISTORY* history )
  * Return -> `LINE *`: Line base pointer
  * Arguments:
  *   1. `uint32_t line_count`: Total line count
- *   2. `CHUNK* chunk`: Chunk base pointer
+ *   2. `uint32_t height`: TTY height
+ *   3. `CHUNK* chunk`: Chunk base pointer
  **/
 static inline LINE*
-tty_get_offset_line ( uint32_t line_count, CHUNK* chunk )
+tty_get_offset_line ( uint32_t line_count, uint32_t height, CHUNK* chunk )
 {
-	return &chunk->lines.base[line_count % TTY_CHUNK_LINES];
+	return &chunk->lines.base[line_count % height];
 }
 
 /**
@@ -168,19 +169,23 @@ tty_get_offset_line ( uint32_t line_count, CHUNK* chunk )
  * Return -> `CELL *`
  * Arguments:
  *   1. `LINE* line`: Line base pointer
+ *   2. `uint32_t width`: TTY width
  **/
 static inline CELL*
-tty_get_current_cell ( LINE* line )
+tty_get_current_cell ( LINE* line, uint32_t width )
 {
-	return ( line->cells.current <
-	    TTY_LINE_CELLS ) ? &line->cells.base[line->cells.current++] : NULL;
+	return ( line->cells.current < width ) ? &line->cells.base[line->cells.current++] : NULL;
 }
 
 /* Defines manager operations */
-struct manager_ops ops = {
+static const struct manager_ops ops = {
 	.putc = _terminal_manager_putc,
+	.write = _terminal_manager_write,
 	.puts = _terminal_manager_puts,
 	.clear = _terminal_manager_clear,
+	.render = _terminal_manager_render,
+	.create = _terminal_manager_create,
+	/* .scroll */
 };
 
 /* Static prototypes */
@@ -234,8 +239,11 @@ _terminal_manager_putc ( HISTORY* history, char c )
 	LINE* line;
 	CELL* cell;
 
+	uint32_t line_count = history->attributes.line_count;
+	uint32_t height = history->attributes.height;
+
 	/* Get the current chunk based on the global line count */
-	chunk = tty_get_chunk_by_line ( history->attributes.line_count, history );
+	chunk = tty_get_chunk_by_line ( line_count, history );
 	if ( chunk == NULL )        /* It's problably gonna be used only for the first put */
 	{
 		chunk = _terminal_manager_alloc_chunk ( history );
@@ -244,7 +252,7 @@ _terminal_manager_putc ( HISTORY* history, char c )
 	}
 
 	/* Get the current line within the current chunk */
-	line = tty_get_offset_line ( history->attributes.line_count, chunk );
+	line = tty_get_offset_line ( line_count, height, chunk );
 
 	/* Cell to write the character to */
 	cell = tty_get_current_cell ( line );
@@ -254,16 +262,16 @@ _terminal_manager_putc ( HISTORY* history, char c )
 	{
 
 		/* Advances the line count */
-		history->attributes.line_count++;
+		line_count++;
 
 		/**
          * Is it the last line in the chunk?
          *
-         * `history->attributes.line_count % TTY_CHUNK_LINES == 1`
+         * `history->attributes.line_count % height == 1`
          *   - The count was already increased
-         *   - The previous line would be zero because it's a multiple of TTY_CHUNK_LINES
+         *   - The previous line would be zero because it's a multiple of height
          **/
-		if ( history->attributes.line_count % TTY_CHUNK_LINES == 1 )
+		if ( line_count % height == 1 )
 		{
 			chunk = _terminal_manager_alloc_chunk ( history );
 
@@ -273,7 +281,7 @@ _terminal_manager_putc ( HISTORY* history, char c )
 		}
 
 		/* Update pointers */
-		line = tty_get_offset_line ( history->attributes.line_count, chunk );
+		line = tty_get_offset_line ( line_count, height, chunk );
 		cell = tty_get_current_cell ( line );
 	}
 
@@ -281,6 +289,9 @@ _terminal_manager_putc ( HISTORY* history, char c )
 	cell->c = c;
 	cell->style = default_style;    // CHANGE DEFAULT STYLE
 	line->dirty = true;
+
+	/* Update counters */
+	history->attributes.line_count = line_count;
 }
 
 /**
@@ -354,6 +365,7 @@ _terminal_manager_render ( HISTORY* history )
 {
 
 	uint32_t height = history->attributes.height;
+	uint32_t width = history->attributes.width;
 	uint32_t top = history->attributes.viewport_top;
 	CHUNK* top_chunk = tty_get_viewport_top_chunk ( top, history );
 
@@ -370,7 +382,7 @@ _terminal_manager_render ( HISTORY* history )
 		 *
 		 * Note it can be obtained by the current value of `top`
 		 * The index is obtained by making a mod operation
-		 * (`top % TTY_CHUNK_LINES`), which will result on the offset
+		 * (`top % height`), which will result on the offset
 		 **/
 		LINE* line = tty_get_offset_line ( top, top_chunk );
 
@@ -382,7 +394,7 @@ _terminal_manager_render ( HISTORY* history )
 			uint32_t write_from = 0;
 
 			/* Iterate for each line character */
-			for ( uint32_t i = 1; i < TTY_LINE_CELLS; i++ )
+			for ( uint32_t i = 1; i < width; i++ )
 			{
 
 				/* We must write substrings with different styles independently */
@@ -424,7 +436,7 @@ _terminal_manager_render ( HISTORY* history )
 			/* Write the rest of the line */
 			TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
 			    g_terminal->backends.ops_list[backend]->write_at ( write_from,
-			    &line->cells[write_from], TTY_LINE_CELLS );
+			    &line->cells[write_from], width );
 
 			/* All line written */
 			line->dirty = false;
@@ -522,6 +534,8 @@ _terminal_manager_create ( void )
 
 	/* Set this history */
 	tty->history = history;
+	history->attributes.width = TTY_LINE_CELLS;
+	history->attributes.height = TTY_CHUNK_LINES;
 
 	/* If `count` and `capability` are equal, no more pointers are available */
 	if ( tty_count == tty_capability )
