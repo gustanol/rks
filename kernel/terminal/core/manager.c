@@ -9,6 +9,8 @@
 #define TTY_FOR_EACH_BACKEND(i, count) \
     for ( uint32_t i = 0; i < count; i++ )
 
+#define CAPABILITY_INCREASE 8
+
 /**
  * Color descriptor
  * They're gonna be stored with each cell
@@ -231,6 +233,12 @@ _terminal_manager_putc ( HISTORY* history, char c )
 
 	/* Get the current chunk based on the global line count */
 	chunk = tty_get_chunk_by_line ( history->attributes.line_count, history );
+	if ( chunk == NULL )        /* It's problably gonna be used only for the first put */
+	{
+		chunk = _terminal_manager_alloc_chunk ( history );
+		if ( chunk == NULL )
+			return;
+	}
 
 	/* Get the current line within the current chunk */
 	line = tty_get_offset_line ( history->attributes.line_count, chunk );
@@ -246,7 +254,7 @@ _terminal_manager_putc ( HISTORY* history, char c )
 		history->attributes.line_count++;
 
 		/**
-         * Is it the last line in the chunk
+         * Is it the last line in the chunk?
          *
          * `history->attributes.line_count % TTY_CHUNK_LINES == 1`
          *   - The count was already increased
@@ -422,8 +430,7 @@ _terminal_manager_render ( HISTORY* history )
 
 	/* Flush every backend buffer */
 	TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
-	    g_terminal->backends.ops_list[backend]->flush ( &buf, TTY_LINE_CELLS,
-	    TTY_CHUNK_LINES * viewport_chunks_limit );
+	    g_terminal->backends.ops_list[backend]->flush (  );
 }
 
 /**
@@ -440,55 +447,58 @@ CHUNK*
 _terminal_manager_alloc_chunk ( HISTORY* history )
 {
 
-	uint32_t count = history->chunks.count;
-	uint32_t capability = history->chunks.capability;
 	CHUNK* chunk;
+	uint32_t chunk_count = history->chunks.count;
+	uint32_t chunk_capability = history->chunks.capability;
 
 	/* If `count == capability`, all pointers are in use */
-	if ( count == capability )
+	if ( chunk_count == chunk_capability )
 	{
 
 		/* Store the old capability before updating it */
-		uint32_t old_capability = capability;
-		capability += 8;
+		uint32_t old_capability = chunk_capability;
+		chunk_capability += CAPABILITY_INCREASE;
 
-		/* Copy of array of chunk pointers */
-		CHUNK** base_cpy = history->chunks.base;
-
-		/* Allocate a new array */
-		history->chunks.base = k_calloc ( sizeof ( CHUNK * ) * ( capability ) );
-
-		/* Error allocating */
-		KERR_RET_IF ( IS_KERR ( history->chunks.base ), NULL, "" );
+		/* Tries to allocate a new array of pointers */
+		CHUNK** new_base = k_calloc ( sizeof ( CHUNK * ) * ( chunk_capability ) );
+		if ( IS_KERR ( new_base ) )
+			return NULL;
 
 		/* Copy all existent chunk pointers */
 		for ( uint32_t i = 0; i < old_capability; i++ )
-			history->chunks.base[i] = base_copy[i];
+			new_base[i] = history->chunks.base[i];
+
+		/* Update the pointer */
+		history->chunks.base = new_base;
 
 		/* Frees the old array */
 		k_mfree ( base_cpy );
+
+		/* Update counters */
+		history->chunks.count = chunk_count;
+		history->chunks.capability = chunk_capability;
 	}
 
 	/* Allocate a new chunk */
-	chunk = history->chunks.base[count++] = k_calloc ( sizeof ( CHUNK ) );
-	KERR_RET_IF ( IS_KERR ( chunk ), NULL, "" );
+	chunk = k_calloc ( sizeof ( CHUNK ) );
+	if ( IS_KERR ( chunk ) )
+		return NULL;
 
-	/* Update counters */
-	history->chunks.count = count;
-	history->chunks.capability = capability;
+	/* Set the chunk */
+	history->chunks.base[history->chunk.count++] = chunk;
 }
 
 /**
  * Terminal manager function used to create a new TTY object
  * Manager function
  *
- * Return -> `uint32_t`: TTY index
+ * Return -> `int64_t`: TTY index or -1 on errors
  * Arguments:
  *   1. `void`
  * Callers:
  *   - `_terminal_dispatch_create`
  **/
-uint32_t
+int64_t
 _terminal_manager_create ( void )
 {
 
@@ -498,34 +508,37 @@ _terminal_manager_create ( void )
 	uint32_t tty_capability = g_terminal->tty.capability;
 
 	/* Allocate a new TTY object */
-	tty = ( TTY* ) k_malloc ( sizeof ( TTY ) );
-	KERR_PROPAGATE_ENCODE ( tty );
+	tty = ( TTY * ) k_malloc ( sizeof ( TTY ) );
+	if ( IS_KERR ( tty ) )
+		goto err_ret;
 
 	/* Allocate a new history for this TTY object */
-	history = ( HISTORY* ) k_calloc ( sizeof ( HISTORY ) );
-	KERR_PROPAGATE_ENCODE ( history );
+	history = ( HISTORY * ) k_calloc ( sizeof ( HISTORY ) );
+	if ( IS_KERR ( history ) )
+		goto err_ret;
 
 	/* Set this history */
 	tty->history = history;
-	
+
 	/* If `count` and `capability` are equal, no more pointers are available */
 	if ( tty_count == tty_capability )
 	{
-		
+
 		/* Make a copy of old capability and update its value */
 		uint32_t old_capability = tty_capability;
-		tty_capability += 8;
+		tty_capability += CAPABILITY_INCREASE;
 
-		/* Make a copy of TTYs pointer */
-		TTY* list_cpy = g_terminal->tty.list;
-
-		/* Allocate a new list with the new capability */
-		g_terminal->tty.list = k_calloc ( sizeof ( TTY ) * ( tty_capability ) );
-		KERR_RET_IF ( IS_KERR ( g_terminal->tty.list ), NULL, "" );
+		/* Tries to allocate a new array of TTY pointers */
+		TTY* new_list = k_calloc ( sizeof ( TTY ) * ( tty_capability ) );
+		if ( IS_KERR ( new_list ) )
+			goto err_ret;
 
 		/* From the old pointer, copy all already-allocated TTY objects */
 		for ( uint32_t i = 0; i < old_capability; i++ )
-			g_terminal->tty.list[i] = base_copy[i];
+			new_list[i] = g_terminal->tty.list[i];
+
+		/* Update the pointer */
+		g_terminal->tty.list = new_list;
 
 		/* Frees the old array */
 		k_mfree ( base_cpy );
@@ -537,6 +550,16 @@ _terminal_manager_create ( void )
 	g_terminal->tty.capability = tty_capability;
 
 	/* Return the TTY index */
-	/* CHANGE TTY ID VALUE TYPE */
 	return tty_count;
+
+	/* Label used to clean allocated objects and return -1 (not created) */
+  err_ret:
+
+	if ( tty != NULL && !IS_KERR ( tty ) )
+		k_mfree ( tty );
+
+	if ( history != NULL && !IS_KERR ( history ) )
+		k_mfree ( history );
+
+	return -1;
 }

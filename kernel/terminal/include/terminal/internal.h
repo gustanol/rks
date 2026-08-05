@@ -16,7 +16,7 @@ struct terminal
 		struct terminal_ops** ops_list;
 
 		/* Array length */
-		size_t count;
+		uint32_t count;
 	} backends;
 
 	struct
@@ -25,8 +25,14 @@ struct terminal
 		/* Array of TTY */
 		struct tty* list;
 
-		/* Array length */
-		size_t count;
+		/* Allocated TTYs */
+		uint32_t count;
+
+		/* Array size */
+		uint32_t capability;
+
+        /* Active TTY */
+        uint32_t current;
 
 		/* Internal manager operations */
 		struct manager_ops* ops;
