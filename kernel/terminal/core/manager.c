@@ -183,9 +183,6 @@ struct manager_ops ops = {
 	.clear = _terminal_manager_clear,
 };
 
-/* Keep it as a const pointer */
-struct manager_ops const* ops_ptr = &ops;
-
 /* Static prototypes */
 static CHUNK* _terminal_manager_alloc_chunk ( HISTORY * history );
 
@@ -203,9 +200,15 @@ kerr_t
 terminal_manager_init ( void )
 {
 
-	/* ALLOCATE A NEW CHUNK WHEN THE FUNCTION IS READY */
+	/* Tries to create a new TTY */
+	tty_id tty = _terminal_manager_create (  );
+	KERR_RET_IF ( tty < 0, KERR_INTERNAL, "Couldn't create a default TTY" );
+
+	/* Firstly, set this TTY as kernel default's */
+	g_terminal->tty.current = tty;
 
 	/* Set the operations to be used by higher layers */
+	struct manager_ops const* ops_ptr = &ops;   /* Constant pointer */
 	g_terminal->tty.manager_ops = ops_ptr;
 
 	/* Everthing's okay */
@@ -492,13 +495,13 @@ _terminal_manager_alloc_chunk ( HISTORY* history )
  * Terminal manager function used to create a new TTY object
  * Manager function
  *
- * Return -> `int64_t`: TTY index or -1 on errors
+ * Return -> `tty_id`: TTY index or -1 on errors
  * Arguments:
  *   1. `void`
  * Callers:
  *   - `_terminal_dispatch_create`
  **/
-int64_t
+tty_id
 _terminal_manager_create ( void )
 {
 
