@@ -128,7 +128,7 @@ tty_get_chunk_by_line ( uint32_t line, HISTORY* history )
 
 	/* Only returns if the index is valid */
 	return ( line / history->attributes.height < history->chunks.count )
-	    ? history->chunks.base[line / TTY_CHUNKS_LINES] : NULL;
+	    ? history->chunks.base[line / history->attributes.height] : NULL;
 }
 
 /**
@@ -366,7 +366,7 @@ void
 _terminal_manager_scroll ( HISTORY* history, int64_t lines )
 {
 	
-	uint32_t viewport_top = history->attributes.viewport_top;
+	uint32_t top = history->attributes.viewport_top;
 	uint32_t line_count = history->attributes.line_count;
 	uint32_t height = history->attributes.height;
 
@@ -375,26 +375,52 @@ _terminal_manager_scroll ( HISTORY* history, int64_t lines )
 	 * Is greater than the available history lines
 	 *
 	 * `line_count` is the screen down limit
-	 * `viewport_top + lines` is where the screen top should be in after scrolling
+	 * `top + lines` is where the screen top should be in after scrolling
 	 *
 	 * If this operation is less than `height`, the viewport should be set at this top:
 	 * `line_count - height`
 	 **/
-	if ( line_count - ( viewport_top + lines ) < height )
-		viewport_top = line_count - height;
+	if ( line_count - ( top + lines ) < height )
+		top = line_count - height;
 
 	/**
 	 * Treat cases where `lines` is a negative value
 	 * It should scroll the screen back (down)
 	 *
-	 * `viewport_top` can be placed at line 0
+	 * `top` can be set as line 0
 	 * The only verification is to avoid it to be placed at a negative line (impossible)
 	 **/
-	else if ( viewport_top + lines <= 0 )
-		viewport_top = 0;
+	else if ( top + lines <= 0 )
+		top = 0;
 
 	/* Update the `viewport_top` value */
-	history->attributes.viewport_top = viewport_top;
+	history->attributes.viewport_top = top;
+
+	/* Get the chunk where the updated viewport top is located */
+	CHUNK* chunk = tty_get_viewport_top_chunk ( top, history );
+
+	/* Set the lines after `top` as dirty for a future render */
+	for ( uint32_t remaining = height; remaining > 0; remaining--, top++ )
+	{
+
+		/**
+		 * `top % height == 1` means `top` went to another chunk offset
+		 * We need to get the next chunk
+		 *
+		 * Note we can't use `top % height == 0` because it's the last
+		 * Line of the current chunk
+		 **/
+		if ( top % height == 1 )
+		{
+			chunk = tty_get_chunk_by_line ( top, history );
+			if ( chunk == NULL ) /* Theoretically impossible due the above verifications */
+				return;
+		}
+
+		/* Set each line in this interval as dirty */
+		LINE* line = tty_get_offset_line ( top, history );
+		line->dirty = true;
+	}
 }
 
 /**
@@ -414,15 +440,23 @@ _terminal_manager_render ( HISTORY* history )
 	uint32_t height = history->attributes.height;
 	uint32_t width = history->attributes.width;
 	uint32_t top = history->attributes.viewport_top;
-	CHUNK* top_chunk = tty_get_viewport_top_chunk ( top, history );
+	CHUNK* chunk = tty_get_viewport_top_chunk ( top, history );
 
 	/* Do nothing for NULL return */
-	if ( top_chunk == NULL )
+	if ( chunk == NULL )
 		return;
 
 	/* Iterate up to height limit */
 	for ( uint32_t remaining = height; remaining > 0; remaining--, top++ )
 	{
+
+		/* Verify if it is on another chunk */
+		if ( top % height == 1 )
+		{
+			chunk = tty_get_chunk_by_line ( top, history );
+			if ( chunk == NULL )
+				return;
+		}
 
 		/**
 		 * Current iteration line
@@ -431,7 +465,7 @@ _terminal_manager_render ( HISTORY* history )
 		 * The index is obtained by making a mod operation
 		 * (`top % height`), which will result on the offset
 		 **/
-		LINE* line = tty_get_offset_line ( top, top_chunk );
+		LINE* line = tty_get_offset_line ( top, chunk );
 
 		/* If current line is dirty, render it */
 		if ( line->dirty )
