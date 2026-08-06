@@ -351,14 +351,61 @@ _terminal_manager_clear ( HISTORY* history )
 }
 
 /**
- * Terminal manager function used to render content
- * Static manager function
+ * Terminal manager function used to scroll the screen content
+ * Manager function
  *
  * Return -> `void`
  * Arguments:
- *   - `HISTORY* history`: TTY history to be used
+ *   1. `HISTORY* history`: TTY history to be scrolled
+ *   2. `int64_t lines`: Amount of lines to be scrolled
+ *     - It should serve either as a 32-bit positive or negative value
  * Callers:
- *   - Internal Terminal manager functions (static)
+ *   - `_terminal_dispatch_scroll`
+ **/
+void
+_terminal_manager_scroll ( HISTORY* history, int64_t lines )
+{
+	
+	uint32_t viewport_top = history->attributes.viewport_top;
+	uint32_t line_count = history->attributes.line_count;
+	uint32_t height = history->attributes.height;
+
+	/**
+	 * Treat cases where the amount of lines to be scrolled
+	 * Is greater than the available history lines
+	 *
+	 * `line_count` is the screen down limit
+	 * `viewport_top + lines` is where the screen top should be in after scrolling
+	 *
+	 * If this operation is less than `height`, the viewport should be set at this top:
+	 * `line_count - height`
+	 **/
+	if ( line_count - ( viewport_top + lines ) < height )
+		viewport_top = line_count - height;
+
+	/**
+	 * Treat cases where `lines` is a negative value
+	 * It should scroll the screen back (down)
+	 *
+	 * `viewport_top` can be placed at line 0
+	 * The only verification is to avoid it to be placed at a negative line (impossible)
+	 **/
+	else if ( viewport_top + lines <= 0 )
+		viewport_top = 0;
+
+	/* Update the `viewport_top` value */
+	history->attributes.viewport_top = viewport_top;
+}
+
+/**
+ * Terminal manager function used to render content
+ * Manager function
+ *
+ * Return -> `void`
+ * Arguments:
+ *   1. `HISTORY* history`: TTY history to be used
+ * Callers:
+ *   - `_terminal_dispatch_render`
  **/
 void
 _terminal_manager_render ( HISTORY* history )
