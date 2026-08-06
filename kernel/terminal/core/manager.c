@@ -183,9 +183,9 @@ static const struct manager_ops ops = {
 	.write = _terminal_manager_write,
 	.puts = _terminal_manager_puts,
 	.clear = _terminal_manager_clear,
+	.scroll = _terminal_manager_scroll,
 	.render = _terminal_manager_render,
 	.create = _terminal_manager_create,
-	/* .scroll */
 };
 
 /* Static prototypes */

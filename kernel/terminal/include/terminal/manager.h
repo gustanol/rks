@@ -26,6 +26,9 @@ struct manager_ops
 	/* Clears all TTY history */
 	void ( *clear ) ( HISTORY * );
 
+	/* Scrolls the history content */
+	void ( *scroll ) ( HISTORY *, int64_t );
+
 	/* Renders all viewport dirty lines */
 	void ( *render ) ( HISTORY * );
 
