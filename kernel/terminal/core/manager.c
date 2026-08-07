@@ -179,13 +179,14 @@ tty_get_current_cell ( LINE* line, uint32_t width )
 
 /* Defines manager operations */
 static const struct manager_ops ops = {
-	.putc = _terminal_manager_putc,
+	.create = _terminal_manager_create,
+	.destroy = _terminal_manager_destroy,
 	.write = _terminal_manager_write,
+	.putc = _terminal_manager_putc,
 	.puts = _terminal_manager_puts,
 	.clear = _terminal_manager_clear,
 	.scroll = _terminal_manager_scroll,
 	.render = _terminal_manager_render,
-	.create = _terminal_manager_create,
 };
 
 /* Static prototypes */
@@ -365,7 +366,7 @@ _terminal_manager_clear ( HISTORY* history )
 void
 _terminal_manager_scroll ( HISTORY* history, int64_t lines )
 {
-	
+
 	uint32_t top = history->attributes.viewport_top;
 	uint32_t line_count = history->attributes.line_count;
 	uint32_t height = history->attributes.height;
@@ -413,7 +414,7 @@ _terminal_manager_scroll ( HISTORY* history, int64_t lines )
 		if ( top % height == 1 )
 		{
 			chunk = tty_get_chunk_by_line ( top, history );
-			if ( chunk == NULL ) /* Theoretically impossible due the above verifications */
+			if ( chunk == NULL )    /* Theoretically impossible due the above verifications */
 				return;
 		}
 
@@ -660,4 +661,37 @@ _terminal_manager_create ( void )
 		k_mfree ( history );
 
 	return -1;
+}
+
+/**
+ * Terminal manager function used to destroy a TTY history
+ * Manager function
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `tty_id id`: TTY ID to be destroyed
+ * Callers:
+ *   - `terminal_dispatch_destroy`
+ **/
+kerr_t
+_terminal_manager_destroy ( tty_id id )
+{
+
+	/* Verify indexing limit */
+	if ( id >= g_terminal->tty.count )
+		return KERR_INVAL;
+
+	TTY* tty = g_terminal->tty.list[id];
+	HISTORY* history = tty->history;
+
+	/* Frees each allocated chunk in this history */
+	for ( uint32_t i = 0; i < history->chunks.count; i++ )
+		k_mfree ( history->chunks.base[i] );
+
+	k_mfree ( history->chunks.base );   /* Array of pointers */
+	k_mfree ( history );
+	k_mfree ( tty );
+
+	/* Everything's okay */
+	return KERR_OK;
 }

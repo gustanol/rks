@@ -14,11 +14,17 @@ typedef struct tty
 struct manager_ops
 {
 
-	/* Put a new character */
-	void ( *putc ) ( HISTORY *, char );
+	/* Creates a new TTY object */
+	tty_id ( *create ) ( void );
+
+	/* Destroys a TTY object */
+	kerr_t ( *destroy ) ( tty_id );
 
 	/* Write a new sized-string */
 	void ( *write ) ( HISTORY *, char* , size_t );
+
+	/* Put a new character */
+	void ( *putc ) ( HISTORY *, char );
 
 	/* Put a new string */
 	void ( *puts ) ( HISTORY *, char*  );
@@ -31,9 +37,6 @@ struct manager_ops
 
 	/* Renders all viewport dirty lines */
 	void ( *render ) ( HISTORY * );
-
-	/* Creates a new TTY object */
-	  tty_id ( *create ) ( void );
 };
 
 /* Operations */
