@@ -502,7 +502,7 @@ _terminal_manager_render ( HISTORY* history )
 					 *   It's the end of current substring
 					 **/
 					TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
-					    g_terminal->backends.ops_list[backend]->write_at ( write_from,
+					    g_terminal->backends.ops_list[backend]->write_at ( top % height, write_from,
 					    &line->cells[write_from], i - write_from );
 
 					/* Update the current substring state */
@@ -517,7 +517,7 @@ _terminal_manager_render ( HISTORY* history )
 
 			/* Write the rest of the line */
 			TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
-			    g_terminal->backends.ops_list[backend]->write_at ( write_from,
+			    g_terminal->backends.ops_list[backend]->write_at ( top % height, write_from,
 			    &line->cells[write_from], width );
 
 			/* All line written */
