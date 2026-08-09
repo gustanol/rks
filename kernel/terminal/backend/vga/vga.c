@@ -65,3 +65,19 @@ TERMINAL_BACKEND_INIT ( __vga_init )
 	/* Correctly initialized */
 	return KERR_OK;
 }
+
+/**
+ * VGA backend character writer 
+ *
+ * Implements the terminal backend specific writer interface
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/backend.h`
+ **/
+TERMINAL_BACKEND_WRITE_AT ( _vga_write_at )
+{
+
+	/* Iterate up to `limit` and call the internal `putc_at` */
+	for ( uint32_t i = 0; i < limit; i++ )
+		_vga_putc_at ( at + i, s[i] );
+}
