@@ -1,8 +1,6 @@
 #ifndef _KERNEL_TERMINAL_BACKEND_H
 #define _KERNEL_TERMINAL_BACKEND_H
 
-/* ADD FUNCTIONS LIKE `WRITE_AT` */
-
 #include <kernel/boot/fb.h>
 #include <kernel/container_of.h>
 #include <kernel/kerr/kerr.h>
@@ -12,7 +10,7 @@
 
 /* Terminal backend registration macro */
 #define REGISTER_TERMINAL_BACKEND(BACKEND) \
-    ({ \
+	({ \
         const struct terminal_backend* __tmp = &( BACKEND ); \
         REGISTER_SUBSYSTEM_BACKEND ( &__tmp->base ); \
     })
@@ -23,39 +21,78 @@
  * Return -> `kerr_t`: Global error code
  * Arguments:
  *   1. `const struct framebuffer_info* fb`: Framebuffer global state
- *
- * This is the required prototype for every terminal backend
+ * Prototype
  **/
 #define TERMINAL_BACKEND_INIT(name) \
-        kerr_t name ( const struct framebuffer_info * fb )
+    kerr_t name ( const struct framebuffer_info * fb )
 
-#define TERMINAL_BACKEND_PUTC(name) \
-        void name ( char c )
+/**
+ * Terminal backend character array insert function
+ *
+ * Return -> `void`
+ * Arguments:
+ *   1. `uint32_t at`: Where to put within backend buffer
+ *   2. `char *c`: Character array base pointer 
+ *   3. `uint32_t limit`: Array limit
+ * Prototype
+ **/
+#define TERMINAL_BACKEND_WRITE_AT(name) \
+    void name ( uint32_t at, char* s, uint32_t limit )
 
-#define TERMINAL_BACKEND_WRITE(name) \
-        void name ( char* s )
+/**
+ * Terminal backend character put function
+ *
+ * Return -> `void`
+ * Arguments:
+ *   1. `uint32_t at`: Where to put within backend buffer
+ *   2. `char c`: Character to put
+ * Prototype
+ **/
+#define TERMINAL_BACKEND_PUTC_AT(name) \
+    void name ( uint32_t at, char c )
 
+/**
+ * Terminal backend style setter
+ *
+ * Return -> `void`
+ * Arguments:
+ *   1. `STYLE style`: Style to be set
+ * Prototype
+ **/
+#define TERMINAL_BACKEND_SET_STYLE(name) \
+	void name ( STYLE style )
+
+/**
+ * Terminal backend data flusher (memory writer)
+ *
+ * Return -> `void`
+ * Arguments:
+ *   1. `void`
+ * Prototype
+ **/
 #define TERMINAL_BACKEND_FLUSH(name) \
-        void name ( char* buf, uint32_t width, uint32_t height )
-
-#define TERMINAL_BACKEND_CLEAR(name) \
-        void name ( void )
+    void name ( void )
 
 /* Shared operations */
 struct terminal_ops
 {
 
-	/* Puts a single char at the end of the screen */
-	TERMINAL_BACKEND_PUTC ( ( *putchar ) );
+	/**
+	 * Writes character at a specific location
+	 *
+	 * Note the backend is responsible to determine
+	 * Out of bounds locations
+	 **/
+	TERMINAL_BACKEND_WRITE_AT ( ( *write_at ) );
 
-	/* Writes a null-terminated string */
-	TERMINAL_BACKEND_WRITE ( ( *write ) );
+	/* Puts a single char at a specific location */
+	TERMINAL_BACKEND_PUTC_AT ( ( *putc_at ) );
+
+	/* Sets current backend style */
+	TERMINAL_BACKEND_SET_STYLE ( ( *set_style ) );
 
 	/* Writes screen content to memory */
 	TERMINAL_BACKEND_FLUSH ( ( *flush ) );
-
-	/* Cleans the screen */
-	TERMINAL_BACKEND_CLEAR ( ( *clear ) );
 };
 
 /* Specific terminal backend context */
