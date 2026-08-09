@@ -67,17 +67,46 @@ TERMINAL_BACKEND_INIT ( __vga_init )
 }
 
 /**
- * VGA backend character writer 
+ * VGA backend string buffer writer 
  *
- * Implements the terminal backend specific writer interface
+ * Implements the terminal backend specific buffer writer interface
  *
  * Interface:
  *   - `kernel/terminal/include/terminal/backend.h`
  **/
 TERMINAL_BACKEND_WRITE_AT ( _vga_write_at )
 {
+	if ( row >= vga_height )
+		return;
 
-	/* Iterate up to `limit` and call the internal `putc_at` */
-	for ( uint32_t i = 0; i < limit; i++ )
-		_vga_putc_at ( at + i, s[i] );
+	if ( col >= vga_width )
+		return;
+
+	/* Iterate up to `len` and call the internal `putc_at` */
+	for ( uint32_t i = 0; i < len; i++ )
+		_vga_putc_at ( row, col + i, s[i] );
+}
+
+/**
+ * VGA backend character writer
+ *
+ * Implements the terminal backend specific character writer interface
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/backend.h`
+ **/
+TERMINAL_BACKEND_PUTC_AT ( _vga_putc_at )
+{
+
+	/* Do not write over the last row */
+	if ( row >= vga_height )
+		return;
+
+	/* Do not write over the last col */
+	if ( col >= vga_width )
+		return;
+
+	/* Set the character and its attributes */
+	g_vga.ptr[row * col].character = c;
+	g_vga.ptr[row * col].color = g_vga.current_color;
 }

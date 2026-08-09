@@ -31,25 +31,27 @@
  *
  * Return -> `void`
  * Arguments:
- *   1. `uint32_t at`: Where to put within backend buffer
- *   2. `char *c`: Character array base pointer 
- *   3. `uint32_t limit`: Array limit
+ *   1. `uint32_t row`: Line to write
+ *   2. `uint32_t col`: Cell within the line to start writing 
+ *   3. `char* buf`: Character array base pointer 
+ *   4. `uint32_t len`: Array limit
  * Prototype
  **/
 #define TERMINAL_BACKEND_WRITE_AT(name) \
-    void name ( uint32_t at, char* s, uint32_t limit )
+    void name ( uint32_t row, uint32_t col, char* buf, uint32_t len )
 
 /**
  * Terminal backend character put function
  *
  * Return -> `void`
  * Arguments:
- *   1. `uint32_t at`: Where to put within backend buffer
- *   2. `char c`: Character to put
+ *   1. `uint32_t row`: Line to write
+ *   2. `uint32_t col`: Where to put within backend buffer
+ *   3. `char c`: Character to put
  * Prototype
  **/
 #define TERMINAL_BACKEND_PUTC_AT(name) \
-    void name ( uint32_t at, char c )
+    void name ( uint32_t row, uint32_t col, char c )
 
 /**
  * Terminal backend style setter
