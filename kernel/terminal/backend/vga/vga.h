@@ -21,7 +21,7 @@ struct vga_ctx
 {
 
 	/* Buffer pointer */
-	const struct vga_cell* ptr;
+	struct vga_cell* ptr;
 };
 
 #endif /* _KERNEL_CONSOLE_VGA_BACKEND_H */

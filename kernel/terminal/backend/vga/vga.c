@@ -110,3 +110,30 @@ TERMINAL_BACKEND_PUTC_AT ( _vga_putc_at )
 	g_vga.ptr[row * col].character = c;
 	g_vga.ptr[row * col].color = g_vga.current_color;
 }
+
+/**
+ * VGA backend content flusher
+ *
+ * Implements the terminal backend specific content flusher
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/backend.h`
+ **/
+TERMINAL_BACKEND_FLUSH ( _vga_flush )
+{
+
+	struct vga_cell* mem = ( struct vga_cell * ) vga_mem_addr;
+	const struct vga_cell* src = ( const struct vga_cell * ) g_vga.ptr;
+
+	/* Iteration for VGA screen dimensions */
+	for ( uint32_t h = 0; h < vga_height; h++ )
+		for ( uint32_t w = 0; w < vga_width; w++ )
+
+			/**
+			 * Writes the current cell to memory
+			 *
+			 * - `h * vga_width`: Amount of cells of that line
+			 * - `+ w`: Offset for the current line
+			 **/
+			mem[h * vga_width + w] = src[h * vga_width + w];
+}
