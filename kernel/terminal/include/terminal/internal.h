@@ -31,8 +31,8 @@ struct terminal
 		/* Array size */
 		uint32_t capability;
 
-        /* Active TTY */
-        uint32_t current;
+		/* Active TTY */
+		tty_id current;
 
 		/* Internal manager operations */
 		struct manager_ops* ops;
