@@ -161,7 +161,6 @@ _terminal_dispatch_clear ( tty_id id )
  * Arguments:
  *   1. `tty_id id`: TTY identification
  *   2. `int64_t lines`: Lines to be scrolled
- *     - Can be negative to scroll back
  * Callers:
  *   - `terminal_scroll`
  **/
