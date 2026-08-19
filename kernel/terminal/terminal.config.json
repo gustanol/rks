@@ -1,4 +1,6 @@
 {
   "vga": 1,
-  "framebuffer": 1
+  "framebuffer": 1,
+  "tty_lines": 64,
+  "tty_cells": 80
 }

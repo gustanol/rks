@@ -2,10 +2,6 @@
 #include <terminal/internal.h>
 #include <terminal/manager.h>
 
-/* PROBABLY, FIXED DIMENSIONS WON'T BE USED IN THE FUTURE */
-#define TTY_CHUNK_LINES 64
-#define TTY_LINE_CELLS 80
-
 #define TTY_FOR_EACH_BACKEND(i, count) \
     for ( uint32_t i = 0; i < count; i++ )
 

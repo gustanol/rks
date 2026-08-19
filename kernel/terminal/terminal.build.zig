@@ -31,6 +31,8 @@ pub fn addSubsystem(
         "-I", b.fmt("{s}/include", .{path}),
         "-D", b.fmt("TERMINAL_VGA_SUPPORT={d}", .{config_file.vga}),
         "-D", b.fmt("TERMINAL_FRAMEBUFFER_SUPPORT={d}", .{config_file.framebuffer}),
+        "-D", b.fmt("TTY_CHUNK_LINES={d}", .{config_file.tty_lines}),
+        "-D", b.fmt("TTY_CHUNK_CELLS={d}", .{config_file.tty_cells}),
     });
 
     // Add to kernel global executable
