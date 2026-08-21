@@ -2,8 +2,8 @@ const std = @import("std");
 const helpers = @import("../../../scripts/zig/helpers.zig");
 
 pub const Config = struct {
-    bitmap: u32 = 1,
-    buddy: u32 = 1,
+    bitmap: u32,
+    buddy: u32,
 };
 
 pub fn addSubsystem(
@@ -16,7 +16,7 @@ pub fn addSubsystem(
     // Load local pmm.config.json (or default)
     const config_file = helpers.config.loadLocalConfigFile(
         Config, b, b.fmt("{s}/pmm.config.json", .{path})
-    );
+    ) catch @panic("Failed to load pmm.config.json");
 
     // PMM core source files
     const core_sources = &[_][]const u8{

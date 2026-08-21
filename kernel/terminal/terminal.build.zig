@@ -1,9 +1,11 @@
 const std = @import("std");
-const helpers = @import("../../../scripts/zig/helpers.zig");
+const helpers = @import("../../scripts/zig/helpers.zig");
 
 pub const Config = struct {
-    vga: u32 = 1,
-    framebuffer: u32 = 1,
+    vga: u32,
+    framebuffer: u32,
+    tty_lines: u32,
+    tty_cells: u32
 };
 
 pub fn addSubsystem(
@@ -16,7 +18,7 @@ pub fn addSubsystem(
     // Load local terminal.config.json (or default)
     const config_file = helpers.config.loadLocalConfigFile(
         Config, b, b.fmt("{s}/terminal.config.json", .{path})
-    );
+    ) catch @panic("Failed to load terminal.config.json");
 
     // Terminal core source files
     const core_sources = &[_][]const u8{
@@ -36,10 +38,7 @@ pub fn addSubsystem(
     });
 
     // Add to kernel global executable
-    kernel.root_module.addCSourceFiles(.{
-        .files = core_sources,
-        .flags = terminal_flags
-    });
+    kernel.root_module.addCSourceFiles(.{ .files = core_sources, .flags = terminal_flags });
 
     // VGA backend sources
     if (config_file.vga == 1) {

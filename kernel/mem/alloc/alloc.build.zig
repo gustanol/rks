@@ -2,8 +2,8 @@ const std = @import("std");
 const helpers = @import("../../../scripts/zig/helpers.zig");
 
 pub const Config = struct {
-    heap: u32 = 1,
-    slab: u32 = 1,
+    heap: u32,
+    slab: u32,
 };
 
 pub fn addSubsystem(
@@ -14,9 +14,7 @@ pub fn addSubsystem(
     const path = "kernel/mem/alloc";
 
     // Load local alloc.config.json
-    const config_file = helpers.config.loadLocalConfigFile(
-        Config, b, b.fmt("{s}/alloc.config.json", .{path})
-    );
+    const config_file = helpers.config.loadLocalConfigFile(Config, b, b.fmt("{s}/alloc.config.json", .{path})) catch @panic("Failed to load alloc.config.json");
 
     // ALLOC core soure files
     const core_sources = &[_][]const u8{

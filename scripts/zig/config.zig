@@ -1,18 +1,20 @@
 const std = @import("std");
 
-pub fn loadLocalConfigFile(comptime T: type, b: *std.Build, path: []const u8) T {
-    const io = b.graph.io;
+pub fn loadLocalConfigFile(comptime T: type, b: *std.Build, path: []const u8) !T {
+    
+    const contents = try b.build_root.handle.readFileAlloc(
+        b.allocator,
+        path,
+        10 * 1024 * 1024, // 10MiB
+    );
+    defer b.allocator.free(contents);
 
-    // Read all file content
-    const contents = b.build_root.handle.readFileAlloc(
-        io, path, b.allocator,
-        std.Io.Limit.unlimited
-    ) catch return .{};
-
-    // Parse it according the given type
-    const parsed = std.json.parseFromSlice(
-        T, b.allocator, contents, .{}
-    ) catch return .{};
+    const parsed = try std.json.parseFromSlice(
+        T,
+        b.allocator,
+        contents,
+        .{ .ignore_unknown_fields = true },
+    );
 
     return parsed.value;
 }
