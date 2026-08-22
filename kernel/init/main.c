@@ -1,71 +1,62 @@
-
-/*
- * Main C kernel code point
- *
- * Define the initial kernel context
- *
- * The `rks_main` function, once reached, should not return to where it was called
- */
-
-#include <rks/kernel/console/console.h>
-#include <rks/kernel/klog/log.h>
-#include <rks/kernel/klog/print.h>
-#include <rks/kernel/init.h>
-#include <rks/kernel/mem/pmm.h>
-#include <rks/kernel/mem/vmm.h>
-#include <rks/kernel/mem/heap.h>
-#include <rks/boot.h>
-
-extern init_fn_t __drivers_init_start;
-extern init_fn_t __drivers_init_end;
+#include <kernel/boot/info.h>
+#include <kernel/mem/alloc/init.h>
+#include <kernel/mem/pmm/init.h>
+#include <kernel/mem/vmm/init.h>
+#include <kernel/mem/vmm/map.h>
+#include <kernel/terminal/init.h>
 
 /* Statically allocated boot info struct */
-static boot_info_t boot_info;
+static struct boot_info info;
 
-/*
- * Call every init function provided by every registered driver
+/**
+ * Kernel C main entry point
+ * Public entry
  *
- * -> void
- */
-static void
-init_drivers ( void )
-{
-	for ( init_fn_t * ptr = &__drivers_init_start;
-	      ptr < &__drivers_init_end; ptr++ )
-		( *ptr ) (  );  /* Init function */
-}
-
-/*
- * Kernel main entry point
- *
- * -> void (should not return)
- * @loader_info: Pointer to a struct defining the bootloader
- *   - Only its `magic number` and a pointer to its `info struct`
- */
+ * Return -> void (Shall not return)
+ * Arguments:
+ *   1. `struct loader_info* loader_info`: Used bootloader info context
+ **/
 void
-rks_main ( loader_info_t* loader_info )
+main ( struct loader_info* loader_info )
 {
-	/* Call architecture-dependent code right here */
-	arch_early_init (  );
 
-	/* Init all self-registered drivers */
-	init_drivers (  );
-
-	console_init (  );
-	_log_init (  );
-
-	/* Generic layer to parse any info structure */
+	/* Parse and fill the boot info structure out */
 	parse_boot ( loader_info, &boot_info );
 
-	/* Physical Memory Manager */
-	pmm_init ( boot_info.mmap );
-	heap_init (  );
+	/* Initializes the Physical Memory Manager */
+	err = pmm_init ( info.mmap );
+	if ( !IS_RET_OK ( err ) )
+		k_panic ( "PMM couldn't be initialized" );
 
-	/* Virtual Memory Manager */
-	vmm_init (  );
+	/* Initializes the Virtual Memory Manager */
+	err = vmm_init (  );
+	if ( !IS_RET_OK ( err ) )
+		k_panic ( "VMM couldn't be initialized" );
 
-	do
-	{
+	/**
+	 * `info` is statically allocated in this file
+	 * At that point, the only virtual mapping is identity mapping
+	 *
+	 * VMM is responsible to unmap identity mapping,
+	 * Which means `info` now points to an unmapped address
+	 *
+	 * As we still need it, we can use the VMM public API to
+	 * Get a virtual address from the current `info` physical address
+	 **/
+	vaddr_t new_boot_info_addr = vmm_phys_to_virt ( ( paddr_t ) info );
+	info = new_boot_info_addr;
+
+	/* Initializes the Allocation subsystem */
+	err = alloc_init (  );
+	if ( !IS_RET_OK ( err ) )
+		k_panic ( "ALLOC couldn't be initialized" );
+
+	/* Initializes the Terminal subsystem */
+	err = terminal_init ( info.fb );
+	if ( !IS_RET_OK ( err ) )
+		k_print ( "The Terminal subsystem couldn't be initialized" );
+
+	/* sched_loop () */
+	while ( true )
 		__asm__ volatile ( "hlt" );
-	} while ( true );
 }
