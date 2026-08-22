@@ -14,6 +14,9 @@
 ADDR_SPACE*
 _vmm_dispatch_create_space ( void )
 {
+
+	KERR_RET_ENCODE_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );
+
 	/* Calls the operation function to create a new space */
 	return g_vmm->ops->create_space (  );
 }
@@ -31,6 +34,9 @@ _vmm_dispatch_create_space ( void )
 kerr_t
 _vmm_dispatch_destroy_space ( ADDR_SPACE* space )
 {
+
+	KERR_RET_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );
+
 	/* Destroys this space */
 	return g_vmm->ops->destroy_space ( space );
 }
@@ -48,6 +54,9 @@ _vmm_dispatch_destroy_space ( ADDR_SPACE* space )
 kerr_t
 _vmm_dispatch_switch_to_space ( ADDR_SPACE* space )
 {
+
+	KERR_RET_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );
+
 	/* Switches the caller core to this space */
 	return g_vmm->ops->switch_to_space ( space );
 }
@@ -66,15 +75,16 @@ _vmm_dispatch_switch_to_space ( ADDR_SPACE* space )
  *   - `vmm_map`
  **/
 kerr_t
-_vmm_dispatch_map ( ADDR_SPACE* space, vaddr_t virt_addr,
-                    paddr_t phys_addr, u32 flags )
+_vmm_dispatch_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr, u32 flags )
 {
+
+	KERR_RET_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );
+
 	/* Gets the mapped HHDM offset */
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
 	/* Calls the operation function */
-	return g_vmm->ops->map ( space, virt_addr, phys_addr,
-	                         hhdm_offset, flags );
+	return g_vmm->ops->map ( space, virt_addr, phys_addr, hhdm_offset, flags );
 }
 
 /**
@@ -91,6 +101,9 @@ _vmm_dispatch_map ( ADDR_SPACE* space, vaddr_t virt_addr,
 kerr_t
 _vmm_dispatch_unmap ( ADDR_SPACE* space, vaddr_t virt_addr )
 {
+
+	KERR_RET_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );
+
 	/* HHDM_offset */
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
@@ -111,14 +124,15 @@ _vmm_dispatch_unmap ( ADDR_SPACE* space, vaddr_t virt_addr )
  *   - `vmm_map`
  **/
 kerr_t
-_vmm_dispatch_remap ( ADDR_SPACE* space, vaddr_t virt_addr,
-                      paddr_t phys_addr, u32 flags )
+_vmm_dispatch_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr, u32 flags )
 {
+
+	KERR_RET_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );
+
 	/* HHDM offset */
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
-	return ( int ) g_vmm->ops->remap ( space, virt_addr, phys_addr,
-	                                   hhdm_offset, flags );
+	return ( int ) g_vmm->ops->remap ( space, virt_addr, phys_addr, hhdm_offset, flags );
 }
 
 /**
@@ -135,6 +149,8 @@ _vmm_dispatch_remap ( ADDR_SPACE* space, vaddr_t virt_addr,
 paddr_t
 _vmm_dispatch_virt_to_phys ( ADDR_SPACE* space, vaddr_t virt_addr )
 {
+
+	KERR_RET_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );
 
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
@@ -155,6 +171,9 @@ _vmm_dispatch_virt_to_phys ( ADDR_SPACE* space, vaddr_t virt_addr )
 vaddr_t
 _vmm_dispatch_phys_to_virt ( paddr_t phys_addr )
 {
+
+	KERR_RET_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );
+
 	/* Gets the HHDM offset to serve as the conversion base */
 	vaddr_t hhdm_offset = g_vmm->hhdm_offset;
 
