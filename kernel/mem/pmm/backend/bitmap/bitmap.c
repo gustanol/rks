@@ -2,9 +2,9 @@
 #include <arch/const.h>
 #include <arch/mem/early_alloc.h>
 #include <pmm/backend.h>
-#include <rks/kernel/mem/pmm/frames.h>
-#include <rks/kernel/mem/vmm/types.h>
-#include <rks/lib/bitwise.h>
+#include <kernel/mem/pmm/frames.h>
+#include <kernel/mem/vmm/types.h>
+#include <lib/bitwise.h>
 
 /* Prototypes */
 static PMM_BACKEND_INIT ( __bitmap_init );
@@ -90,12 +90,11 @@ PMM_ALLOC_FRAME ( _bitmap_alloc_frame )
 	long frame_idx = FIND_FIRST_ZERO_BIT ( g_bitmap.ptr, g_bitmap.size );
 
 	/* No available memory */
-	KERR_RET_ENCODE_IF ( frame_idx < 0, KERR_NOMEM,
-	                     "No free physical frame\n" );
+	KERR_RET_ENCODE_IF ( frame_idx < 0, KERR_NOMEM, "No free physical frame\n" );
 
 	/* Frame out of boundary */
 	KERR_RET_ENCODE_IF ( frame_idx > total_frames, KERR_INTERNAL,
-	                     "Frame '%l' out of bounds\n", frame_idx );
+	    "Frame '%l' out of bounds\n", frame_idx );
 
 	/* Mark this frame as used */
 	BITMAP_SET_BIT ( g_bitmap.ptr, frame_idx );
@@ -123,7 +122,7 @@ PMM_BACKEND_FREE_FRAME ( _bitmap_free_frame )
 
 	/* Frame out of boundary */
 	KERR_RET_ENCODE_IF ( frame_idx > total_frames, KERR_INVAL,
-	                     "Frame '%l' out of bounds\n", frame_idx );
+	    "Frame '%l' out of bounds\n", frame_idx );
 
 	/* Mark this frame as used */
 	BITMAP_CLEAR_BIT ( g_bitmap.ptr, frame_idx );
@@ -147,13 +146,11 @@ PMM_BACKEND_ALLOC_REGION ( _bitmap_alloc_region )
 {
 
 	/* First region frame index */
-	long region_start =
-	        FIND_CONTIGUOUS_ZERO_REGION ( g_bitmap.ptr, g_bitmap.size,
-	                                      frames_needed );
+	long region_start = FIND_CONTIGUOUS_ZERO_REGION ( g_bitmap.ptr, g_bitmap.size,
+	    frames_needed );
 
 	/* No available memory */
-	KERR_RET_ENCODE_IF ( region_start < 0, KERR_NOMEM,
-	                     "No free physical frame\n" );
+	KERR_RET_ENCODE_IF ( region_start < 0, KERR_NOMEM, "No free physical frame\n" );
 
 	/* Mark the found region as used */
 	BITMAP_SET_REGION ( g_bitmap.ptr, region_start, frames_needed );
@@ -185,7 +182,7 @@ PMM_BACKEND_FILL_REGION ( _bitmap_fill_region )
 
 	/* Region out of boundary */
 	KERR_RET_IF ( frame_idx + frame_count > total_frames, KERR_INVAL,
-	              "Limit '%l' out of bounds\n", frame_idx + frame_count );
+	    "Limit '%l' out of bounds\n", frame_idx + frame_count );
 
 	/* Set all the bits of this region */
 	BITMAP_SET_REGION ( g_bitmap.ptr, frame_idx, frame_count );
@@ -217,8 +214,7 @@ PMM_BACKEND_FREE_REGION ( _bitmap_free_region )
 
 	/* Region out of boundary */
 	KERR_RET_ENCODE_IF ( frame_idx + frame_count > total_frames, KERR_INVAL,
-	                     "Limit '%l' out of bounds",
-	                     frame_idx + frame_count );
+	    "Limit '%l' out of bounds", frame_idx + frame_count );
 
 	/* Clear this region on the bitmap */
 	BITMAP_CLEAR_REGION ( g_bitmap.ptr, frame_idx, frame_count );

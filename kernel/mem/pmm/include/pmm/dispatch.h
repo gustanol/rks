@@ -1,8 +1,8 @@
 #ifndef _KERNEL_SUBSYS_PMM_DISPATCH_H
 #define _KERNEL_SUBSYS_PMM_DISPATCH_H
 
-#include <rks/kernel/err/kerr.h>
-#include <rks/kernel/mem/pmm/types.h>
+#include <kernel/kerr/kerr.h>
+#include <kernel/mem/pmm/types.h>
 
 /* Dispatch function prototypes */
 paddr_t _pmm_dispatch_alloc_frame ( void );

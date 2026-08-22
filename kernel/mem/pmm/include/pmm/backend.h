@@ -1,10 +1,10 @@
 #ifndef _KERNEL_SUBSYS_PMM_BACKEND_H
 #define _KERNEL_SUBSYS_PMM_BACKEND_H
 
-#include <rks/kernel/container_of.h>
-#include <rks/kernel/err/kerr.h>
-#include <rks/kernel/mem/pmm/types.h>
-#include <rks/kernel/subsys/registry.h>
+#include <kernel/container_of.h>
+#include <kernel/kerr/kerr.h>
+#include <kernel/mem/pmm/types.h>
+#include <kernel/subsys/registry.h>
 
 #define SUBSYS_TAG_PMM 0x504D4D
 

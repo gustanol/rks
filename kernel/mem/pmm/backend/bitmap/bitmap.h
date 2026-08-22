@@ -1,6 +1,9 @@
 #ifndef _KERNEL_SUBSYS_PMM_BITMAP_BACKEND_H
 #define _KERNEL_SUBSYS_PMM_BITMAP_BACKEND_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 /* Bitmap useful content data */
 struct bitmap_ctx
 {

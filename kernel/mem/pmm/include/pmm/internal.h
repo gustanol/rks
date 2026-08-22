@@ -1,8 +1,8 @@
 #ifndef PMM_INTERNAL_H
 #define PMM_INTERNAL_H
 
+#include <kernel/mem/pmm/types.h>
 #include <pmm/backend.h>
-#include <rks/kernel/mem/pmm/types.h>
 
 /* PMM context struct */
 struct pmm
