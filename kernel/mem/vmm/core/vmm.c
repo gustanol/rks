@@ -1,6 +1,6 @@
 #include <arch/const.h>
-#include <rks/kernel/mem/vmm/init.h>
-#include <rks/kernel/subsys/registry.h>
+#include <kernel/mem/vmm/init.h>
+#include <kernel/subsys/registry.h>
 #include <vmm/internal.h>
 
 /* Static VMM context structure */
@@ -23,8 +23,7 @@ vmm_init ( void )
 	g_vmm = &i_pmm;
 
 	/* Gets the registered VMM backend (architecture-dependent) */
-	struct subsys_backend* backend =
-	        subsys_find_backend ( SUBSYSTEM_TAG_VMM );
+	struct subsys_backend* backend = subsys_find_backend ( SUBSYSTEM_TAG_VMM );
 
 	/*
 	   if (!backend)

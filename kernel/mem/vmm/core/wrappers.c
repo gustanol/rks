@@ -1,5 +1,5 @@
-#include <rks/kernel/mem/vmm/addr_space.h>
-#include <rks/kernel/mem/vmm/map.h>
+#include <kernel/mem/vmm/addr_space.h>
+#include <kernel/mem/vmm/map.h>
 #include <vmm/dispatch.h>
 
 /**

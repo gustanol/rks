@@ -2,7 +2,7 @@
 #define _KERNEL_VMM_INTERNAL_H
 
 #include "backend.h"
-#include <rks/kernel/mem/vmm/types.h>
+#include <kernel/mem/vmm/types.h>
 
 /* VMM context struct */
 struct vmm
