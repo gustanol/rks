@@ -1,6 +1,6 @@
+#include <kernel/mem/pmm/frames.h>
 #include <pmm/dispatch.h>
 #include <pmm/internal.h>
-#include <rks/kernel/mem/pmm/frames.h>
 
 /* Inline function to get the `pmm_ops` pointer */
 static inline struct pmm_ops*
@@ -23,6 +23,8 @@ paddr_t
 _pmm_dispatch_alloc_frame ( void )
 {
 
+	KERR_RET_ENCODE_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
+
 	u32 total_frames = g_pmm->frames.total;
 
 	/* Allocates a new physical frame */
@@ -31,7 +33,7 @@ _pmm_dispatch_alloc_frame ( void )
 	/* If correctly allocated, there's no kerr_t */
 	if ( !IS_KERR ( phys_addr ) )
 
-	        /* Update the amount of used frames */
+	    /* Update the amount of used frames */
 		g_pmm->frames.used++;
 
 	/* Returns the actual value */
@@ -52,6 +54,8 @@ kerr_t
 _pmm_dispatch_free_frame ( paddr_t phys_addr )
 {
 
+	KERR_RET_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
+
 	u32 total_frames = g_pmm->frames.total;
 
 	/* Frees the requested frame */
@@ -60,7 +64,7 @@ _pmm_dispatch_free_frame ( paddr_t phys_addr )
 	/* If correct freed */
 	if ( IS_RET_OK ( ret ) )
 
-	        /* Updates the amount of frames used */
+	    /* Updates the amount of frames used */
 		g_pmm->frames.used--;
 
 	/* Return it */
@@ -80,11 +84,13 @@ _pmm_dispatch_free_frame ( paddr_t phys_addr )
 paddr_t
 _pmm_dispatch_alloc_region ( size_t frames_needed )
 {
+
+	KERR_RET_ENCODE_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
+
 	u32 total_frames = g_pmm->frames.total;
 
 	/* Region start */
-	padd_t phys_addr =
-	        get_ops (  )->alloc_region ( phys_addr, total_frames );
+	padd_t phys_addr = get_ops (  )->alloc_region ( phys_addr, total_frames );
 
 	/* Just update the global state on correct allocation */
 	if ( !IS_KERR ( phys_addr ) )
@@ -108,16 +114,17 @@ kerr_t
 _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t size )
 {
 
+	KERR_RET_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
+
 	u32 total_frames = g_pmm->frames.total;
 
 	/* Tries to fill this region */
-	kerr_t ret =
-	        get_ops (  )->fill_region ( phys_addr, size, total_frames );
+	kerr_t ret = get_ops (  )->fill_region ( phys_addr, size, total_frames );
 
 	/* No returning error */
 	if ( IS_RET_OK ( ret ) )
 
-	        /* Increases the amount of used frames */
+	    /* Increases the amount of used frames */
 		g_pmm->frames.used += size;
 
 	return ret;
@@ -137,16 +144,18 @@ _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t size )
 kerr_t
 _pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
 {
+
+	KERR_RET_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
+
 	u32 total_frames = g_pmm->frames.total;
 
 	/* Tries to free this region */
-	kerr_t ret =
-	        get_ops (  )->free_region ( phys_addr, size, total_frames );
+	kerr_t ret = get_ops (  )->free_region ( phys_addr, size, total_frames );
 
 	/* No returning error */
 	if ( IS_RET_OK ( ret ) )
 
-	        /* Decreases the amount of used frames */
+	    /* Decreases the amount of used frames */
 		g_pmm->frames.used -= size;
 
 	return ret;
@@ -165,6 +174,9 @@ _pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
 size_t
 _pmm_dispatch_get_total_memory ( void )
 {
+
+	KERR_RET_ENCODE_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
+
 	/* Gets the total stored memory size */
 	size_t total_memory = g_pmm->memory.total;
 
@@ -185,6 +197,9 @@ _pmm_dispatch_get_total_memory ( void )
 size_t
 _pmm_dispatch_get_available_memory ( void )
 {
+
+	KERR_RET_ENCODE_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
+
 	size_t total_memory = g_pmm->memory.total;
 	u32 frames_used = g_pmm->frames.used;
 
