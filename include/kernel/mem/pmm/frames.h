@@ -2,7 +2,7 @@
 #define _KERNEL_PMM_FRAMES_H
 
 #include "types.h"
-#include <rks/kernel/err/kerr.h>
+#include <kernel/kerr/kerr.h>
 
 /* Amount of frames to fit `SIZE` */
 #define FRAMES_BY_SIZE(SIZE) \
