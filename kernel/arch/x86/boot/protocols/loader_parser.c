@@ -21,5 +21,5 @@ parse_boot ( struct loader_info* loader, struct boot_info* boot )
 
 	/* Loaded by a Multibot2 bootloader */
 	if ( loader->magic == MULTIBOOT2_BOOTLOADER_MAGIC )
-		_parse_mbi2 ( loader->info_ptr, boot );
+		parse_multiboot2 ( loader->info_ptr, boot );
 }
