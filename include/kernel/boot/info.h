@@ -5,7 +5,6 @@
 #include "loader.h"
 #include "mmap.h"
 #include "rsdp.h"
-#include <rks/kernel/types.h>
 
 /* Generic boot information */
 struct boot_info

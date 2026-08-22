@@ -1,7 +1,8 @@
-#ifndef KERNEL_BOOT_MMAP_H
-#define KERNEL_BOOT_MMAP_H
+#ifndef _KERNEL_BOOT_MMAP_H
+#define _KERNEL_BOOT_MMAP_H
 
-#include <rks/kernel/types.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /* Memory types */
 enum mem_type
@@ -14,24 +15,26 @@ enum mem_type
 /* MMAP entry structure */
 struct mmap_entry
 {
+
 	/* Base physical address */
-	addr_t addr;
+	uint64_t addr;
 
 	/* Entry length */
 	size_t len;
 
 	/* Memory type */
-	u32 type;
+	uint32_t type;
 } __attribute__ ( ( packed ) );
 
 /* Generic parsed MMAP tag */
 struct mmap_tag
 {
+
 	/* Amount of entries */
-	u32 entry_count;
+	uint32_t entry_count;
 
 	/* Pointer to them */
 	struct mmap_entry* entries;
 } __attribute__ ( ( packed ) );
 
-#endif /* KERNEL_BOOT_MMAP_H */
+#endif /* _KERNEL_BOOT_MMAP_H */

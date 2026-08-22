@@ -1,31 +1,33 @@
-#ifndef KERNEL_BOOT_FB_H
-#define KERNEL_BOOT_FB_H
+#ifndef _KERNEL_BOOT_FB_H
+#define _KERNEL_BOOT_FB_H
 
-#include <rks/kernel/types.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /* Framebuffer information structure */
 struct framebuffer_info
 {
+
 	/* Framebuffer virtual address pointer */
-	addr_t* addr;
+	uintptr_t* addr;
 
 	/* Dimensions */
-	u32 width;
-	u32 height;
+	uint32_t width;
+	uint32_t height;
 
 	/* Bytes per row */
-	u32 pitch;
+	uint32_t pitch;
 
 	/* Bits per pixel */
-	ubyte_t bpp;
+	uint8_t bpp;
 
 	/* Formatter */
 	struct
 	{
-		ubyte_t red_shift;
-		ubyte_t green_shift;
-		ubyte_t blue_shift;
+		uint8_t red_shift;
+		uint8_t green_shift;
+		uint8_t blue_shift;
 	} fmt;
 };
 
-#endif /* KERNEL_BOOT_FB_H */
+#endif /* _KERNEL_BOOT_FB_H */
