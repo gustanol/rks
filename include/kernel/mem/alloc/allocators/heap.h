@@ -1,8 +1,8 @@
 #ifndef _KERNEL_ALLOC_HEAP_H
 #define _KERNEL_ALLOC_HEAP_H
 
-#include <rks/kernel/mem/alloc/types.h>
-#include <rks/kernel/err/kerr.h>
+#include <kernel/mem/alloc/types.h>
+#include <kernel/kerr/kerr.h>
 
 HEAP* alloc_heap_create ( void );
 kerr_t alloc_heap_destroy ( HEAP * heap );
