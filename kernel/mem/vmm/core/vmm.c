@@ -61,4 +61,7 @@ vmm_init ( void )
 
 	/* The public API is ready from now on */
 	g_vmm->ready = 1;
+
+	/* Everything was set */
+	return KERR_OK;
 }
