@@ -1,8 +1,6 @@
 #ifndef _KERNEL_CONTAINER_OF_H
 #define _KERNEL_CONTAINER_OF_H
 
-#include <rks/lib/compiler/builtins.h>
-
 /**
  * Calculate the original object pointer from one of its members
  *
@@ -31,7 +29,7 @@
 #define container_of(ptr, type, member) \
         ({ \
                 const typeof ( ( ( type * ) 0 )->member )* __mptr = ( ptr ); \
-                ( type * ) ( ( char * ) __mptr - offsetof ( type, member ) ); \
+                ( type * ) ( ( char * ) __mptr - __builtin_offsetof ( type, member ) ); \
         })
 
 #endif /* _KERNEL_CONTAINER_OF_H */
