@@ -1,26 +1,26 @@
-#ifndef IDT_H
-#define IDT_H
+#ifndef _X86_CPU_IDT_H
+#define _X86_CPU_IDT_H
 
-#include <rks/kernel/types.h>
-#include <rks/kernel/mem/vmm.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /* IDT entry */
 struct __attribute__ ( ( packed ) )
 {
-	u16 offset_l;
-	u16 selector;
-	ubyte_t ist;
-	ubyte_t type_attributes;
-	u16 offset_m;
-	u32 offset_u;
-	pad_t reserved[2];
+	uint16_t offset_l;
+	uint16_t selector;
+	uint8_t ist;
+	uint8_t type_attributes;
+	uint16_t offset_m;
+	uint32_t offset_u;
+	uint32_t reserved;
 } idt_entry;
 
 /* IDT descriptor */
 struct __attribute__ ( ( packed ) )
 {
-	u16 limit;
-	vaddr_t base;
+	uint16_t limit;
+	uint64_t base;
 } idt_descriptor;
 
-#endif /* IDT_H */
+#endif /* _X86_CPU_IDT_H */

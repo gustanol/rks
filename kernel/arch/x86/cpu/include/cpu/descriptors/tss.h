@@ -1,20 +1,21 @@
-#ifndef TSS_H
-#define TSS_H
+#ifndef _X86_CPU_TSS_H
+#define _X86_CPU_TSS_H
 
-#include <rks/kernel/types.h>
-#include <rks/kernel/mem/vmm.h>
+#include <stddef.h>
+#include <stdint.h>
 
-struct __attribute__ ( ( packed ) )
+struct tss
 {
-	pad_t reserved0[2];     /* 32 bits */
-	vaddr_t rsp0;            /* Kernel stack pointer */
-	vaddr_t rsp1;
-	vaddr_t rsp2;
-	pad_t reserved1[4];     /* 64 bits */
-	vaddr_t ist[7];          /* Interrupt Stack Table */
-	pad_t reserved2[4];     /* 64 bits */
-	pad_t reserved3[4];     /* 64 bits */
-	vaddr_t iomap_base;
-} tss;
 
-#endif /* TSS_H */
+	uint32_t reserved0;
+	uint64_t rsp0;              /* Kernel stack pointer */
+	uint64_t rsp1;
+	uint64_t rsp2;
+	uint64_t reserved1;
+	uint64_t ist[7];            /* Interrupt Stack Table */
+	uint64_t reserved2;
+	uint64_t reserved3;
+	uint64_t iomap_base;
+} __attribute__ ( ( packed ) );
+
+#endif /* _X86_CPU_TSS_H */

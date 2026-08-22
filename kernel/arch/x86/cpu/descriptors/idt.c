@@ -1,10 +1,9 @@
-#include <x86/cpu/descriptors/idt.h>
-#include <x86/mem/early_alloc.h>
+#include <arch/mem/early_alloc.h>
+#include <cpu/descriptors/idt.h>
 
 #define IDT_ENTRIES 256
 
-/* Macro used to load a new IDT
- * ============================== */
+/* Macro used to load a new IDT */
 #define LOAD_IDT(DESCRIPTOR) \
         __asm__ volatile ( \
                 "lidt %0" \
@@ -13,8 +12,7 @@
                 : "memory" \
         )
 
-/* Macro used to populate the IDT entries by passing the attributes directly
- * ============================================================== */
+/* Macro used to populate the IDT entries by passing the attributes directly */
 #define IDT_ENTRY(OFFSET, SELECTOR, IST, TYPE_ATTRIBUTES) \
  ( struct idt_entry ) \
  { \
@@ -30,8 +28,8 @@
 /* Prototypes */
 static void __set_idt_entries ( struct idt_entry* idt );
 
-/*
- * Sets and loads a new 64-bit version Interrupt Descriptor Table
+/**
+ * Set and load a new 64-bit Interrupt Descriptor Table
  * Public helper
  *
  * Return -> `void`
@@ -39,39 +37,39 @@ static void __set_idt_entries ( struct idt_entry* idt );
  *   1. `void`
  * Callers:
  *   - `set_64_descriptors`
- */
+ **/
 void
 _setup_idt ( void )
 {
+
 	/* IDT allocation  */
 	struct idt_entry* idt =
-	        ( struct idt_entry * ) early_alloc ( sizeof ( idt_entry ) *
-	                                             IDT_ENTRIES );
+	    ( struct idt_entry * ) early_alloc ( sizeof ( idt_entry ) * IDT_ENTRIES );
 
 	/* IDT descriptor */
 	struct idt_descriptor* desc =
-	        ( struct idt_descriptor * )
-	        early_alloc ( sizeof ( idt_descriptor ) );
+	    ( struct idt_descriptor * ) early_alloc ( sizeof ( idt_descriptor ) );
 
 	/* Sets just the necessary ISRs */
 	__set_idt_entries ( idt );
 
-        /* *INDENT-OFF* */
+	/* *INDENT-OFF* */
 
-        /* Set the IDT descriptor */
+	/* Set the IDT descriptor */
 	idt_descriptor = ( idt_desc_t )
-        {
-                .limit = ( IDT_ENTRIES * sizeof ( idt_entry_t ) ) - 1,
-                .base = ( addr_t ) & idt,
-        };
-        /* *INDENT-ON* */
+	{
+		.limit = ( IDT_ENTRIES * sizeof ( idt_entry_t ) ) - 1,
+		.base = ( addr_t ) & idt,
+	};
+
+	/* *INDENT-ON* */
 
 	/* Loads it */
 	LOAD_IDT ( &idt_descriptor );
 }
 
 /*
- * Sets the essential IDT entries
+ * Set the essential IDT entries
  * Private helper
  *
  * Return -> `void`
@@ -83,8 +81,8 @@ _setup_idt ( void )
 void
 __set_idt_entries ( struct idt_entry* idt )
 {
-	/* External Interrupt Service Routines
-	 * =================================== */
+
+	/* External Interrupt Service Routines */
 	extern void isr0 ( void );
 	extern void isr1 ( void );
 	extern void isr2 ( void );
@@ -100,9 +98,7 @@ __set_idt_entries ( struct idt_entry* idt )
 	extern void isr13 ( void );
 	extern void isr14 ( void );
 
-	/*
-	 * For each entry, pass the memory address of the correspondent ISR
-	 */
+	/* For each entry, pass the memory address of the correspondent ISR */
 
 	idt[0] = IDT_ENTRY ( isr0, 0x08, 0, 0x8E );
 	idt[1] = IDT_ENTRY ( isr1, 0x08, 0, 0x8F );

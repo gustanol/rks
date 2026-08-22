@@ -1,8 +1,8 @@
-#ifndef GDT_H
-#define GDT_H
+#ifndef _X86_CPU_GDT_H
+#define _X86_CPU_GDT_H
 
-#include <rks/kernel/types.h>
-#include <rks/kernel/mem/vmm.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /* GDT entry */
 struct gdt_entry
@@ -11,9 +11,9 @@ struct gdt_entry
 	{
 		struct
 		{
-			u16 limit_l;    /* Lower 16-bit limit value */
-			u16 base_l;     /* Lower base address 16 bits */
-			u8 base_m;      /* Middle base address byte */
+			uint16_t limit_l;   /* Lower 16-bit limit value */
+			uint16_t base_l;    /* Lower base address 16 bits */
+			uint8_t base_m;     /* Middle base address byte */
 
 			/*
 			 * P (1b) = Present bit (should always be 1)
@@ -44,7 +44,7 @@ struct gdt_entry
 			 *     - Write never allowed
 			 * A (1b) = Accessed bit
 			 */
-			ubyte_t access_byte;
+			uint8_t access_byte;
 
 			/*
 			 * G (1b) = Granularity flag
@@ -59,14 +59,14 @@ struct gdt_entry
 			 * Reserved (1b)
 			 * LIMIT (4b) = 4 upper limit bits
 			 */
-			ubyte_t flags_limit;
-			ubyte_t base_u;
+			uint8_t flags_limit;
+			uint8_t base_u;
 		};
 
 		struct
 		{
-			u32 base_ih;    /* Upper 32 bits base address */
-			pad_t reserved[2];
+			uint32_t base_ih;   /* Upper 32 bits base address */
+			uint32_t reserved;
 		} system_segment;
 	};
 } __attribute__ ( ( packed ) );
@@ -74,13 +74,14 @@ struct gdt_entry
 /* GDT descriptor */
 struct gdt_descriptor
 {
-	u16 limit;
-	vaddr_t start;
+	uint16_t limit;
+	uint64_t start;
 } __attribute__ ( ( packed ) );
 
 /* Types of semgnets to choose */
 enum
 {
+
 	/* Local Descriptor Table */
 	LDT = 0x2,
 
@@ -91,4 +92,4 @@ enum
 	TSS_B = 0xB,
 } segment_type;
 
-#endif /* GDT_H */
+#endif /* _X86_CPU_GDT_H */
