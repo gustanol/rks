@@ -25,7 +25,7 @@ pub fn addSubsystem(
     });
 
     // Entry file
-    kernel.root_module.addAssemblyFile(.{
+    kernel.root_module.addCSourceFile(.{
         .file = b.path(b.fmt("{s}/entry.S", .{path})),
         .flags = boot_cflags,
     });
@@ -38,13 +38,9 @@ pub fn addSubsystem(
 
     // Multiboot2 source files
     if (config_file.multiboot2 == 1) {
-        kernel.root_module.addAssemblyFile(.{
-            .file = b.path(b.fmt("{s}/protocols/multiboot2/header.S", .{path})),
-            .flags = boot_cflags,
-        });
-
         kernel.root_module.addCSourceFiles(.{
            .files = &[_][]const u8{
+               b.fmt("{s}/protocols/multiboot2/header.S", .{path}),
                b.fmt("{s}/protocols/multiboot2/parsers/framebuffer.c", .{path}),
                b.fmt("{s}/protocols/multiboot2/parsers/generic.c", .{path}),
                b.fmt("{s}/protocols/multiboot2/parsers/mmap.c", .{path}),
