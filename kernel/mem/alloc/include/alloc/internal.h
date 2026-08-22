@@ -8,7 +8,7 @@
 struct alloc_ctx
 {
 	/* Is it ready to use? */
-	int ready;
+	bool ready;
 
 	/* Kernel state */
 	struct

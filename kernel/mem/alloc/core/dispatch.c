@@ -30,6 +30,9 @@ _alloc_dispatch_heap_create ( void )
 kerr_t
 _alloc_dispatch_heap_destroy ( struct heap* heap )
 {
+
+	KERR_RET_IF ( !heap->ready, KERR_NOTREADY, "Given heap is not ready" );
+
 	/* Get the function pointer from the internal operations */
 	return heap->ops->destroy ( heap );
 }
@@ -48,6 +51,9 @@ _alloc_dispatch_heap_destroy ( struct heap* heap )
 void*
 _alloc_dispatch_heap_malloc ( struct heap* heap, size_t size )
 {
+
+	KERR_RET_ENCODE_IF ( !heap->ready, KERR_NOTREADY, "Given heap is not ready" );
+
 	return heap->ops->malloc ( heap, size );
 }
 
@@ -65,6 +71,9 @@ _alloc_dispatch_heap_malloc ( struct heap* heap, size_t size )
 kerr_t
 _alloc_dispatch_heap_mfree ( struct heap* heap, void* ptr )
 {
+
+	KERR_RET_IF ( !heap->ready, KERR_NOTREADY, "Given heap is not ready" );
+
 	return heap->ops->mfree ( ptr );
 }
 
@@ -82,6 +91,9 @@ _alloc_dispatch_heap_mfree ( struct heap* heap, void* ptr )
 kerr_t
 _alloc_dispatch_heap_grow ( struct heap* heap, size_t frames_needed )
 {
+
+	KERR_RET_IF ( !heap->ready, KERR_NOTREADY, "Given heap is not ready" );
+
 	return heap->ops->grow ( heap, frames_needed );
 }
 
@@ -103,10 +115,10 @@ _alloc_dispatch_k_malloc ( size_t size )
 	struct heap* kernel_heap = g_alloc->kernel.heap;
 
 	/**
-         * Calls the dispatcher layer
-         *
-         * Organize the logic here for other allocators
-         **/
+	 * Calls the dispatcher layer
+	 *
+	 * Organize the logic here for other allocators
+	 **/
 	return _alloc_heap_malloc ( kernel_heap, size );
 }
 
@@ -123,12 +135,13 @@ _alloc_dispatch_k_malloc ( size_t size )
 kerr_t
 _alloc_dispatch_k_mfree ( void* ptr )
 {
+	
 	struct heap* kernel_heap = g_alloc->kernel.heap;
 
 	/**
-         * Return the dispatcher
-         *
-         * Organize the logic here for other allocators
-         **/
+	 * Return the dispatcher
+	 *
+	 * Organize the logic here for other allocators
+	 **/
 	return _alloc_heap_mfree ( kernel_heap, ptr );
 }
