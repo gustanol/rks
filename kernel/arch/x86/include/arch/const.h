@@ -1,5 +1,5 @@
-#ifndef _X86_ARCH_CONST
-#define _X86_ARCH_CONST
+#ifndef _X86_CONST
+#define _X86_CONST
 
 #define PAGE_LSHIFT 12
 #define PAGE_SIZE ( 1ULL << ( PAGE_LSHIFT ) )
@@ -15,4 +15,4 @@ extern void HHDM_BASE ( void );
 
 #endif /* __ASSEMBLY__ */
 
-#endif /* _X86_ARCH_CONST */
+#endif /* _X86_CONST */

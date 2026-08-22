@@ -1,17 +1,18 @@
-#ifndef CPU_H
-#define CPU_H
+#ifndef _X86_CPU_H
+#define _X86_CPU_H
 
-#include <rks/kernel/types.h>
-#include <x86/mem/vmm/paging.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /* CPU hardware state */
 struct cpu_hw
 {
+
 	/* LAPIC ID */
-	u32 lapic_id;
+	uint32_t lapic_id;
 
 	/* Logical index (0, 1, ...) */
-	u32 idx;
+	uint32_t idx;
 
 	/* Has this CPU core been brought up? */
 	bool online;
@@ -20,6 +21,7 @@ struct cpu_hw
 /* CPU execution state */
 struct cpu_exec
 {
+
 	/* struct process* process; */
 	/* struct thread* thread; */
 
@@ -34,25 +36,26 @@ struct cpu_exec
 /* CPU state for Interrupt Requests */
 struct cpu_irq
 {
+
 	/* Probably, this section can be replaced by a per-CPU TSS state */
 
 	/* Task State Segment base */
-	vaddr_t tss_base;
+	uint64_t tss_base;
 
 	/* Stack pointers */
-	vaddr_t ist_stacks[7];
+	uint64_t ist_stacks[7];
 
-	/*
+	/**
 	 * Nesting depth of interrupt handlers
-	 *
 	 * How many IRQs can be pending at once
-	 */
-	u8 irq_depth;
+	 **/
+	uint8_t irq_depth;
 };
 
 /* CPU core state */
 struct cpu
 {
+
 	struct cpu_hw hardware;
 	struct cpu_exec execution;
 
@@ -64,4 +67,4 @@ struct cpu
 	struct cpu* self;
 };
 
-#endif /* CPU_H */
+#endif /* _X86_CPU_H */
