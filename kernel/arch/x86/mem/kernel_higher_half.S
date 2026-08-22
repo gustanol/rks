@@ -1,15 +1,14 @@
 .section .bootstrap, "ax"
 .align 16
 
-/* Global/extern symbols
- * ===================== */
+/* Global/extern symbols */
 .globl early_kernel_higher_half
 
 /* Kernel stack */
 .extern kernel_stack_top
 
 /* Main function */
-.extern rks_main
+.extern main
 
 /* Descriptors setter */
 .extern set_64_descriptors
@@ -72,7 +71,7 @@ early_kernel_higher_half:
 	addq %r12, %rdi
 
 	/* Call the main C function */
-	call rks_main
+	call main
 
 /* It should not be reached unless it fails to continue */
 .halt:
