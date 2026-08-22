@@ -10,61 +10,55 @@ static struct vmm i_vmm;
  * Virtual Memory Manager initializer
  * Public subsystem initializer
  *
- * Return -> `void`
+ * Return -> `kerr_t`: Kernel global error type
  * Arguments:
  *   1. `void`
  * Callers:
  *   - `rks_main`
  **/
-void
+kerr_t
 vmm_init ( void )
 {
+
 	/* VMM global state structure pointer */
 	g_vmm = &i_pmm;
 
-	/* Gets the registered VMM backend (architecture-dependent) */
+	/* Get the registered VMM backend (architecture-dependent) */
 	struct subsys_backend* backend = subsys_find_backend ( SUBSYSTEM_TAG_VMM );
 
-	/*
-	   if (!backend)
-	   k_panic("no registered backend");
-	 */
-
-	/*
-	   if (!backend->init)
-	   k_panic("no registered backend");
-	 */
+	/* Treat common errors */
+	KERR_RET_IF ( backend == NULL, KERR_INTERNAL, "No registered VMM backends" );
+	KERR_RET_IF ( backends->init == NULL, KERR_INTERNAL,
+	    "Registered VMM backend has no init function" );
 
 	/* Initializes the backend */
 	backend->init ( g_vmm->kernel.addr_space );
 
-	/* Sets the registered operation functions as default */
+	/* Set the registered operation functions as default */
 	g_vmm->ops = ( struct vmm_ops * ) backend->ops;
 
-	/* Maps all physical memory to higher half */
+	/* Map all physical memory to higher half */
 	g_vmm->ops->early_build_hhdm ( g_vmm->kernel.addr_space );
 
 	/**
-         * Sets the HHDM offset after all
-         *
-         * Notice we could've done this before
-         * Doing now is just a convention because the HHDM was fully set
-         **/
+	 * Sets the HHDM offset after all
+	 *
+	 * Notice we could've done this before
+	 * Doing now is just a convention because the HHDM was fully set
+	 **/
 	g_vmm->hhdm_offset = HHDM_BASE;
 
 	/* Now we've got HHDM mapped, there's no reason to keep identity mapping */
 	kerr_t err g_vmm->ops->unmap_identity ( g_vmm->kernel.addr_space );
 
-	/*
-	   if ( err != KERR_OK )
-	   k_print ( kerr_string ( err ) );
-	 */
+	/* Print the error source */
+	if ( !IS_KERR_OK ( err ) )
+		k_print ( kerr_string ( err ) );
 
-	/* Sets the kernel limit
-	 * ===================== */
+	/* Sets the kernel limit */
 	g_vmm->kernel.virt_base = KERNEL_START;
 	g_vmm->kernel.virt_end = KERNEL_END;
 
-	/* Every is ready from now on */
+	/* The public API is ready from now on */
 	g_vmm->ready = 1;
 }
