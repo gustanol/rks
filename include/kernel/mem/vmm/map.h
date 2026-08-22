@@ -2,8 +2,8 @@
 #define _KERNEL_VMM_MAP_H
 
 #include "types.h"
-#include <rks/kernel/mem/pmm/types.h>
-#include <rks/kernel/err/kerr.h>
+#include <kernel/mem/pmm/types.h>
+#include <kernel/kerr/kerr.h>
 
 /* Generic VMM flags */
 enum vmm_flags
@@ -15,11 +15,9 @@ enum vmm_flags
 };
 
 /* Mapping operations */
-kerr_t vmm_map ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
-                 u32 flags );
+kerr_t vmm_map ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr, uint32_t flags );
 kerr_t vmm_unmap ( ADDR_SPACE * space, vaddr_t virt_addr );
-kerr_t vmm_remap ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
-                   u32 flags );
+kerr_t vmm_remap ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr, uint32_t flags );
 
 /* Convert operations */
 paddr_t vmm_virt_to_phys ( ADDR_SPACE * space, vaddr_t virt_addr );

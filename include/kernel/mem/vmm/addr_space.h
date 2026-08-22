@@ -2,7 +2,7 @@
 #define _KERNEL_VMM_ADDR_SPACE_H
 
 #include "types.h"
-#include <rks/kernel/err/kerr.h>
+#include <kernel/kerr/kerr.h>
 
 /* Address space operations */
 ADDR_SPACE* vmm_create_space ( void );
