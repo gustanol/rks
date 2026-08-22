@@ -4,6 +4,7 @@
 #include <pmm/backend.h>
 #include <kernel/mem/pmm/frames.h>
 #include <kernel/mem/vmm/types.h>
+
 #include <lib/bitwise.h>
 
 /* Prototypes */
@@ -43,14 +44,12 @@ static const struct pmm_backend bitmap_backend = {
 REGISTER_PMM_BACKEND ( bitmap_backend );
 
 /**
- * PMM bitmap backend initializer function
- * Subsystem backend init function
+ * Bitmap backend initialization
  *
- * Return -> `kerr_t`
- * Arguments:
- *   1. `const struct pmm_init_backend_ctx* ctx`: PMM non-specific backend data
- * Callers:
- *   - `pmm_init`
+ * Implements the PMM backend initialization interface
+ *
+ * Interface:
+ *   - `kernel/mem/pmm/include/pmm/backend.h`
  **/
 PMM_BACKEND_INIT ( __bitmap_init )
 {
@@ -74,14 +73,12 @@ PMM_BACKEND_INIT ( __bitmap_init )
 }
 
 /**
- * Bitmap single frame allocator
- * Subsystem backend function
+ * Bitmap backend frame allocator
  *
- * Return -> `paddr_t`: Allocated page physical address
- * Arguments:
- *   1. `u32 total_frames`: Total amount of memory frames
- * Callers:
- *   - PMM implementations
+ * Implements the PMM backend frame allocator interface
+ *
+ * Interface:
+ *   - `kernel/mem/pmm/include/pmm/backend.h`
  **/
 PMM_ALLOC_FRAME ( _bitmap_alloc_frame )
 {
@@ -104,21 +101,18 @@ PMM_ALLOC_FRAME ( _bitmap_alloc_frame )
 }
 
 /**
- * Bitmap single frame freer
- * Subsystem backend function
+ * Bitmap backend frame liberator
  *
- * Return -> `kerr_t`: Global error type
- * Arguments:
- *   1. `paddr_t phys_addr`: Frame physical address
- *   2. `u32 total_frames`: Total amount of physical frames
- * Callers:
- *   - PMM implementations
+ * Implements the PMM backend frame liberator interface
+ *
+ * Interface:
+ *   - `kernel/mem/pmm/include/pmm/backend.h`
  **/
 PMM_BACKEND_FREE_FRAME ( _bitmap_free_frame )
 {
 
 	/* Physical frame index */
-	u32 frame_idx = phys_addr / FRAME_SIZE;
+	uint32_t frame_idx = phys_addr / FRAME_SIZE;
 
 	/* Frame out of boundary */
 	KERR_RET_ENCODE_IF ( frame_idx > total_frames, KERR_INVAL,
@@ -132,15 +126,12 @@ PMM_BACKEND_FREE_FRAME ( _bitmap_free_frame )
 }
 
 /**
- * Bitmap contiguous region allocator
- * Subsystem backend function
+ * Bitmap backend region allocator 
  *
- * Return -> `paddr_t`: Starter region physical address
- * Arguments:
- *   1. `size_t frames_needed`: Amount of frames this region must have
- *   2. `u32 total_frames`: Total amount of memory frames
- * Callers:
- *   - PMM implementations
+ * Implements the PMM backend region allocator interface
+ *
+ * Interface:
+ *   - `kernel/mem/pmm/include/pmm/backend.h`
  **/
 PMM_BACKEND_ALLOC_REGION ( _bitmap_alloc_region )
 {
@@ -160,25 +151,21 @@ PMM_BACKEND_ALLOC_REGION ( _bitmap_alloc_region )
 }
 
 /**
- * Bitmap region map setter
- * Subsystem backend function
+ * Bitmap backend region filler
  *
- * Return -> `kerr_t`: Global error type
- * Arguments:
- *   1. `paddr_t phys_addr`: Region base physical address
- *   2. `size_t size`: Region size
- *   3. `u32 total_frames`: Total frames provided by dispatch layer
- * Callers:
- *   - PMM imprementations
+ * Implements the PMM backend region filler interface
+ *
+ * Interface:
+ *   - `kernel/mem/pmm/include/pmm/backend.h`
  **/
 PMM_BACKEND_FILL_REGION ( _bitmap_fill_region )
 {
 
 	/* Physical frame starting index */
-	u32 frame_idx = phys_addr / FRAME_SIZE;
+	uint32_t frame_idx = phys_addr / FRAME_SIZE;
 
 	/* Frames amount */
-	u32 frame_count = FRAMES_BY_SIZE ( size );
+	uint32_t frame_count = FRAMES_BY_SIZE ( size );
 
 	/* Region out of boundary */
 	KERR_RET_IF ( frame_idx + frame_count > total_frames, KERR_INVAL,
@@ -192,25 +179,21 @@ PMM_BACKEND_FILL_REGION ( _bitmap_fill_region )
 }
 
 /**
- * Bitmap region map freer
- * Subsystem backend function
+ * Bitmap backend region freer
  *
- * Return -> `kerr_t`: Global error type
- * Arguments:
- *   1. `paddr_t phys_addr`: Region base physical address
- *   2. `size_t size`: Region size
- *   3. `u32 total_frames`: Total frames provided by dispatch layer
- * Callers:
- *   - PMM imprementations
+ * Implements the PMM backend region freer interface
+ *
+ * Interface:
+ *   - `kernel/mem/pmm/include/pmm/backend.h`
  **/
 PMM_BACKEND_FREE_REGION ( _bitmap_free_region )
 {
 
 	/* Starting index of the physical frame */
-	u32 frame_idx = phys_addr / FRAME_SIZE;
+	uint32_t frame_idx = phys_addr / FRAME_SIZE;
 
 	/* Amount of frames this region has */
-	u32 frame_count = size / FRAME_SIZE;
+	uint32_t frame_count = size / FRAME_SIZE;
 
 	/* Region out of boundary */
 	KERR_RET_ENCODE_IF ( frame_idx + frame_count > total_frames, KERR_INVAL,

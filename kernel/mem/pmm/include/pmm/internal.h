@@ -1,5 +1,5 @@
-#ifndef PMM_INTERNAL_H
-#define PMM_INTERNAL_H
+#ifndef _KERNEL_PMM_INTERNAL_H
+#define _KERNEL_PMM_INTERNAL_H
 
 #include <kernel/mem/pmm/types.h>
 #include <pmm/backend.h>
@@ -9,8 +9,8 @@ struct pmm
 {
 	struct
 	{
-		u32 total;
-		u32 used;
+		uint32_t total;
+		uint32_t used;
 	} frames;
 
 	struct
@@ -28,4 +28,4 @@ struct pmm
 /* PMM context struct pointer */
 extern struct pmm* const g_pmm;
 
-#endif /* PMM_INTERNAL_H */
+#endif /* _KERNEL_PMM_INTERNAL_H */
