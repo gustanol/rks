@@ -1,8 +1,8 @@
 #ifndef _KERNEL_ALLOC_BACKEND_HEAP_H
 #define _KERNEL_ALLOC_BACKEND_HEAP_H
 
-#include <rks/kernel/err/kerr.h>
-#include <rks/kernel/mem/vmm/types.h>
+#include <kernel/kerr/kerr.h>
+#include <kernel/mem/vmm/types.h>
 
 /* Heap allocator operation functions */
 struct heap_ops
@@ -32,11 +32,11 @@ struct heap_ops
  **/
 struct heap
 {
-	vaddr_t arena_start;    /* Base address */
-	vaddr_t current_arena;  /* Current frame base address */
-	size_t limit;           /* Limit size */
-	bool ready;             /* Is it ready to be used? */
-	struct heap_ops* ops;   /* Operations */
+	vaddr_t arena_start;        /* Base address */
+	vaddr_t current_arena;      /* Current frame base address */
+	size_t limit;               /* Limit size */
+	bool ready;                 /* Is it ready to be used? */
+	struct heap_ops* ops;       /* Operations */
 };
 
 /* Heap creator function prototype */

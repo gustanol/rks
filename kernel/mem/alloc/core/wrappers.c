@@ -1,6 +1,6 @@
 #include <alloc/dispatch.h>
-#include <rks/kernel/mem/alloc.h>
-#include <rks/kernel/mem/alloc/allocators/heap.h>
+#include <kernel/mem/alloc.h>
+#include <kernel/mem/alloc/allocators/heap.h>
 #include <string.h>
 
 /**

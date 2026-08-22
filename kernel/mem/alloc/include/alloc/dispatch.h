@@ -1,7 +1,7 @@
 #ifndef _KERNEL_ALLOC_DISPATCH_H
 #define _KERNEL_ALLOC_DISPATCH_H
 
-#include <rks/kernel/err/kerr.h>
+#include <kernel/kerr/kerr.h>
 
 /* Heap dispatchers */
 struct heap* _alloc_dispatch_heap_create ( void );

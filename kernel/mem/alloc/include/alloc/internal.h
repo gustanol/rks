@@ -2,7 +2,7 @@
 #define _KERNEL_ALLOC_INTERNAL_H
 
 #include <alloc/allocators/heap.h>
-#include <rks/kernel/types.h>
+#include <kernel/types.h>
 
 /* Allocaton context structure */
 struct alloc_ctx

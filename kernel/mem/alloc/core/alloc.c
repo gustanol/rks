@@ -1,5 +1,5 @@
 #include <alloc/internal.h>
-#include <rks/kernel/mem/alloc/init.h>
+#include <kernel/mem/alloc/init.h>
 
 /* Statically allocate the global state Allocation context struct */
 static struct alloc_ctx i_alloc;
