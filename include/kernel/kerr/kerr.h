@@ -1,7 +1,8 @@
 #ifndef _KERNEL_ERR_H
 #define _KERNEL_ERR_H
 
-#include <rks/kernel/mem/vmm/types.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define KERR_PTR_BASE 0xFFFFEE0000000000ULL
 #define KERR_PTR_MASK 0xFFFFFF0000000000ULL
