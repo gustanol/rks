@@ -31,7 +31,7 @@ struct vmm_ops
 	  kerr_t ( *switch_to_space ) ( ADDR_SPACE * );
 
 	/* Virtual address mapping within an address space */
-	  kerr_t ( *map ) ( ADDR_SPACE *, vaddr_t, paddr_t, vaddr_t, u32 flags );
+	  kerr_t ( *map ) ( ADDR_SPACE *, vaddr_t, paddr_t, vaddr_t, uint32_t flags );
 
 	/* Virtual address unmapping within an address space */
 	  kerr_t ( *unmap ) ( ADDR_SPACE *, vaddr_t, vaddr_t );
@@ -40,7 +40,7 @@ struct vmm_ops
 	  kerr_t ( *unmap_identity ) ( ADDR_SPACE * );
 
 	/* Remapping operation */
-	  kerr_t ( *remap ) ( ADDR_SPACE *, vaddr_t, vaddr_t, u32 flags );
+	  kerr_t ( *remap ) ( ADDR_SPACE *, vaddr_t, vaddr_t, uint32_t flags );
 
 	/**
 	 * Convertions of virtual to physical address
