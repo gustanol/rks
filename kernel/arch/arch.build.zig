@@ -1,7 +1,7 @@
 const std = @import("std");
 
 // Every architecture build file
-const x86 = @import("x86/build.zig");
+const x86 = @import("x86/x86.build.zig");
 
 pub fn addSubsystem(
     b: *std.Build,
