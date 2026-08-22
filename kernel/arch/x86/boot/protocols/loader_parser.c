@@ -1,6 +1,8 @@
-#include <rks/kernel/boot/info.h>
-#include <rks/lib/boot/multiboot2.h>
-#include <x86/boot/loader_parser.h>
+#include <kernel/boot/info.h>
+#include <arch/boot/loader_parser.h>
+
+// Update this include
+// #include <lib/boot/multiboot2.h>
 
 /**
  * Parses the bootloader-given Multiboot2 information structure
@@ -16,6 +18,7 @@
 void
 parse_boot ( struct loader_info* loader, struct boot_info* boot )
 {
+
 	/* Loaded by a Multibot2 bootloader */
 	if ( loader->magic == MULTIBOOT2_BOOTLOADER_MAGIC )
 		_parse_mbi2 ( loader->info_ptr, boot );

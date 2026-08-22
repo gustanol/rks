@@ -1,5 +1,6 @@
-#include <rks/kernel/boot/fb.h>
-#include <rks/lib/boot/multiboot2.h>
+#include <kernel/boot/fb.h>
+
+// #include <rks/lib/boot/multiboot2.h>
 
 /**
  * Parses the given framebuffer to the global state boot info
@@ -13,9 +14,9 @@
  *   - `_parse_mbi2`
  **/
 void
-__parse_framebuffer ( struct multiboot2_tag_framebuffer* tag,
-                      struct framebuffer_info* framebuffer )
+__parse_framebuffer ( struct multiboot2_tag_framebuffer* tag, struct framebuffer_info* framebuffer )
 {
+
 	/* Framebuffer base physical address */
 	framebuffer->addr = tag->framebuffer_addr;
 
