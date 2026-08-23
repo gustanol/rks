@@ -5,7 +5,6 @@
  **/
 
 X(KERR_OK, "Success")
-
 X(KERR_NOMEM, "Out of memory")
 X(KERR_REXIST, "Existent resource")
 X(KERR_NOTMAPPED, "Resource not mapped")

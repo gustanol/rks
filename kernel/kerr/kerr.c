@@ -1,4 +1,4 @@
-#include <rks/kernel/err/kerr.h>
+#include <kernel/kerr/kerr.h>
 
 /**
  * Generated array of pointers to error strings
