@@ -1,8 +1,9 @@
 #ifndef _X86_PAGING_ADDR_SPACE_H
 #ifndef _X86_PAGING_ADDR_SPACE_H
 
-#include <rks/kernel/err/kerr.h>
-#include <rks/kernel/mem/vmm/types.h>
+#include <kernel/kerr/kerr.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /* Address space struct */
 struct addr_space
@@ -10,7 +11,7 @@ struct addr_space
 	/* atomic_size_t refcount */
 	/* spinlock_t lock */
 	/* struct vm_region_tree regions */
-	paddr_t pml4_phys;
+	uint64_t pml4_phys;
 };
 
 /* Address space paging operations */

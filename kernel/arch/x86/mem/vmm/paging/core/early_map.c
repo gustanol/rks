@@ -1,10 +1,10 @@
-#include <rks/kernel/mem/pmm/types.h>
-#include <rks/kernel/sections.h>
-#include <rks/lib/bitwise.h>
-#include <x86/const.h>
-#include <x86/mem/early_alloc.h>
-#include <x86/mem/vmm/paging/internal/early_map.h>
-#include <x86/mem/vmm/paging/internal/flags.h>
+#include <arch/const.h>
+#include <arch/mem/early_alloc.h>
+#include <kernel/mem/pmm/types.h>
+#include <kernel/sections.h>
+#include <lib/bitwise.h>
+#include <mem/vmm/paging/early_map.h>
+#include <mem/vmm/paging/flags.h>
 
 /**
  * Early page table getter (and allocator when needed)
@@ -57,17 +57,14 @@ __early_get_or_alloc_table ( paddr_t* entry )
  *   - `bootstrap` section
  **/
 __BOOT_TEXT static void
-__early_map_page ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr,
-                   u32 flags )
+__early_map_page ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr, u32 flags )
 {
 
 	/* PDPT */
-	struct page_table* pdpt =
-	        __early_get_or_alloc_page ( &pml4[PML4_IDX ( virt_addr )] );
+	struct page_table* pdpt = __early_get_or_alloc_page ( &pml4[PML4_IDX ( virt_addr )] );
 
 	/* PD */
-	struct page_table* pd =
-	        __early_get_or_alloc_page ( &pdpt[PDPT_IDX ( virt_addr )] );
+	struct page_table* pd = __early_get_or_alloc_page ( &pdpt[PDPT_IDX ( virt_addr )] );
 
 	/* Fills PD */
 	pd[PD_IDT ( virt_addr )] = phys_addr | ( flags | PAGE_HUGE );
@@ -90,9 +87,9 @@ __early_map_page ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr,
  *   - `bootstrap` section
  **/
 __BOOT_TEXT void
-_early_map_range ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr,
-                   size_t size, u32 flags )
+_early_map_range ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr, size_t size, u32 flags )
 {
+
 	/* Guarantees the size is aligned up */
 	size = ALIGN_UP ( size, 0x200000 );
 
@@ -101,8 +98,7 @@ _early_map_range ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr,
 
 	/* Iterates for each page within the size */
 	for ( size_t offset = 0; offset < size; offset += PAGE_SIZE )
-		__early_map_page ( pml4, virt_addr + offset, phys_addr + offset,
-	                           flags );
+		__early_map_page ( pml4, virt_addr + offset, phys_addr + offset, flags );
 }
 
 /**
@@ -118,12 +114,11 @@ _early_map_range ( paddr_t* pml4, vaddr_t virt_addr, paddr_t phys_addr,
 __BOOT_TEXT void
 _map_kernel_hh ( paddr_t pml4_phys )
 {
+
 	/* Calculates the kernel size */
-	size_t kernel_size =
-	        ( ( vaddr_t ) KERNEL_END - ( vaddr_t ) KERNEL_START );
+	size_t kernel_size = ( ( vaddr_t ) KERNEL_END - ( vaddr_t ) KERNEL_START );
 
 	/* Maps the whole mapping */
 	_early_map_range ( &pml4_phys, ( vaddr_t ) KERNEL_VIRT_BASE,
-	                   ( paddr_t ) KERNEL_PHYS_BASE, kernel_size,
-	                   ( PAGE_PRESENT | PAGE_WRITE ) );
+	    ( paddr_t ) KERNEL_PHYS_BASE, kernel_size, ( PAGE_PRESENT | PAGE_WRITE ) );
 }
