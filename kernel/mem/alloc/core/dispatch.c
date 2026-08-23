@@ -119,7 +119,7 @@ _alloc_dispatch_k_malloc ( size_t size )
 	 *
 	 * Organize the logic here for other allocators
 	 **/
-	return _alloc_heap_malloc ( kernel_heap, size );
+	return _alloc_dispatch_heap_malloc ( kernel_heap, size );
 }
 
 /**
@@ -135,7 +135,7 @@ _alloc_dispatch_k_malloc ( size_t size )
 kerr_t
 _alloc_dispatch_k_mfree ( void* ptr )
 {
-	
+
 	struct heap* kernel_heap = g_alloc->kernel.heap;
 
 	/**
@@ -143,5 +143,5 @@ _alloc_dispatch_k_mfree ( void* ptr )
 	 *
 	 * Organize the logic here for other allocators
 	 **/
-	return _alloc_heap_mfree ( kernel_heap, ptr );
+	return _alloc_dispatch_heap_mfree ( kernel_heap, ptr );
 }

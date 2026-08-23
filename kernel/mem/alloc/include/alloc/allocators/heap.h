@@ -3,6 +3,7 @@
 
 #include <kernel/kerr/kerr.h>
 #include <kernel/mem/vmm/types.h>
+#include <stdbool.h>
 
 /* Heap allocator operation functions */
 struct heap_ops

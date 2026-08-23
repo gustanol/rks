@@ -41,5 +41,5 @@ alloc_init ( void )
 	 */
 
 	/* Ready to be used */
-	g_alloc->ready = 1;
+	g_alloc->ready = true;
 }
