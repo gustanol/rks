@@ -37,7 +37,7 @@ static const struct pmm_backend bitmap_backend = {
 	/* *INDENT-ON* */
 
 	.init = __bitmap_init,
-	ops = &bitmap_ops,
+	.ops = &bitmap_ops,
 };
 
 /* Register it as a PMM backend */
