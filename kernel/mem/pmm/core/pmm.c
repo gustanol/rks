@@ -6,9 +6,6 @@
 #include <kernel/mem/vmm/types.h>
 #include <kernel/subsys/registry.h>
 
-/* Static prototypes */
-static void _pmm_fill_total_memory ( struct mmap_tag* mmap );
-
 /* Static PMM context structure */
 static struct pmm i_pmm;
 
@@ -55,18 +52,21 @@ pmm_init ( struct mmap_tag* mmap )
 	g_pmm->frames.used = 0;
 
 	/**
-         * Get the registered backend
-         *
-         * Note it should be only one
-         * For any reason, if we get more than one registered backend,
-         * The first one found will be returned
-         **/
+	 * Get the registered backend
+	 *
+	 * Note it should be only one
+	 * For any reason, if we get more than one registered backend,
+	 * The first one found will be returned
+	 **/
 	struct subsys_backend* backend = subsys_find_backend ( SUBSYS_TAG_PMM );
 
 	/* Check integrity */
 	KERR_RET_IF ( backend == NULL, KERR_INTERNAL, "No registered PMM backend" );
 	KERR_RET_IF ( backend->init == NULL, KERR_INTERNAL,
 	    "[%s] backend has no init function", backend->name );
+
+	/* Get the specific PMM backend data context */
+	struct pmm_backend* pmm_backend = pmm_backend_from_base ( backend );
 
 	/* Context (Useful non-specific data) */
 	struct pmm_init_backend_ctx ctx = {
@@ -75,7 +75,7 @@ pmm_init ( struct mmap_tag* mmap )
 	};
 
 	/* Calls it */
-	backend->init ( &ctx );
+	pmm_backend->init ( &ctx );
 
 	/*
 	 * NOTE: For now on, the backend should be correctly initialized
@@ -83,7 +83,7 @@ pmm_init ( struct mmap_tag* mmap )
 	 *
 	 * Sets the operations right here
 	 */
-	g_pmm->ops = ( struct pmm_ops * ) backend->ops;
+	g_pmm->ops = ( struct pmm_ops * ) pmm_backend->ops;
 
 	/* Marks available entries as free regions */
 	for ( u32 i = 0; i < mmap->entry_count; i++ )

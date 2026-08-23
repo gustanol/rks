@@ -10,10 +10,10 @@
 
 /* PMM backend registration macro */
 #define REGISTER_PMM_BACKEND(BACKEND) \
-        ({ \
-                const struct pmm_backend* __tmp = &( BACKEND ); \
-                REGISTER_SUBSYS_BACKEND ( &( __tmp )->base ); \
-        })
+	({ \
+		const struct pmm_backend* __tmp = &( BACKEND ); \
+		REGISTER_SUBSYS_BACKEND ( &( __tmp )->base ); \
+	})
 
 /**
  * PMM backend initialization entry
