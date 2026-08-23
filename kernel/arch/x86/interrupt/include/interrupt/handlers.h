@@ -1,14 +1,15 @@
-#ifndef HANDLERS_H
-#define HANDLERS_H
+#ifndef _X86_INTERRUPT_HANDLERS_H
+#define _X86_INTERRUPT_HANDLERS_H
 
-#include <rks/kernel/types.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define PAGE_FAULT 14
 
 /* Frame with all pushed registers */
-struct __attribute__ ( ( packed ) )
+struct _interrupt_frame
 {
-	reg_t r15,
+	uint64_t r15,
 	  r14,
 	  r13,
 	  r12,
@@ -22,16 +23,16 @@ struct __attribute__ ( ( packed ) )
 	  rcx,
 	  rbx,
 	  rax;
-	u64 int_num,
+	uint64_t int_num,
 	  err_code;
-	u64 rip,
+	uint64_t rip,
 	  cs,
 	  rflags,
 	  rsp,
 	  ss;
-} interrupt_frame;
+} _attribute__ ( ( packed ) );
 
 /* Handlers declaration */
 void __page_fault_handler ( struct interrupt_frame* frame );
 
-#endif /* HANDLERS_H */
+#endif /* _X86_INTERRUPT_HANDLERS_H */

@@ -1,5 +1,5 @@
-#include <rks/kernel/klog/print.h>
-#include <x86/interrupt/internal/handlers.h>
+#include <interrupt/handlers.h>
+#include <kernel/klog/print.h>
 
 /**
  * Page Fault handler
@@ -14,8 +14,7 @@
 void
 __page_fault_handler ( struct interrupt_frame* frame )
 {
-	/* Gets the address that caused the fault (stored at CR2)
-         * ====================================================== */
+	/* Gets the address that caused the fault (stored at CR2) */
 	addr_t faulting_addr;
 	__asm__ volatile ( "mov %%cr2, %0":"=r" ( faulting_addr ) );
 
@@ -32,14 +31,13 @@ __page_fault_handler ( struct interrupt_frame* frame )
 	bool reserved = frame->err_code & 0x8;
 	bool instruction_fetch = frame->err_code & 0x10;
 
-	kprintf ( "  Page Fault (#PF)\n" );
-	kprintf ( "    Address: 0x%lx\n", faulting_addr );
-	kprintf ( "    RIP: 0x%lx\n", frame->rip );
-	kprintf ( "    Error: 0x%x\n", frame->err_code );
-	kprintf ( "    Present: %s\n", present ? "Yes" : "No" );
-	kprintf ( "    Write: %s\n", write ? "Yes" : "No" );
-	kprintf ( "    User: %s\n", user ? "Yes" : "No" );
-	kprintf ( "    Reserved: %s\n", reserved ? "Yes" : "No" );
-	kprintf ( "    Instruction Fetch: %s\n",
-	          instruction_fetch ? "Yes" : "No" );
+	k_print ( "  Page Fault (#PF)\n" );
+	k_print ( "    Address: 0x%lx\n", faulting_addr );
+	k_print ( "    RIP: 0x%lx\n", frame->rip );
+	k_print ( "    Error: 0x%x\n", frame->err_code );
+	k_print ( "    Present: %s\n", present ? "Yes" : "No" );
+	k_print ( "    Write: %s\n", write ? "Yes" : "No" );
+	k_print ( "    User: %s\n", user ? "Yes" : "No" );
+	k_print ( "    Reserved: %s\n", reserved ? "Yes" : "No" );
+	k_print ( "    Instruction Fetch: %s\n", instruction_fetch ? "Yes" : "No" );
 }
