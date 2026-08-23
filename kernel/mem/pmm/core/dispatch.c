@@ -90,7 +90,7 @@ _pmm_dispatch_alloc_region ( size_t frames_needed )
 	uint32_t total_frames = g_pmm->frames.total;
 
 	/* Region start */
-	padd_t phys_addr = get_ops (  )->alloc_region ( phys_addr, total_frames );
+	paddr_t phys_addr = get_ops (  )->alloc_region ( frames_needed, total_frames );
 
 	/* Just update the global state on correct allocation */
 	if ( !IS_KERR ( phys_addr ) )
