@@ -11,6 +11,32 @@
 		: "memory" \
 	);
 
+/**
+ * VMM paging internal walker
+ * Private helper
+ *
+ * Return -> `kerr_t`: Global error type
+ * Arguments:
+ *   1. `ADDR_SPACE* space`: Given address space
+ *   2. `vaddr_t virt_addr`: Virtual address
+ *   3. `paddr_t phys_addr`: Physical address
+ *   4. `vaddr_t hhdm_offset`: HHDM offset used to convert physical to virtual address
+ *   5. `struct page_walk* walk`: Walker context struct
+ *   6. `int create`: Can new pages be allocated?
+ * Callers:
+ *   - Internal paging functions
+ *
+ * Signature macro
+ **/
+#define PAGING_WALK \
+	kerr_t __paging_walk ( \
+		ADDR_SPACE* space, \
+		vaddr_t virt_addr, \
+		vaddr_t hhdm_offset, \
+		struct* page_walk walk, \
+		bool create \
+	);
+
 /* Page table entry */
 typedef vaddr_t pte_t;
 
@@ -30,40 +56,30 @@ struct page_walk
 };
 
 /* Prototypes */
-static kerr_t __paging_walk ( ADDR_SPACE * space, vaddr_t virt_addr,
-    vaddr_t hhdm_offset, struct* page_walk walk, int create );
+static PAGING_WALK;
 
 /**
- * x86 VMM paging mapping
- * Subsystem backend function
+ * Paging backend page mapping 
  *
- * Return -> `kerr_t`: Global kernel error types
- * Arguments:
- *   1. `ADDR_SPACE* space`: Address space to map the page in
- *   2. `vaddr_t virt_addr`: Virtual address
- *   3. `paddr_t phys_addr`: Physical address
- *   4. `vaddr_t hhdm_offset`: Kernel HHDM offset
- * Callers:
- *   - VMM implementations
+ * Implements the VMM backend page mapping interface
+ *
+ * Interface:
+ *   - `kernel/mem/vmm/include/vmm/backend.h`
  **/
-kerr_t
-_paging_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
-    vaddr_t hhdm_offset, u32 flags )
+VMM_BACKEND_MAP ( _paging_map )
 {
 
-	/* Stack-allocated `page_walk` struct */
+	kerr_t err;
 	struct page_walk walk;
+	pte_t* pt_entry;
 
 	/* Calls the walker */
-	kerr_t err = __paging_walk ( space, virt_addr, hhdm_offset, flags,
-	    &walk, 1 );
-
-	/* Stops on error */
-	if ( err != KERR_OK )
+	err = __paging_walk ( space, virt_addr, hhdm_offset, flags, &walk, true );
+	if ( !IS_RET_OK ( err ) )
 		return err;
 
 	/* Gets the PT entry */
-	pte_t* pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
+	pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
 
 	/* PT entry already set */
 	if ( IS_PRESENT ( *pt_entry ) )
@@ -80,34 +96,27 @@ _paging_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 }
 
 /**
- * x86 VMM paging unmapping
- * Subsystem backend function
+ * Paging backend page unmapping 
  *
- * Return -> `kerr_t`: Global error type
- * Arguments:
- *   1. `ADDR_SPACE* space`: Addess space the page table should be unmapped from
- *   2. `vaddr_t virt_addr`: Page virtual address
- *   3. `vaddr_t hhdm_offset`: Kernel HHDM offset
- * Callers:
- *   - VMM implementations
+ * Implements the VMM backend page unmapping interface
+ *
+ * Interface:
+ *   - `kernel/mem/vmm/include/vmm/backend.h`
  **/
-kerr_t
-_paging_unmap ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset )
+VMM_BACKEND_UNMAP ( _paging_unmap )
 {
 
-	/* Stack-allocated `page_walk` struct */
+	kerr_t err;
 	struct page_walk walk;
+	pte_t* pt_entry;
 
 	/* Calls the walker */
-	kerr_t err = __paging_walk ( space, virt_addr, hhdm_offset, flags,
-	    &walk, 0 );
-
-	/* Stops on error */
-	if ( err != KERR_OK )
+	err = __paging_walk ( space, virt_addr, hhdm_offset, flags, &walk, false );
+	if ( !IS_RET_OK ( err ) )
 		return err;
 
 	/* Gets the entry */
-	pte_t* pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
+	pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
 
 	/* PT not present (can't be unmapped) */
 	if ( !IS_PRESENT ( *pt_entry ) )
@@ -115,8 +124,6 @@ _paging_unmap ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset )
 
 	/* Fill it with zeros */
 	memset ( pt_entry, 0, PAGE_SIZE );
-
-	/* Invalidates cache */
 	INVLPG ( vaddr );
 
 	/* Correctly unmapped */
@@ -124,35 +131,27 @@ _paging_unmap ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset )
 }
 
 /**
- * x86 VMM paging remapping
- * Subsystem backend function
+ * Paging backend page remapping
  *
- * Return -> `kerr_t`: Global kernel error types
- * Arguments:
- *   1. `ADDR_SPACE* space`: Address space where the page should be remapped
- *   2. `vaddr_t virt_addr`: Virtual address
- *   3. `paddr_t phys_addr`: Physical address
- *   4. `vaddr_t hhdm_offset`: Kernel HHDM offset
- * Callers:
- *   - VMM implementations
+ * Implements the VMM backend page remapping interface
+ *
+ * Interface:
+ *   - `kernel/mem/vmm/include/vmm/backend.h`
  **/
-kerr_t
-_paging_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
-    vaddr_t hhdm_offset, u32 flags )
+VMM_BACKEND_REMAP ( _paging_remap )
 {
 
+	kerr_t err;
 	struct page_walk walk;
+	pte_t* pt_entry;
 
 	/* As remapping operation, walker can't allocate new pages */
-	kerr_t err = __paging_walk ( space, virt_addr, hhdm_offset, flags,
-	    &walk, 0 );
-
-	/* Stops on error */
-	if ( err != KERR_OK )
+	err = __paging_walk ( space, virt_addr, hhdm_offset, flags, &walk, false );
+	if ( !IS_RET_OK ( err ) )
 		return err;
 
 	/* Gets the PT entry */
-	pte_t* pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
+	pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
 
 	/* PT entry not set. Should be mapped first */
 	if ( !IS_PRESENT ( *pt_entry ) )
@@ -160,8 +159,6 @@ _paging_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 
 	/* Passes the new physical address to PT entry with its flags */
 	*pt_entry = phys_addr | ( PAGE_PRESENT & flags );
-
-	/* Invalidates any cache */
 	INVLPG ( virt_addr );
 
 	/* Successful remapped */
@@ -169,22 +166,23 @@ _paging_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr,
 }
 
 /**
- * x86 identity unmapping
- * Subsystem backend function
+ * Paging backend function used to unmap identity mapping
  *
- * Return -> `kerr_t`: Global error type
- * Arguments:
- *   1. `ADDR_SPACE* space`: Kernel address space
- * Callers:
- *   - VMM implementations
+ * Implements the VMM backend identity unmapping interface
+ *
+ * Interface:
+ *   - `kernel/mem/vmm/include/vmm/backend.h`
  **/
-kerr_t
-_paging_unmap_identity ( ADDR_SPACE* kernel_address_space )
+VMM_BACKEND_UNMAP_IDENTITY ( _paging_unmap_identity )
 {
 
-	/* Kernel AS PML4 */
-	struct page_table* pml4 = ( struct page_table * ) _paging_phys_to_virt ( space->pml4_phys,
-	    hhdm_offset );
+	struct page_table* pml4;
+	struct page_table* pdpt;
+	pte_t* pml4_entry;
+	pte_t* pdpt_entry;
+
+	/* Kernel address space PML4 */
+	pml4 = ( struct page_table * ) _paging_phys_to_virt ( space->pml4_phys, hhdm_offset );
 
 	/**
 	 * The identity mapping was mapped the following way:
@@ -194,7 +192,7 @@ _paging_unmap_identity ( ADDR_SPACE* kernel_address_space )
 	 **/
 
 	/* Get the PML4 entry */
-	pte_t* pml4_entry = &pml4->entries[0];
+	pml4_entry = &pml4->entries[0];
 
 	/**
 	 * If it's not present, it was already unmapped
@@ -204,13 +202,12 @@ _paging_unmap_identity ( ADDR_SPACE* kernel_address_space )
 		return KERR_NOTMAPPED;
 
 	/* Get the PDPT page table */
-	struct page_table* pdpt = ( struct page_table * )
-	    _paging_phys_to_virt ( ADDR_MASK ( *pml4_entry ), hhdm_offset );
+	pdpt = ( struct page_table * ) _paging_phys_to_virt ( ADDR_MASK ( *pml4_entry ), hhdm_offset );
 
 	/* And its entry */
-	pte_t* pdpt_entry = &pdpt->entries[0];
+	pdpt_entry = &pdpt->entries[0];
 
-	/* The same present verification as above */
+	/* The same verification as above */
 	if ( !IS_PRESENT ( *pdpt_entry ) )
 		return KERR_NOTMAPPED;
 
@@ -223,53 +220,41 @@ _paging_unmap_identity ( ADDR_SPACE* kernel_address_space )
 }
 
 /**
- * Physical address conversor
- * Subsystem backend function
+ * Paging backend virtual address converter to physical one
  *
- * Return -> `paddr_t`: The converted physical address
- * Arguments:
- *   1. `ADDR_SPACE* space`: Address space to get the virtual address from
- *   2. `vaddr_t virt_addr`: Virtual address to be converted
- *   3. `vaddr_t hhdm_offset`: HHDM offset to be used
- * Callers:
- *   - VMM implementations
+ * Implements the VMM backend virtual address converter interface
+ *
+ * Interface:
+ *   - `kernel/mem/vmm/include/vmm/backend.h`
  **/
-paddr_t _paging_virt_to_phys ( ADDR_SPACE * space, vaddr_t virt_addr, vaddr_t hhdm_offset );
+VMM_BACKEND_VIRT_TO_PHYS ( _paging_virt_to_phys )
 {
 
-	/* Stack-allocated `page_walk` struct */
+	kerr_t err;
 	struct page_walk walk;
+	pte_t* pt_entry;
 
 	/* Calls the walker */
-	kerr_t err = __paging_walk ( space, virt_addr, hhdm_offset, flags,
-	    &walk, 0 );
-
-	/* Some error occurred */
-	if ( err != KERR_OK )
+	err = __paging_walk ( space, virt_addr, hhdm_offset, flags, &walk, false );
+	if ( !IS_RET_OK ( err ) )
 		return ENCODE_KERR ( err );
 
 	/* Gets the correct entry */
-	pte_t* pt_entry & walk->pt->entries[PT_IDX ( virt_addr )];
-
-
+	pt_entry = &walk->pt->entries[PT_IDX ( virt_addr )];
 
 	/* Masks its flags to get the physical address */
 	return ( paddr_t ) ADDR_MASK ( *pt_entry );
 }
 
 /**
- * Virtual address conversor
- * Subsystem backend function
+ * Paging backend physical address converter to virtual one
  *
- * Return -> `vaddr_t`: The converted virtual address
- * Arguments:
- *   1. `paddr_t phys_addr`: Physical address to be converted
- *   2. `vaddr_t hhdm_offset`: HHDM offset to be used
- * Callers:
- *   - VMM implementations
+ * Implements the VMM backend physical address converter interface
+ *
+ * Interface:
+ *   - `kernel/mem/vmm/include/vmm/backend.h`
  **/
-vaddr_t
-_paging_phys_to_virt ( paddr_t phys_addr, vaddr_t hhdm_offset )
+VMM_BACKEND_PHYS_TO_VIRT ( _paging_phys_to_virt )
 {
 
 	/* Gets the virtual address within the HHDM direct mapping */
@@ -277,23 +262,12 @@ _paging_phys_to_virt ( paddr_t phys_addr, vaddr_t hhdm_offset )
 }
 
 /**
- * VMM paging internal walker
- * Private helper
+ * Paging walker 
  *
- * Return -> `kerr_t`: Global error type
- * Arguments:
- *   1. `ADDR_SPACE* space`: Given address space
- *   2. `vaddr_t virt_addr`: Virtual address
- *   3. `paddr_t phys_addr`: Physical address
- *   4. `vaddr_t hhdm_offset`: HHDM offset used to convert physical to virtual address
- *   5. `struct page_walk* walk`: Walker context struct
- *   6. `int create`: Can new pages be allocated?
- * Callers:
- *   - Internal paging functions
+ * Interface:
+ *   - Statically define at this file
  **/
-kerr_t
-__paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset,
-    struct* page_walk walk, int create )
+PAGING_WALK
 {
 
 	/* Can't proceed */
@@ -301,30 +275,29 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset,
 		return KERR_INVAL;
 
 	/* Page table indexes */
-	u16 pml4_idx = PML4_INDEX ( virt_addr );
-	u16 pdpt_idx = PDPT_INDEX ( virt_addr );
-	u16 pd_idx = PD_INDEX ( virt_addr );
-	u16 pt_idx = PT_INDEX ( virt_addr );
-	u16 offset = ADDR_OFFSET ( virt_addr );
+	uint16_t pml4_idx = PML4_INDEX ( virt_addr );
+	uint16_t pdpt_idx = PDPT_INDEX ( virt_addr );
+	uint16_t pd_idx = PD_INDEX ( virt_addr );
+	uint16_t pt_idx = PT_INDEX ( virt_addr );
+	uint16_t offset = ADDR_OFFSET ( virt_addr );
+
+	struct page_table* pml4;
+	struct page_table* pdpt;
+	struct page_table* pd;
+	struct page_table* pt;
+	pte_t* pml4_entry;
+	pte_t* pdpt_entry;
+	pte_t* pd_entry;
+	pte_t* pt_entry;
 
 	/* Address space's PML4 */
-	struct page_table* pml4 = ( struct page_table * ) _paging_phys_to_virt ( space->pml4_phys,
-	    hhdm_offset );
-
-	/* Page Directory Pointer Table */
-	struct page_table* pdpt;
-
-	/* Page Directory */
-	struct page_table* pd;
-
-	/* Page Table */
-	struct page_table* pt;
+	pml4 = ( struct page_table * ) _paging_phys_to_virt ( space->pml4_phys, hhdm_offset );
 
 	/* Sets PML4 virtual address to `page_walk` struct pointer */
 	walk->pml4 = pml4;
 
 	/* Loads the correct indexing PML4 entry */
-	pte_t* pml4_entry = &pml4->entries[pml4_idx];
+	pml4_entry = &pml4->entries[pml4_idx];
 
 	/* PDPT was already mapped */
 	if ( IS_PRESENT ( *pml4_entry ) )
@@ -370,7 +343,7 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset,
 	walk->pdpt = pdpt;
 
 	/* Gets the PDPT entry */
-	pte_t* pdpt_entry = &pdpt->entries[pdpt_idx];
+	pdpt_entry = &pdpt->entries[pdpt_idx];
 
 	/* PD is already mapped */
 	if ( IS_PRESENT ( *pdpt_entry ) )
@@ -382,6 +355,7 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset,
 	/* PD not mapped yet */
 	else
 	{
+
 		/* Stops for lookups */
 		if ( !create )
 			return KERR_NOTMAPPED;
@@ -405,7 +379,7 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset,
 	walk->pd = pd;
 
 	/* Gets the PD entry */
-	pte_t* pd_entry = &pd->entries[pd_idx];
+	pd_entry = &pd->entries[pd_idx];
 
 	/* PT was already mapped */
 	if ( IS_PRESENT ( *pd_entry ) )
@@ -416,6 +390,7 @@ __paging_walk ( ADDR_SPACE* space, vaddr_t virt_addr, vaddr_t hhdm_offset,
 	/* PT was not mapped yet */
 	else
 	{
+
 		/* Stops for non-allocators callers */
 		if ( !create )
 			return KERR_NOTMAPPED;

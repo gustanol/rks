@@ -4,17 +4,14 @@
 #include <kernel/kerr/kerr.h>
 #include <kernel/mem/pmm/types.h>
 #include <kernel/mem/vmm/types.h>
+#include <vmm/backend.h>
 
 /* Mapping paging operations */
-kerr_t _paging_map ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
-    vaddr_t hhdm_offset, u32 flags );
-kerr_t _paging_unmap ( ADDR_SPACE * space, vaddr_t virt_addr, vaddr_t hhdm_offset );
-kerr_t _paging_unmap_identity ( ADDR_SPACE * kernel_address_space );
-kerr_t _paging_remap ( ADDR_SPACE * space, vaddr_t virt_addr, paddr_t phys_addr,
-    vaddr_t hhdm_offset, u32 flags );
-
-/* Translation operations */
-paddr_t _paging_virt_to_phys ( ADDR_SPACE * space, vaddr_t virt_addr, vaddr_t hhdm_offset );
-vaddr_t _paging_phys_to_virt ( paddr_t phys_addr, vaddr_t hhdm_offset );
+VMM_BACKEND_MAP ( _paging_map );
+VMM_BACKEND_UNMAP ( _paging_unmap );
+VMM_BACKEND_REMAP ( _paging_remap );
+VMM_BACKEND_UNMAP_IDENTITY ( _paging_unmap_identity );
+VMM_BACKEND_VIRT_TO_PHYS ( _paging_virt_to_phys );
+VMM_BACKEND_PHYS_TO_VIRT ( _paging_phys_to_virt );
 
 #endif /* _X86_PAGING_MAP_H */
