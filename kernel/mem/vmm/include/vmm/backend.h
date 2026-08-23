@@ -181,7 +181,7 @@ struct vmm_ops
 	VMM_BACKEND_DESTROY_SPACE ( ( *destroy_space ) );
 
 	/* Address space switching */
-	VMM_BACKEND_SWITCH_TO ( ( *switch_to_space ) );
+	VMM_BACKEND_SWITCH_TO_SPACE ( ( *switch_to_space ) );
 
 	/* Virtual address mapping within an address space */
 	VMM_BACKEND_MAP ( ( *map ) );

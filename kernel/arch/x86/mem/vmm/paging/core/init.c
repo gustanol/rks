@@ -22,6 +22,7 @@ static const struct vmm_ops paging_ops = {
 	.phys_to_virt = _paging_phys_to_virt,
 };
 
+/* VMM backend context */
 static const struct vmm_backend paging_backend = {
 
 	/* *INDENT-OFF* */

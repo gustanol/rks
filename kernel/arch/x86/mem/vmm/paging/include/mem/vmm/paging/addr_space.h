@@ -4,6 +4,7 @@
 #include <kernel/kerr/kerr.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <vmm/backend.h>
 
 /* Address space struct */
 struct addr_space
@@ -15,8 +16,8 @@ struct addr_space
 };
 
 /* Address space paging operations */
-ADDR_SPACE* _paging_create_space ( void );
-kerr_t _paging_destroy_space ( ADDR_SPACE * space );
-kerr_t _paging_switch_to_space ( ADDR_SPACE * space );
+VMM_BACKEND_CREATE_SPACE ( _paging_create_space );
+VMM_BACKEND_DESTROY_SPACE ( _paging_destroy_space );
+VMM_BACKEND_SWITCH_TO_SPACE ( _paging_switch_to_space );
 
 #endif /* _X86_PAGING_ADDR_SPACE_H */
