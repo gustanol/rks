@@ -1,5 +1,5 @@
 const std = @import("std");
-const Flag = @import("shared.zig");
+const Flag = @import("shared.zig").Flag;
 const kernel_build = @import("kernel/kernel.build.zig");
 
 // Global CFLAGS that will be shared between all C/Zig files
