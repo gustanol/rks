@@ -1,10 +1,10 @@
 #include <kernel/kerr/kerr.h>
-#include <kernel/init/subsystem.h>
 #include <kernel/mem/alloc.h>
+#include <kernel/subsys/registry.h>
 
 /* Subsystems section limits */
-extern struct subsys_backend* __registry_subsystem_start;
-extern struct subsys_backend* __registry_subsystem_end;
+extern struct subsys_backend* __subsys_backend_registry_start;
+extern struct subsys_backend* __subsys_backend_registry_end;
 
 /**
  * Subsystem backend locator
@@ -24,8 +24,8 @@ subsys_find_backend ( uint32_t tag )
 	struct subsys_backend* found = NULL;
 
 	/* Iterate for each backend stored in the section */
-	for ( struct subsys_backend * backend = __registry_subsystems_start;
-	      backend < __registry_subsystems_end; backend++ )
+	for ( struct subsys_backend * backend = __subsys_backend_registry_start;
+	    backend < __subsys_backend_registry_end; backend++ )
 	{
 
 		/* Verifies if the current tag is equal to the one we're aiming */
@@ -58,8 +58,7 @@ subsys_find_multiple_backends ( uint32_t tag )
 
 	/* Allocate the return type */
 	struct backends_list* list =
-	        ( struct backends_list * )
-	        k_malloc ( sizeof ( struct backends_list ) );
+	    ( struct backends_list * ) k_malloc ( sizeof ( struct backends_list ) );
 
 	/* Stop on error */
 	if ( IS_KERR ( list ) )
@@ -69,25 +68,24 @@ subsys_find_multiple_backends ( uint32_t tag )
 	list->count = 0;
 
 	/* First iteration to get the backend count */
-	for ( struct subsys_backend * backend = __registry_subsystems_start;
-	      backend < __registry_subsystems_end; backend++ )
+	for ( struct subsys_backend * backend = __subsys_backend_registry_start;
+	    backend < __subsys_backend_registry_end; backend++ )
 
-	        /* Compare tags */
+	    /* Compare tags */
 		if ( backend->tag == tag )
 			list->count++;
 
 	/* Allocate the array of pointers */
-	list->arr =
-	        k_malloc ( sizeof ( struct subsys_backend * ) * list->count );
+	list->arr = k_malloc ( sizeof ( struct subsys_backend * ) * list->count );
 
 	/* Again, stop on error */
 	if ( IS_KERR ( list ) )
 		return NULL;
 
 	/* Second iteration to set all backends */
-	for ( struct subsys_backend * backend =
-	      __registry_subsystems_start, uint32_t i = 0;
-	      backend < __registry_subsystems_end; backend++ )
+	uint32_t i = 0;
+	for ( struct subsys_backend * backend = __subsys_backend_registry_start;
+	    backend < __subsys_backend_registry_end; backend++ )
 	{
 		if ( backend->tag == tag )
 			list->arr[i++] = backend;
