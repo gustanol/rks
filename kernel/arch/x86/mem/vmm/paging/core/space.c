@@ -1,8 +1,9 @@
-#include <rks/kernel/mem/alloc.h>
-#include <x86/mem/vmm/paging/internal/addr_space.h>
+#include <kernel/mem/alloc.h>
+#include <kernel/mem/pmm/frames.h>
+#include <mem/vmm/paging/addr_space.h>
 
 /**
- * x86 address space creator
+ * Address space creator
  * Backend function
  *
  * Return -> `ADDR_SPACE *`: Address space pointer
@@ -21,7 +22,7 @@ _paging_create_space ( void )
 	/* Stop on error */
 	if ( IS_KERR ( pml4_phys ) )
 
-	        /* Already encoded */
+	    /* Already encoded */
 		return pml4_phys;
 
 	/* Allocate a new address space */
@@ -32,4 +33,32 @@ _paging_create_space ( void )
 
 	/* Return the allocate space */
 	return space;
+}
+
+kerr_t
+_paging_destroy_space ( ADDR_SPACE* space )
+{
+	kerr_t err;
+
+	err = pmm_free_frame ( ( paddr_t ) space->pml4_phys );
+	if ( !IS_RET_OK ( err ) )
+		return err;
+
+	err = k_mfree ( space );
+	return err;
+}
+
+kerr_t
+_paging_switch_to_space ( ADDR_SPACE* space )
+{
+	paddr_t pml4 = ( paddr_t ) space->pml4;
+
+	/* *INDENT-OFF* */
+
+	__asm__ volatile (
+		"mov %0, %%cr3"
+		: "=r" ( pml4 )
+	);
+
+	/* *INDENT-ON* */
 }
