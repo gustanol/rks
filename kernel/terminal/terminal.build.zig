@@ -1,7 +1,8 @@
 const std = @import("std");
 const helpers = @import("../../scripts/zig/helpers.zig");
+const Flag = @import("../../shared.zig").Flag;
 
-pub const Config = struct {
+const Config = struct {
     vga: u32,
     framebuffer: u32,
     tty_lines: u32,
@@ -11,40 +12,40 @@ pub const Config = struct {
 pub fn addSubsystem(
     b: *std.Build,
     kernel: *std.Build.Step.Compile,
-    global_flags: []const []const u8,
+    flags: Flag,
 ) void {
     const path = "kernel/terminal";
 
-    // Load local terminal.config.json (or default)
-    const config_file = helpers.config.loadLocalConfigFile(
+    const config = helpers.config.loadLocalConfigFile(
         Config, b, b.fmt("{s}/terminal.config.json", .{path})
     ) catch @panic("Failed to load terminal.config.json");
 
-    // Terminal core source files
-    const core_sources = &[_][]const u8{
-        b.fmt("{s}/core/dispatch.c", .{path}),
-        b.fmt("{s}/core/init.c", .{path}),
-        b.fmt("{s}/core/manager.c", .{path}),
-        b.fmt("{s}/core/wrappers.c", .{path}),
+    const c_sources = &[_][]const u8{
+        "core/dispatch.c",
+        "core/init.c",
+        "core/manager.c",
+        "core/wrappers.c",
     };
 
-    // Terminal internal CFLAGS
-    const terminal_flags = helpers.flags.mergeFlags(b, global_flags, &.{
+    const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
         "-I", b.fmt("{s}/include", .{path}),
-        "-D", b.fmt("TERMINAL_VGA_SUPPORT={d}", .{config_file.vga}),
-        "-D", b.fmt("TERMINAL_FRAMEBUFFER_SUPPORT={d}", .{config_file.framebuffer}),
-        "-D", b.fmt("TTY_CHUNK_LINES={d}", .{config_file.tty_lines}),
-        "-D", b.fmt("TTY_CHUNK_CELLS={d}", .{config_file.tty_cells}),
+        "-D", b.fmt("TERMINAL_VGA_SUPPORT={d}", .{config.vga}),
+        "-D", b.fmt("TERMINAL_FRAMEBUFFER_SUPPORT={d}", .{config.framebuffer}),
+        "-D", b.fmt("TTY_CHUNK_LINES={d}", .{config.tty_lines}),
+        "-D", b.fmt("TTY_CHUNK_CELLS={d}", .{config.tty_cells}),
     });
 
-    // Add to kernel global executable
-    kernel.root_module.addCSourceFiles(.{ .files = core_sources, .flags = terminal_flags });
+    kernel.root_module.addCSourceFiles(.{
+        .root = b.path(path),
+        .files = c_sources,
+        .flags = cflags,
+    });
 
     // VGA backend sources
-    if (config_file.vga == 1) {
+    if (config.vga == 1) {
         kernel.root_module.addCSourceFile(.{
             .file = b.path(b.fmt("{s}/backend/vga/vga.c", .{path})),
-            .flags = terminal_flags,
+            .flags = cflags,
         });
     }
 }

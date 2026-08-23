@@ -1,27 +1,29 @@
 const std = @import("std");
 const helpers = @import("../../scripts/zig/helpers.zig");
+const Flag = @import("../../shared.zig").Flag;
 
 pub fn addSubsystem(
     b: *std.Build,
     kernel: *std.Build.Step.Compile,
-    global_flags: []const []const u8,
+    flags: Flag,
 ) void {
     const path = "kernel/init";
 
-    // Core source files
-    const core_sources = &[_][]const u8{
-        b.fmt("{s}/main.c", .{path}),
-        b.fmt("{s}/subsys/registry.c", .{path}),
+    // C source files
+    const c_sources = &[_][]const u8{
+        "main.c",
+        "subsys/registry.c",
     };
 
     // Internal CFLAGS
-    const pmm_flags = helpers.flags.mergeFlags(b, global_flags, &.{
+    const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
         "-I", b.fmt("{s}/include", .{path}),
     });
 
     // Add to kernel global executable
     kernel.root_module.addCSourceFiles(.{
-        .files = core_sources,
-        .flags = pmm_flags
+        .root = b.path(path),
+        .files = c_sources,
+        .flags = cflags
     });
 }

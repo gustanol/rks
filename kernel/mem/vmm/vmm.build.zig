@@ -1,28 +1,27 @@
 const std = @import("std");
 const helpers = @import("../../../scripts/zig/helpers.zig");
+const Flag = @import("../../../shared.zig").Flag;
 
 pub fn addSubsystem(
     b: *std.Build,
     kernel: *std.Build.Step.Compile,
-    global_flags: []const []const u8,
+    flags: Flag,
 ) void {
     const path = "kernel/mem/vmm";
 
-    // VMM core source files
-    const core_sources = &[_][]const u8{
-        b.fmt("{s}/core/dispatch.c", .{path}),
-        b.fmt("{s}/core/vmm.c", .{path}),
-        b.fmt("{s}/core/wrappers.c", .{path}),
+    const c_sources = &[_][]const u8{
+        "core/dispatch.c",
+        "core/vmm.c",
+        "core/wrappers.c",
     };
 
-    // VMM internal CFLAGS
-    const vmm_flags = helpers.flags.mergeFlags(b, global_flags, &.{
+    const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
         "-I", b.fmt("{s}/include", .{path}),
     });
 
-    // Add to kernel global executable
     kernel.root_module.addCSourceFiles(.{
-        .files = core_sources,
-        .flags = vmm_flags
+        .root = b.path(path),
+        .files = c_sources,
+        .flags = cflags
     });
 }
