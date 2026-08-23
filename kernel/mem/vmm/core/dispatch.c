@@ -70,12 +70,12 @@ _vmm_dispatch_switch_to_space ( ADDR_SPACE* space )
  *   1. `ADDR_SPACE* space`: Address space to map the address to
  *   2. `vaddr_t virt_addr`: Virtual address to map
  *   3. `paddr_t phys_addr`: Physical address
- *   4. `u32 flags`: Extra flags
+ *   4. `uint32_t flags`: Extra flags
  * Callers:
  *   - `vmm_map`
  **/
 kerr_t
-_vmm_dispatch_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr, u32 flags )
+_vmm_dispatch_map ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr, uint32_t flags )
 {
 
 	KERR_RET_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );
@@ -119,12 +119,12 @@ _vmm_dispatch_unmap ( ADDR_SPACE* space, vaddr_t virt_addr )
  *   1. `ADDR_SPACE* space`: Address space to map the address to
  *   2. `vaddr_t virt_addr`: Virtual address to map
  *   3. `paddr_t phys_addr`: Physical address
- *   4. `u32 flags`: Extra flags
+ *   4. `uint32_t flags`: Extra flags
  * Callers:
  *   - `vmm_map`
  **/
 kerr_t
-_vmm_dispatch_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr, u32 flags )
+_vmm_dispatch_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr, uint32_t flags )
 {
 
 	KERR_RET_IF ( !g_vmm->ready, KERR_NOTREADY, "VMM not ready" );

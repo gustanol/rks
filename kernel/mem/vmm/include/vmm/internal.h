@@ -3,6 +3,7 @@
 
 #include "backend.h"
 #include <kernel/mem/vmm/types.h>
+#include <stdbool.h>
 
 /* VMM context struct */
 struct vmm

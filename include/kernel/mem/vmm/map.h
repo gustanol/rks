@@ -8,10 +8,10 @@
 /* Generic VMM flags */
 enum vmm_flags
 {
-	VMM_READ = 0 << 1;
-	VMM_WRITE = 1 << 1;
-	VMM_EXEC = 1 << 2;
-	VMM_USER = 1 << 3;
+	VMM_READ = 0 << 1,
+	VMM_WRITE = 1 << 1,
+	VMM_EXEC = 1 << 2,
+	VMM_USER = 1 << 3,
 };
 
 /* Mapping operations */

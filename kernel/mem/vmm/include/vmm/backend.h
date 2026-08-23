@@ -213,7 +213,7 @@ struct vmm_backend
 	  VMM_BACKEND_INIT ( ( *init ) );
 
 	/* Operations */
-	const struct vmm_ops const* ops;
+	const struct vmm_ops* ops;
 };
 
 /* Subsystem base -> VMM backend */

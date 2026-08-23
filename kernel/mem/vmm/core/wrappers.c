@@ -121,7 +121,7 @@ vmm_remap ( ADDR_SPACE* space, vaddr_t virt_addr, paddr_t phys_addr, uint32_t fl
 paddr_t
 vmm_virt_to_phys ( ADDR_SPACE* space, vaddr_t virt_addr )
 {
-	return _vmm_dispatcher_virt_to_phys ( space, virt_addr );
+	return _vmm_dispatch_virt_to_phys ( space, virt_addr );
 }
 
 /**
@@ -137,5 +137,5 @@ vmm_virt_to_phys ( ADDR_SPACE* space, vaddr_t virt_addr )
 vaddr_t
 vmm_phys_to_virt ( paddr_t phys_addr )
 {
-	return _vmm_dispatcher_phys_to_virt ( phys_addr );
+	return _vmm_dispatch_phys_to_virt ( phys_addr );
 }
