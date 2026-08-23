@@ -1,4 +1,5 @@
 const std = @import("std");
+const Flag = @import("../../shared.zig").Flag;
 
 // Every architecture build file
 const x86 = @import("x86/x86.build.zig");
@@ -6,7 +7,7 @@ const x86 = @import("x86/x86.build.zig");
 pub fn addSubsystem(
     b: *std.Build,
     kernel: *std.Build.Step.Compile,
-    flags: []const []const u8,
+    flags: Flag,
 ) void {
 
     // Gets the chosen architecture

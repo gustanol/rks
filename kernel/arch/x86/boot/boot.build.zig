@@ -1,7 +1,8 @@
 const std = @import("std");
 const helpers = @import("../../../../scripts/zig/helpers.zig");
+const Flag = @import("../../../../shared.zig").Flag;
 
-pub const Config = struct {
+const Config = struct {
     multiboot: u32,
     multiboot2: u32,
 };
@@ -9,42 +10,63 @@ pub const Config = struct {
 pub fn addSubsystem(
     b: *std.Build,
     kernel: *std.Build.Step.Compile,
-    global_flags: []const []const u8,
+    flags: Flag,
 ) void {
     const path = "kernel/arch/x86/boot";
 
-    // Configuration file loading
-    const config_file = helpers.config.loadLocalConfigFile(
+    const config = helpers.config.loadLocalConfigFile(
         Config, b, b.fmt("{s}/boot.config.json", .{path})
     ) catch @panic("Failed to load boot.config.json");
 
-    // Boot specific CFLAGS
-    const boot_cflags = helpers.flags.mergeFlags(b, global_flags, &.{
-       "-D", b.fmt("MULTIBOOT_SUPPORT={d}", .{config_file.multiboot}),
-       "-D", b.fmt("MULTIBOOT2_SUPPORT={d}", .{config_file.multiboot2}),
+    const c_sources = &[_][]const u8{
+        "protocols/loader_parser.c",
+    };
+
+    const as_sources = &[_][]const u8{
+        "entry.S",
+    };
+
+    const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
+       "-D", b.fmt("MULTIBOOT_SUPPORT={d}", .{config.multiboot}),
+       "-D", b.fmt("MULTIBOOT2_SUPPORT={d}", .{config.multiboot2}),
     });
 
-    // Entry file
-    kernel.root_module.addCSourceFile(.{
-        .file = b.path(b.fmt("{s}/entry.S", .{path})),
-        .flags = boot_cflags,
+    const asflags = helpers.flags.mergeFlags(b, cflags, flags.asflags);
+
+    kernel.root_module.addCSourceFiles(.{
+        .root = b.path(path),
+        .files = c_sources,
+        .flags = cflags,
     });
 
-    // Boot protocol parser
-    kernel.root_module.addCSourceFile(.{
-        .file = b.path(b.fmt("{s}/protocols/loader_parser.c", .{path})),
-        .flags = boot_cflags,
+    kernel.root_module.addCSourceFiles(.{
+        .root = b.path(path),
+        .files = as_sources,
+        .flags = asflags,
     });
 
     // Multiboot2 source files
-    if (config_file.multiboot2 == 1) {
+    if (config.multiboot2 == 1) {
+        const multiboot2_c_sources = &[_][]const u8{
+            "parsers/framebuffer.c",
+            "parsers/generic.c",
+            "parsers/mmap.c",
+        };
+
+        const multiboot2_as_sources = &[_][]const u8{
+            "header.S",
+        };
+
         kernel.root_module.addCSourceFiles(.{
-           .files = &[_][]const u8{
-               b.fmt("{s}/protocols/multiboot2/header.S", .{path}),
-               b.fmt("{s}/protocols/multiboot2/parsers/framebuffer.c", .{path}),
-               b.fmt("{s}/protocols/multiboot2/parsers/generic.c", .{path}),
-               b.fmt("{s}/protocols/multiboot2/parsers/mmap.c", .{path}),
-           }
+            .root = b.path(b.fmt("{s}/protocols/multiboot2", .{path})),
+            .files = multiboot2_c_sources,
+            .flags = cflags,
+        });
+
+        kernel.root_module.addCSourceFiles(.{
+            .root = b.path(b.fmt("{s}/protocols/multiboot2", .{path})),
+            .files = multiboot2_as_sources,
+            .flags = asflags,
         });
     }
 }

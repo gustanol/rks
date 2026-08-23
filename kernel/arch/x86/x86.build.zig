@@ -1,4 +1,5 @@
 const std = @import("std");
+const Flag = @import("../../../shared.zig").Flag;
 
 const boot = @import("boot/boot.build.zig");
 const cpu = @import("cpu/cpu.build.zig");
@@ -8,15 +9,20 @@ const mem = @import("mem/mem.build.zig");
 pub fn addSubsystem(
     b: *std.Build,
     kernel: *std.Build.Step.Compile,
-    flags: []const []const u8,
+    flags: Flag,
 ) void {
+    const path = "kernel/arch/x86";
 
-    kernel.root_module.addIncludePath(b.path("include"));
+    // This architecture include path
+    kernel.root_module.addIncludePath(
+        b.path(b.fmt("{s}/include", .{path}))
+    );
 
-    // Set the architecture-dependent linker script
-    kernel.setLinkerScript(b.path("x86.ld"));
+    // Linker script
+    kernel.setLinkerScript(
+        b.path(b.fmt("{s}/x86.ld", .{path}))
+    );
 
-    // Add these subsystems
     boot.addSubsystem(b, kernel, flags);
     cpu.addSubsystem(b, kernel, flags);
     interrupt.addSubsystem(b, kernel, flags);
