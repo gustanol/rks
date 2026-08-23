@@ -31,11 +31,14 @@ vmm_init ( void )
 	KERR_RET_IF ( backends->init == NULL, KERR_INTERNAL,
 	    "Registered VMM backend has no init function" );
 
+	/* Specific VMM backend context */
+	struct vmm_backend* vmm_backend = vmm_backend_from_base ( backend );
+
 	/* Initializes the backend */
-	backend->init ( g_vmm->kernel.addr_space );
+	vmm_backend->init ( g_vmm->kernel.addr_space );
 
 	/* Set the registered operation functions as default */
-	g_vmm->ops = ( struct vmm_ops * ) backend->ops;
+	g_vmm->ops = ( struct vmm_ops * ) vmm_backend->ops;
 
 	/* Map all physical memory to higher half */
 	g_vmm->ops->early_build_hhdm ( g_vmm->kernel.addr_space );
