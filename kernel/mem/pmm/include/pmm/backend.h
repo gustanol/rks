@@ -85,7 +85,7 @@
  * Prototype
  **/
 #define PMM_BACKEND_FREE_REGION(name) \
-        kerr_t name ( paddr_t phys_addr, size_t size, u32 total_frames )
+        kerr_t name ( paddr_t phys_addr, size_t size, uint32_t total_frames )
 
 /* PMM backend operations */
 struct pmm_ops
@@ -125,7 +125,7 @@ struct pmm_backend
 	  PMM_BACKEND_INIT ( ( *init ) );
 
 	/* Operations */
-	const struct pmm_ops const* ops;
+	const struct pmm_ops* ops;
 };
 
 /* Subsys base -> PMM backend */

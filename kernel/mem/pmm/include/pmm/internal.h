@@ -3,6 +3,7 @@
 
 #include <kernel/mem/pmm/types.h>
 #include <pmm/backend.h>
+#include <stdbool.h>
 
 /* PMM context struct */
 struct pmm
@@ -26,6 +27,6 @@ struct pmm
 };
 
 /* PMM context struct pointer */
-extern struct pmm* const g_pmm;
+extern struct pmm* g_pmm;
 
 #endif /* _KERNEL_PMM_INTERNAL_H */

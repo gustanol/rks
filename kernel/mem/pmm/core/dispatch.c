@@ -6,7 +6,7 @@
 static inline struct pmm_ops*
 get_ops ( void )
 {
-	return ( struct pmm_ops ) g_pmm->ops;
+	return ( struct pmm_ops * ) g_pmm->ops;
 }
 
 /**
@@ -25,10 +25,10 @@ _pmm_dispatch_alloc_frame ( void )
 
 	KERR_RET_ENCODE_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
 
-	u32 total_frames = g_pmm->frames.total;
+	uint32_t total_frames = g_pmm->frames.total;
 
 	/* Allocates a new physical frame */
-	paddr_t phys_addr = get_ops (  )->alloc_frame ( total_frames );
+	paddr_t phys_addr = get_ops (  )->alloc_frame (  );
 
 	/* If correctly allocated, there's no kerr_t */
 	if ( !IS_KERR ( phys_addr ) )
@@ -56,7 +56,7 @@ _pmm_dispatch_free_frame ( paddr_t phys_addr )
 
 	KERR_RET_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
 
-	u32 total_frames = g_pmm->frames.total;
+	uint32_t total_frames = g_pmm->frames.total;
 
 	/* Frees the requested frame */
 	kerr_t ret = get_ops (  )->free_frame ( phys_addr, total_frames );
@@ -87,7 +87,7 @@ _pmm_dispatch_alloc_region ( size_t frames_needed )
 
 	KERR_RET_ENCODE_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
 
-	u32 total_frames = g_pmm->frames.total;
+	uint32_t total_frames = g_pmm->frames.total;
 
 	/* Region start */
 	padd_t phys_addr = get_ops (  )->alloc_region ( phys_addr, total_frames );
@@ -116,7 +116,7 @@ _pmm_dispatch_fill_region ( paddr_t phys_addr, size_t size )
 
 	KERR_RET_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
 
-	u32 total_frames = g_pmm->frames.total;
+	uint32_t total_frames = g_pmm->frames.total;
 
 	/* Tries to fill this region */
 	kerr_t ret = get_ops (  )->fill_region ( phys_addr, size, total_frames );
@@ -147,7 +147,7 @@ _pmm_dispatch_free_region ( paddr_t phys_addr, size_t size )
 
 	KERR_RET_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
 
-	u32 total_frames = g_pmm->frames.total;
+	uint32_t total_frames = g_pmm->frames.total;
 
 	/* Tries to free this region */
 	kerr_t ret = get_ops (  )->free_region ( phys_addr, size, total_frames );
@@ -201,7 +201,7 @@ _pmm_dispatch_get_available_memory ( void )
 	KERR_RET_ENCODE_IF ( !g_pmm->ready, KERR_NOTREADY, "PMM not ready" );
 
 	size_t total_memory = g_pmm->memory.total;
-	u32 frames_used = g_pmm->frames.used;
+	uint32_t frames_used = g_pmm->frames.used;
 
 	/* Return it */
 	return total_memory - SIZE_BY_FRAMES ( frames_used );
