@@ -1,12 +1,30 @@
 const std = @import("std");
-
-/// Child directories
+const Flag = @import("shared.zig");
 const kernel_build = @import("kernel/kernel.build.zig");
+
+// Global CFLAGS that will be shared between all C/Zig files
+const global_cflags = &[_][]const u8{
+    "-ffreestanding",
+    "-fno-stack-protector",
+    "-fno-pic",
+    "-fno-pie",
+    "-mno-red-zone",
+    "-Wall",
+    "-Wextra",
+    "-std=gnu11", // GNU extensions
+    "-D__KERNEL__",
+};
+
+// Global assembly flags
+const global_asflags = &[_][]const u8{
+    "-D__ASSEMBLY__",
+};
 
 pub fn build(b: *std.Build) void {
 
     // Architecture selection
-    const arch_opt = b.option([]const u8, "arch", "Target architecture (x86, aarch64)") orelse "x86";
+    const arch_opt = b.option([]const u8, "arch", "Target architecture (x86, aarch64)")
+    orelse "x86";
 
     // Select chosen architecture from the enum `std.Target.Cpu.Arch
     const cpu_arch =
@@ -29,18 +47,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // Global CFLAGS that will be shared between all C/Zig files
-    const global_cflags = &[_][]const u8{
-        "-ffreestanding",
-        "-fno-stack-protector",
-        "-fno-pic",
-        "-fno-pie",
-        "-mno-red-zone",
-        "-Wall",
-        "-Wextra",
-        "-std=gnu11", // GNU extensions
+    // Group the flags
+    const flags: Flag = .{
+        .asflags = global_asflags,
+        .cflags = global_cflags,
     };
 
-    kernel_build.addKernel(b, kernel_exec, global_cflags);
+    kernel_build.addKernel(b, kernel_exec, flags);
     b.installArtifact(kernel_exec);
 }
