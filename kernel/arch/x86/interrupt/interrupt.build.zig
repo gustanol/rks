@@ -15,10 +15,10 @@ pub fn addSubsystem(
     };
 
     const as_sources = &[_][]const u8{
-        "isr.c",
+        "isr.S",
     };
 
-    const cflags = helpers.flags.mergeFlags(b, flags.cflags, .{
+    const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
         "-I", b.fmt("{s}/include", .{path}),
     });
 

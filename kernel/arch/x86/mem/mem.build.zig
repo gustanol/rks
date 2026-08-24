@@ -13,8 +13,8 @@ pub fn addSubsystem(
         "early_alloc.c",
         "vmm/paging/core/early_map.c",
         "vmm/paging/core/init.c",
-        "vmm/paging/page.c",
-        "vmm/paging/space.c",
+        "vmm/paging/core/page.c",
+        "vmm/paging/core/space.c",
     };
 
     const as_sources = &[_][]const u8{
