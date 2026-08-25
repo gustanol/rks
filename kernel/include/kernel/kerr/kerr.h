@@ -9,15 +9,15 @@
 
 /* kerr_t -> tagged error convertor */
 #define ENCODE_KERR(err) \
-        ( ( void * ) ( KERR_PTR_BASE | ( ( vaddr_t ) ( err ) & 0xFFFFULL ) ) )
+        ( ( void * ) ( KERR_PTR_BASE | ( ( uint64_t ) ( err ) & 0xFFFFULL ) ) )
 
 /* Checks a valid encoded kerr_t */
 #define IS_KERR(ptr) \
-        ( ( ( vaddr_t ) ( ptr ) & KERR_PTR_MASK ) == KERR_PTR_BASE )
+        ( ( ( uint64_t ) ( ptr ) & KERR_PTR_MASK ) == KERR_PTR_BASE )
 
 /* Enconded kerr_t extractor */
 #define GET_KERR(ptr) \
-        ( ( kerr_t ) ( ( vaddr_t ) ( ptr ) & 0xFFFFULL ) )
+        ( ( kerr_t ) ( ( uint64_t ) ( ptr ) & 0xFFFFULL ) )
 
 #define IS_RET_OK(err) \
         ( ( err ) == KERR_OK )
@@ -26,7 +26,7 @@
 #define KERR_RET_IF(cond, err, fmt, ...) \
         ({ \
                 if ( cond ) { \
-                        klog_err ( fmt, ##__VA_ARGS__ ); \
+                        /* klog_err ( fmt, ##__VA_ARGS__ ); */ \
                         return ( err ); \
                 } \
         })
@@ -38,7 +38,7 @@
 #define KERR_RET_ENCODE_IF(cond, err, fmt, ...) \
         ({ \
                 if ( cond ) { \
-                        klog_err ( fmt, ##__VA_ARGS__ ); \
+                       /* klog_err ( fmt, ##__VA_ARGS__ ); */ \
                         return ENCODE_KERR ( err ); \
                 } \
         })

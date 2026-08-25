@@ -2,6 +2,7 @@
 #define _KERNEL_TERMINAL_TTY_H
 
 #include "types.h"
+#include <kernel/kerr/kerr.h>
 
 /* TTY-specific operations */
 tty_id terminal_create_tty ( void );
