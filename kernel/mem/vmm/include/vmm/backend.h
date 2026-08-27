@@ -3,6 +3,7 @@
 
 #include <kernel/container_of.h>
 #include <kernel/kerr/kerr.h>
+#include <kernel/mem/pmm/types.h>
 #include <kernel/mem/vmm/types.h>
 #include <kernel/subsys/registry.h>
 

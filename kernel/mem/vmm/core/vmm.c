@@ -21,14 +21,14 @@ vmm_init ( void )
 {
 
 	/* VMM global state structure pointer */
-	g_vmm = &i_pmm;
+	g_vmm = &i_vmm;
 
 	/* Get the registered VMM backend (architecture-dependent) */
-	struct subsys_backend* backend = subsys_find_backend ( SUBSYSTEM_TAG_VMM );
+	struct subsys_backend* backend = subsys_find_backend ( SUBSYS_TAG_VMM );
 
 	/* Treat common errors */
 	KERR_RET_IF ( backend == NULL, KERR_INTERNAL, "No registered VMM backends" );
-	KERR_RET_IF ( backends->init == NULL, KERR_INTERNAL,
+	KERR_RET_IF ( backend->init == NULL, KERR_INTERNAL,
 	    "Registered VMM backend has no init function" );
 
 	/* Specific VMM backend context */
@@ -49,18 +49,18 @@ vmm_init ( void )
 	 * Notice we could've done this before
 	 * Doing now is just a convention because the HHDM was fully set
 	 **/
-	g_vmm->hhdm_offset = HHDM_BASE;
+	g_vmm->hhdm_offset = ( vaddr_t ) HHDM_BASE;
 
 	/* Now we've got HHDM mapped, there's no reason to keep identity mapping */
 	kerr_t err g_vmm->ops->unmap_identity ( g_vmm->kernel.addr_space );
 
 	/* Print the error source */
-	if ( !IS_KERR_OK ( err ) )
-		k_print ( kerr_string ( err ) );
+	if ( !IS_RET_OK ( err ) )
+		k_print ( kerr_str ( err ) );
 
 	/* Sets the kernel limit */
-	g_vmm->kernel.virt_base = KERNEL_START;
-	g_vmm->kernel.virt_end = KERNEL_END;
+	g_vmm->kernel.virt_base = ( vaddr_t ) KERNEL_START;
+	g_vmm->kernel.virt_end = ( vaddr_t ) KERNEL_END;
 
 	/* The public API is ready from now on */
 	g_vmm->ready = 1;
