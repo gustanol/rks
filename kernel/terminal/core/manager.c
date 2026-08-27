@@ -150,6 +150,16 @@ tty_get_current_cell ( LINE* line, uint32_t width )
 	return ( line->cells.current < width ) ? &line->cells.base[line->cells.current++] : NULL;
 }
 
+/* Static prototypes using signature macros */
+static TERMINAL_MANAGER_CREATE ( _terminal_manager_create );
+static TERMINAL_MANAGER_DESTROY ( _terminal_manager_destroy );
+static TERMINAL_MANAGER_WRITE ( _terminal_manager_write );
+static TERMINAL_MANAGER_PUTC ( _terminal_manager_putc );
+static TERMINAL_MANAGER_PUTS ( _terminal_manager_puts );
+static TERMINAL_MANAGER_CLEAR ( _terminal_manager_clear );
+static TERMINAL_MANAGER_SCROLL ( _terminal_manager_scroll );
+static TERMINAL_MANAGER_RENDER ( _terminal_manager_render );
+
 /* Defines manager operations */
 static const struct manager_ops ops = {
 	.create = _terminal_manager_create,
@@ -166,17 +176,14 @@ static const struct manager_ops ops = {
 static CHUNK* _terminal_manager_alloc_chunk ( HISTORY * history );
 
 /**
- * Terminal manager initializer function
- * Manager function
+ * Terminal manager initialization function
  *
- * Return -> `kerr_t`
- * Arguments:
- *   - `void`
- * Callers:
- *   - `terminal_init`
+ * Implements the terminal manager intialization interface
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/manager.h`
  **/
-kerr_t
-terminal_manager_init ( void )
+TERMINAL_MANAGER_INIT ( _terminal_manager_INIT )
 {
 
 	/* Tries to create a new TTY */
@@ -195,18 +202,14 @@ terminal_manager_init ( void )
 }
 
 /**
- * Terminal manager function to add a new character
- * Manager function
+ * Terminal manager character inserter function
  *
- * Return -> `void`
- * Arguments:
- *   - `HISTORY* history`: TTY chunk content history
- *   - `char c`: Character to be put in
- * Callers:
- *   - `_terminal_dispatch_putc`
+ * Implements the terminal manager `putc` interface
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/manager.h`
  **/
-void
-_terminal_manager_putc ( HISTORY* history, char c )
+TERMINAL_MANAGER_PUTC ( _terminal_manager_putc )
 {
 
 	CHUNK* chunk;
@@ -239,12 +242,12 @@ _terminal_manager_putc ( HISTORY* history, char c )
 		line_count++;
 
 		/**
-         * Is it the last line in the chunk?
-         *
-         * `history->attributes.line_count % height == 1`
-         *   - The count was already increased
-         *   - The previous line would be zero because it's a multiple of height
-         **/
+		 * Is it the last line in the chunk?
+		 *
+		 * `history->attributes.line_count % height == 1`
+		 *   - The count was already increased
+		 *   - The previous line would be zero because it's a multiple of height
+		 **/
 		if ( line_count % height == 1 )
 		{
 			chunk = _terminal_manager_alloc_chunk ( history );
@@ -269,18 +272,14 @@ _terminal_manager_putc ( HISTORY* history, char c )
 }
 
 /**
- * Terminal manager function to add a new null-terminated string
- * Manager function
+ * Terminal manager null-terminated string inserter
  *
- * Return -> `void`
- * Arguments:
- *   - `HISTORY* history`: TTY history to be modified
- *   - `char* s`: Null-terminated string to be added
- * Callers:
- *   - `_terminal_dispatch_puts`
+ * Implements the terminal manager `puts` interface
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/manager.h`
  **/
-void
-_terminal_manager_puts ( HISTORY* history, char* s )
+TERMINAL_MANAGER_PUTS ( _terminal_manager_puts )
 {
 
 	/* PARSE SPECIAL CASES BEFORE CALLING `PUTC` */
@@ -290,17 +289,14 @@ _terminal_manager_puts ( HISTORY* history, char* s )
 }
 
 /**
- * Terminal manager function to clear all TTY history
- * Manager function
+ * Terminal manager history cleaner
  *
- * Return -> `void`
- * Arguments:
- *   - `HISTORY* history`: TTY history to be cleared up
- * Callers:
- *   - `_terminal_dispatch_clear`
+ * Implements the terminal manager `clear` interface
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/manager.h`
  **/
-void
-_terminal_manager_clear ( HISTORY* history )
+TERMINAL_MANAGER_CLEAR ( _terminal_manager_clear )
 {
 
 	/**
@@ -325,19 +321,14 @@ _terminal_manager_clear ( HISTORY* history )
 }
 
 /**
- * Terminal manager function used to scroll the screen content
- * Manager function
+ * Terminal manager screen scroller
  *
- * Return -> `void`
- * Arguments:
- *   1. `HISTORY* history`: TTY history to be scrolled
- *   2. `int64_t lines`: Amount of lines to be scrolled
- *     - It should serve either as a 32-bit positive or negative value
- * Callers:
- *   - `_terminal_dispatch_scroll`
+ * Implements the terminal manager `scroll` interface
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/manager.h`
  **/
-void
-_terminal_manager_scroll ( HISTORY* history, int64_t lines )
+TERMINAL_MANAGER_SCROLL ( _terminal_manager_scroll )
 {
 
 	uint32_t top = history->attributes.viewport_top;
@@ -398,17 +389,14 @@ _terminal_manager_scroll ( HISTORY* history, int64_t lines )
 }
 
 /**
- * Terminal manager function used to render content
- * Manager function
+ * Terminal manager screen renderer
  *
- * Return -> `void`
- * Arguments:
- *   1. `HISTORY* history`: TTY history to be used
- * Callers:
- *   - `_terminal_dispatch_render`
+ * Implements the terminal manager `render` interface
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/manager.h`
  **/
-void
-_terminal_manager_render ( HISTORY* history )
+TERMINAL_MANAGER_RENDER ( _terminal_manager_render )
 {
 
 	uint32_t height = history->attributes.height;
@@ -504,72 +492,14 @@ _terminal_manager_render ( HISTORY* history )
 }
 
 /**
- * Terminal manager function used to allocate new chunks
- * Static manager function
+ * Terminal manager TTY creator
  *
- * Return -> `CHUNK *`: Chunk base pointer or NULL
- * Arguments:
- *   - `HISTORY* history`: TTY history to be used
- * Callers:
- *   - Internal Terminal manager functions (static)
- **/
-CHUNK*
-_terminal_manager_alloc_chunk ( HISTORY* history )
-{
-
-	CHUNK* chunk;
-	uint32_t chunk_count = history->chunks.count;
-	uint32_t chunk_capability = history->chunks.capability;
-
-	/* If `count == capability`, all pointers are in use */
-	if ( chunk_count == chunk_capability )
-	{
-
-		/* Store the old capability before updating it */
-		uint32_t old_capability = chunk_capability;
-		chunk_capability += CAPABILITY_INCREASE;
-
-		/* Tries to allocate a new array of pointers */
-		CHUNK** new_base = k_calloc ( sizeof ( CHUNK * ) * ( chunk_capability ) );
-		if ( IS_KERR ( new_base ) )
-			return NULL;
-
-		/* Copy all existent chunk pointers */
-		for ( uint32_t i = 0; i < old_capability; i++ )
-			new_base[i] = history->chunks.base[i];
-
-		/* Update the pointer */
-		history->chunks.base = new_base;
-
-		/* Frees the old array */
-		k_mfree ( base_cpy );
-
-		/* Update counters */
-		history->chunks.count = chunk_count;
-		history->chunks.capability = chunk_capability;
-	}
-
-	/* Allocate a new chunk */
-	chunk = k_calloc ( sizeof ( CHUNK ) );
-	if ( IS_KERR ( chunk ) )
-		return NULL;
-
-	/* Set the chunk */
-	history->chunks.base[history->chunk.count++] = chunk;
-}
-
-/**
- * Terminal manager function used to create a new TTY object
- * Manager function
+ * Implements the terminal manager `create` interface
  *
- * Return -> `tty_id`: TTY index or -1 on errors
- * Arguments:
- *   1. `void`
- * Callers:
- *   - `_terminal_dispatch_create`
+ * Interface:
+ *   - `kernel/terminal/include/terminal/manager.h`
  **/
-tty_id
-_terminal_manager_create ( void )
+TERMINAL_MANAGER_CREATE ( _terminal_manager_create )
 {
 
 	TTY* tty;
@@ -637,17 +567,14 @@ _terminal_manager_create ( void )
 }
 
 /**
- * Terminal manager function used to destroy a TTY history
- * Manager function
+ * Terminal manager TTY destroyer
  *
- * Return -> `kerr_t`: Kernel global error type
- * Arguments:
- *   1. `tty_id id`: TTY ID to be destroyed
- * Callers:
- *   - `terminal_dispatch_destroy`
+ * Implements the terminal manager `destroy` interface
+ *
+ * Interface:
+ *   - `kernel/terminal/include/terminal/manager.h`
  **/
-kerr_t
-_terminal_manager_destroy ( tty_id id )
+TERMINAL_MANAGER_DESTROY ( _terminal_manager_destroy )
 {
 
 	/* Verify indexing limit */
@@ -667,4 +594,59 @@ _terminal_manager_destroy ( tty_id id )
 
 	/* Everything's okay */
 	return KERR_OK;
+}
+
+/**
+ * Terminal manager function used to allocate new chunks
+ * Static manager function
+ *
+ * Return -> `CHUNK *`: Chunk base pointer or NULL
+ * Arguments:
+ *   - `HISTORY* history`: TTY history to be used
+ * Callers:
+ *   - Internal Terminal manager functions (static)
+ **/
+CHUNK*
+_terminal_manager_alloc_chunk ( HISTORY* history )
+{
+
+	CHUNK* chunk;
+	uint32_t chunk_count = history->chunks.count;
+	uint32_t chunk_capability = history->chunks.capability;
+
+	/* If `count == capability`, all pointers are in use */
+	if ( chunk_count == chunk_capability )
+	{
+
+		/* Store the old capability before updating it */
+		uint32_t old_capability = chunk_capability;
+		chunk_capability += CAPABILITY_INCREASE;
+
+		/* Tries to allocate a new array of pointers */
+		CHUNK** new_base = k_calloc ( sizeof ( CHUNK * ) * ( chunk_capability ) );
+		if ( IS_KERR ( new_base ) )
+			return NULL;
+
+		/* Copy all existent chunk pointers */
+		for ( uint32_t i = 0; i < old_capability; i++ )
+			new_base[i] = history->chunks.base[i];
+
+		/* Update the pointer */
+		history->chunks.base = new_base;
+
+		/* Frees the old array */
+		k_mfree ( base_cpy );
+
+		/* Update counters */
+		history->chunks.count = chunk_count;
+		history->chunks.capability = chunk_capability;
+	}
+
+	/* Allocate a new chunk */
+	chunk = k_calloc ( sizeof ( CHUNK ) );
+	if ( IS_KERR ( chunk ) )
+		return NULL;
+
+	/* Set the chunk */
+	history->chunks.base[history->chunk.count++] = chunk;
 }
