@@ -48,12 +48,12 @@
  * Return -> `void`
  * Arguments:
  *   - `HISTORY* history`: TTY history to be modified
- *   - `char* buf`: String buffer to be added
+ *   - `const char* buf`: String buffer to be added
  *   - `size_t len`: Buffer length
  * Prototype
  **/
 #define TERMINAL_MANAGER_WRITE(name) \
-	void name ( HISTORY* history, char* buf, size_t len )
+	void name ( HISTORY* history, const char* buf, size_t len )
 
 /**
  * Terminal manager function to add a new null-terminated string
@@ -62,11 +62,11 @@
  * Return -> `void`
  * Arguments:
  *   - `HISTORY* history`: TTY history to be modified
- *   - `char* s`: Null-terminated string to be added
+ *   - `const char* s`: Null-terminated string to be added
  * Prototype
  **/
 #define TERMINAL_MANAGER_PUTS(name) \
-	void name ( HISTORY* history, char* s );
+	void name ( HISTORY* history, const char* s );
 
 /**
  * Terminal manager function to add a new character
@@ -75,11 +75,11 @@
  * Return -> `void`
  * Arguments:
  *   - `HISTORY* history`: TTY chunk content history
- *   - `char c`: Character to be put in
+ *   - `const char c`: Character to be put in
  * Prototype
  **/
 #define TERMINAL_MANAGER_PUTC(name) \
-	void name ( HISTORY* history, char c )
+	void name ( HISTORY* history, const char c )
 
 /**
  * Terminal manager function to clear all TTY history

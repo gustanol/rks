@@ -11,9 +11,9 @@ kerr_t _terminal_dispatch_switch_tty ( tty_id id );
 tty_id _terminal_dispatch_get_active_tty ( void );
 
 /* Main operations */
-void _terminal_dispatch_putc ( tty_id id, char c );
+void _terminal_dispatch_putc ( tty_id id, const char c );
 void _terminal_dispatch_write ( tty_id id, const char* buf, size_t len );
-void _terminal_dispatch_puts ( tty_id id, const char* str );
+void _terminal_dispatch_puts ( tty_id id, const char* s );
 void _terminal_dispatch_clear ( tty_id id );
 void _terminal_dispatch_scroll ( tty_id id, int64_t lines );
 void _terminal_dispatch_render ( tty_id id );

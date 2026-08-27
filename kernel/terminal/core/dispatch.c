@@ -80,7 +80,7 @@ _terminal_dispatch_get_active_tty ( void )
  *   - `terminal_putc`
  **/
 void
-_terminal_dispatch_putc ( tty_id id, char c )
+_terminal_dispatch_putc ( tty_id id, const char c )
 {
 
 	if ( id >= g_terminal->tty.count )
@@ -109,7 +109,7 @@ _terminal_dispatch_write ( tty_id id, const char* buf, size_t len )
 	if ( id >= g_terminal->tty.count )
 		return;
 
-	struct tty* tty = g_terminal->tty.list[id];
+	struct tty* tty = &g_terminal->tty.list[id];
 	return g_terminal->tty.ops->write ( tty->history, buf, len );
 }
 
@@ -131,7 +131,7 @@ _terminal_dispatch_puts ( tty_id id, const char* str )
 	if ( id >= g_terminal->tty.count )
 		return;
 
-	struct tty* tty = g_terminal->tty.list[id];
+	struct tty* tty = &g_terminal->tty.list[id];
 	return g_terminal->tty.ops->puts ( tty->history, str );
 }
 
@@ -152,7 +152,7 @@ _terminal_dispatch_clear ( tty_id id )
 	if ( id >= g_terminal->tty.count )
 		return;
 
-	struct tty* tty = g_terminal->tty.list[id];
+	struct tty* tty = &g_terminal->tty.list[id];
 	return g_terminal->tty.ops->clear ( tty->history );
 }
 
@@ -174,7 +174,7 @@ _terminal_dispatch_scroll ( tty_id id, int64_t lines )
 	if ( id >= g_terminal->tty.count )
 		return;
 
-	struct tty* tty = g_terminal->tty.list[id];
+	struct tty* tty = &g_terminal->tty.list[id];
 	return g_terminal->tty.ops->scroll ( tty->history, lines );
 }
 
@@ -195,6 +195,6 @@ _terminal_dispatch_render ( tty_id id )
 	if ( id >= g_terminal->tty.count )
 		return;
 
-	struct tty* tty = g_terminal->tty.list[id];
+	struct tty* tty = &g_terminal->tty.list[id];
 	return g_terminal->tty.ops->render ( tty->history );
 }
