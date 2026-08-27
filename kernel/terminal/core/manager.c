@@ -7,29 +7,6 @@
 
 #define CAPABILITY_INCREASE 8
 
-/**
- * Color descriptor
- * They're gonna be stored with each cell
- *
- * Note it's gonna be interpreted individually by each backend,
- * Whose can decide implementing it or no
- **/
-typedef struct
-{
-
-	/* Type RGB */
-	uint8_t r,
-	  g,
-	  b;
-} COLOR;
-
-/* Cell style descriptor */
-typedef struct
-{
-	COLOR fg;                   /* Foreground */
-	COLOR bg;                   /* Background */
-} STYLE;
-
 /* Default cell style */
 STYLE default_style = {
 
@@ -51,14 +28,14 @@ STYLE default_style = {
 };
 
 /* Cell descriptor */
-typedef struct
+typedef struct cell
 {
 	STYLE style;
 	char c;                     /* Character */
 } CELL;
 
 /* Line descriptor */
-typedef struct
+typedef struct line
 {
 	struct
 	{
@@ -71,7 +48,7 @@ typedef struct
 } LINE;
 
 /* Chunk of lines */
-typedef struct
+typedef struct chunk
 {
 	struct
 	{
@@ -85,7 +62,7 @@ typedef struct
 } CHUNK;
 
 /* History containing all chunks */
-typedef struct
+typedef struct history
 {
 	struct
 	{
@@ -211,7 +188,7 @@ terminal_manager_init ( void )
 
 	/* Set the operations to be used by higher layers */
 	struct manager_ops const* ops_ptr = &ops;   /* Constant pointer */
-	g_terminal->tty.manager_ops = ops_ptr;
+	g_terminal->tty.ops = ops_ptr;
 
 	/* Everthing's okay */
 	return KERR_OK;
@@ -656,7 +633,7 @@ _terminal_manager_create ( void )
 	if ( history != NULL && !IS_KERR ( history ) )
 		k_mfree ( history );
 
-	return -1;
+	return KERR_ENCODE ( KERR_INTERNAL );
 }
 
 /**

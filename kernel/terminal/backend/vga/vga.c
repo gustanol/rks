@@ -1,3 +1,4 @@
+#include "vga.h"
 #include <terminal/backend.h>
 #include <kernel/mem/alloc.h>
 
@@ -84,7 +85,7 @@ TERMINAL_BACKEND_WRITE_AT ( _vga_write_at )
 
 	/* Iterate up to `len` and call the internal `putc_at` */
 	for ( uint32_t i = 0; i < len; i++ )
-		_vga_putc_at ( row, col + i, s[i] );
+		_vga_putc_at ( row, col + i, buf[i] );
 }
 
 /**
@@ -108,7 +109,7 @@ TERMINAL_BACKEND_PUTC_AT ( _vga_putc_at )
 
 	/* Set the character and its attributes */
 	g_vga.ptr[row * col].character = c;
-	g_vga.ptr[row * col].color = g_vga.current_color;
+	g_vga.ptr[row * col].color = vga_default_color; // SET DEFAULT COLOR WHILE THE COLOR TREATMENT IS NOT READY
 }
 
 /**

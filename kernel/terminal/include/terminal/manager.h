@@ -1,8 +1,12 @@
 #ifndef _KERNEL_TERMINAL_MANAGER_H
 #define _KERNEL_TERMINAL_MANAGER_H
 
+#include <kernel/terminal/types.h>
 #include <stddef.h>
 #include <stdint.h>
+
+/* Opaque history type (only visible by the manager) */
+typedef struct history HISTORY;
 
 /* Virtual terminal global state */
 typedef struct tty

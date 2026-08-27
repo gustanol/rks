@@ -28,7 +28,8 @@ terminal_init ( struct framebuffer_info* fb )
 
 	/* Set extracted backend-specific data */
 	g_terminal->backends.count = backends->count;
-	struct terminal_ops* ops_list = k_malloc ( sizeof ( struct terminal_ops * ) * backends->count );
+	struct terminal_ops** ops_list =
+	    k_malloc ( sizeof ( struct terminal_ops ** ) * backends->count );
 
 	/* Set the operations list after verificaton */
 	KERR_PROPAGATE ( ops_list );
@@ -50,7 +51,7 @@ terminal_init ( struct framebuffer_info* fb )
          * Note it's not needed every of them to be initialized
          **/
 		if ( IS_RET_OK ( err ) )
-			g_terminal->backends.list[i] = current_terminal_backend->ops;
+			g_terminal->backends.ops_list[i] = current_terminal_backend->ops;
 	}
 
 	k_mfree ( backends->arr );  /* Array of backends' struct context */

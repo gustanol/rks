@@ -3,7 +3,7 @@
 
 #include "backend.h"
 #include "manager.h"
-#include <stddef.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 /* Terminal global state */
@@ -35,7 +35,7 @@ struct terminal
 		tty_id current;
 
 		/* Internal manager operations */
-		struct manager_ops* ops;
+		const struct manager_ops* ops;
 	} tty;
 
 	/* Is it ready? */
@@ -43,6 +43,6 @@ struct terminal
 };
 
 /* Main pointer */
-extern struct terminal const* g_terminal;
+extern struct terminal* g_terminal;
 
 #endif /* _KERNEL_TERMINAL_INTERNAL_H */

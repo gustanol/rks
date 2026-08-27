@@ -4,9 +4,9 @@
 #include <kernel/boot/fb.h>
 #include <kernel/container_of.h>
 #include <kernel/kerr/kerr.h>
-#include <kernel/susys/registry.h>
+#include <kernel/subsys/registry.h>
 
-#define SUBSYS_TAG_TERMINAL 0x434F4E534F4C45
+#define SUBSYS_TAG_TERMINAL 0x434F4E
 
 /* Terminal backend registration macro */
 #define REGISTER_TERMINAL_BACKEND(BACKEND) \
@@ -75,6 +75,29 @@
 #define TERMINAL_BACKEND_FLUSH(name) \
     void name ( void )
 
+/**
+ * Color descriptor
+ * They're gonna be stored with each cell
+ *
+ * Note it's gonna be interpreted individually by each backend,
+ * Whose can decide implementing it or no
+ **/
+typedef struct
+{
+
+	/* Type RGB */
+	uint8_t r,
+	  g,
+	  b;
+} COLOR;
+
+/* Cell style descriptor */
+typedef struct
+{
+	COLOR fg;                   /* Foreground */
+	COLOR bg;                   /* Background */
+} STYLE;
+
 /* Shared operations */
 struct terminal_ops
 {
@@ -108,7 +131,7 @@ struct terminal_backend
 	  TERMINAL_BACKEND_INIT ( ( *init ) );
 
 	/* Terminal operations */
-	struct terminal_ops* ops;
+	const struct terminal_ops* ops;
 };
 
 /**

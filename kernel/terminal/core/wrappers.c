@@ -1,5 +1,7 @@
+#include <kernel/kerr/kerr.h>
 #include <kernel/terminal/ops.h>
 #include <kernel/terminal/tty.h>
+#include <kernel/terminal/types.h>
 #include <terminal/dispatch.h>
 
 /**
@@ -31,7 +33,7 @@ terminal_create_tty ( void )
 kerr_t
 terminal_destroy_tty ( tty_id id )
 {
-	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL );
+	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL, "The given TTY ID is KERR\n" );
 	return _terminal_dispatch_destroy_tty ( id );
 }
 
@@ -48,8 +50,10 @@ terminal_destroy_tty ( tty_id id )
 kerr_t
 terminal_switch_tty ( tty_id id )
 {
-	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL );
+	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL, "The given TTY ID is KERR\n" );
 	_terminal_dispatch_switch_tty ( id );
+
+	return KERR_OK;
 }
 
 /**
@@ -82,9 +86,6 @@ terminal_get_active_tty ( void )
 void
 terminal_putc ( tty_id id, char c )
 {
-	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL );
-	KERR_RET_IF ( IS_KERR ( c ), KERR_INVAL );
-
 	_terminal_dispatch_putc ( id, c );
 }
 
@@ -103,10 +104,6 @@ terminal_putc ( tty_id id, char c )
 void
 terminal_write ( tty_id id, const char* buf, size_t len )
 {
-	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL );
-	KERR_RET_IF ( IS_KERR ( buf ), KERR_INVAL );
-	KERR_RET_IF ( len == 0, KERR_INVAL );
-
 	_terminal_dispatch_write ( id, buf, len );
 }
 
@@ -124,9 +121,6 @@ terminal_write ( tty_id id, const char* buf, size_t len )
 void
 terminal_puts ( tty_id id, const char* str )
 {
-	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL );
-	KERR_RET_IF ( IS_KERR ( str ), KERR_INVAL );
-
 	_terminal_dispatch_puts ( id, str );
 }
 
@@ -143,18 +137,7 @@ terminal_puts ( tty_id id, const char* str )
 void
 terminal_clear ( tty_id id )
 {
-	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL );
-
 	_terminal_dispatch_clear ( id );
-}
-
-void
-terminal_scroll ( tty_id id, int64_t lines )
-{
-	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL );
-	KERR_RET_IF ( IS_KERR ( lines ), KERR_INVAL );
-
-	_terminal_dispatch_scroll ( id, lines );
 }
 
 /**
@@ -170,9 +153,23 @@ terminal_scroll ( tty_id id, int64_t lines )
  *   - Many
  **/
 void
+terminal_scroll ( tty_id id, int64_t lines )
+{
+	_terminal_dispatch_scroll ( id, lines );
+}
+
+/**
+ * Public TTY viewport renderer 
+ * Public wrapper
+ *
+ * Return `void`
+ * Arguments:
+ *   1. `tty_id id`: TTY identification to be rendered
+ * Callers:
+ *   - Many
+ **/
+void
 terminal_render ( tty_id id )
 {
-	KERR_RET_IF ( IS_KERR ( id ), KERR_INVAL );
-
-	_termnal_dispatch_render ( id );
+	_terminal_dispatch_render ( id );
 }

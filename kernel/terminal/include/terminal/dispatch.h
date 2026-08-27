@@ -7,7 +7,7 @@
 /* TTY dispatch operations */
 tty_id _terminal_dispatch_create_tty ( void );
 kerr_t _terminal_dispatch_destroy_tty ( tty_id id );
-void _terminal_dispatch_switch_tty ( tty_id id );
+kerr_t _terminal_dispatch_switch_tty ( tty_id id );
 tty_id _terminal_dispatch_get_active_tty ( void );
 
 /* Main operations */

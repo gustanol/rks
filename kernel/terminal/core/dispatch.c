@@ -1,3 +1,4 @@
+#include <kernel/kerr/kerr.h>
 #include <terminal/dispatch.h>
 #include <terminal/internal.h>
 
@@ -37,16 +38,18 @@ _terminal_dispatch_destroy_tty ( tty_id id )
  * Private TTY switcher
  * Private dispatcher
  *
- * Return `void`
+ * Return `kerr_t`: Global kernel error type
  * Arguments:
  *   1. `tty_id id`: TTY id to switch to
  * Callers:
  *   - `terminal_switch_tty`
  **/
-void
+kerr_t
 _terminal_dispatch_switch_tty ( tty_id id )
 {
+	KERR_RET_IF ( id >= g_terminal->tty.count, KERR_INVAL, "Invalid TTY ID" );
 	g_terminal->tty.current = id;
+	return KERR_OK;
 }
 
 /**
@@ -83,7 +86,7 @@ _terminal_dispatch_putc ( tty_id id, char c )
 	if ( id >= g_terminal->tty.count )
 		return;
 
-	struct tty* tty = g_terminal->tty.list[id];
+	struct tty* tty = &g_terminal->tty.list[id];
 	return g_terminal->tty.ops->putc ( tty->history, c );
 }
 
