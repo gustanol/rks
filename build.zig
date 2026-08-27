@@ -1,6 +1,8 @@
 const std = @import("std");
 const Flag = @import("shared.zig").Flag;
+
 const kernel_build = @import("kernel/kernel.build.zig");
+const libc_build = @import("libc/libc.build.zig");
 
 // Global CFLAGS that will be shared between all C/Zig files
 const global_cflags = &[_][]const u8{
@@ -41,7 +43,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // Executable options
-    const kernel_exec = b.addExecutable(.{
+    const kernel = b.addExecutable(.{
         .name = "rks",
         .target = target,
         .optimize = optimize,
@@ -53,6 +55,7 @@ pub fn build(b: *std.Build) void {
         .cflags = global_cflags,
     };
 
-    kernel_build.addKernel(b, kernel_exec, flags);
-    b.installArtifact(kernel_exec);
+    kernel_build.addKernel(b, kernel, flags);
+    libc_build.addLibrary(b, kernel, target, optimize);
+    b.installArtifact(kernel);
 }
