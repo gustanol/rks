@@ -1,3 +1,4 @@
+#include <kernel/mem/alloc.h>
 #include <string.h>
 #include <terminal/internal.h>
 #include <terminal/manager.h>
@@ -194,8 +195,7 @@ TERMINAL_MANAGER_INIT ( _terminal_manager_INIT )
 	g_terminal->tty.current = tty;
 
 	/* Set the operations to be used by higher layers */
-	struct manager_ops const* ops_ptr = &ops;   /* Constant pointer */
-	g_terminal->tty.ops = ops_ptr;
+	g_terminal->tty.ops = &ops;
 
 	/* Everthing's okay */
 	return KERR_OK;
@@ -217,6 +217,7 @@ TERMINAL_MANAGER_PUTC ( _terminal_manager_putc )
 	CELL* cell;
 
 	uint32_t line_count = history->attributes.line_count;
+	uint32_t width = history->attributes.width;
 	uint32_t height = history->attributes.height;
 
 	/* Get the current chunk based on the global line count */
@@ -232,7 +233,7 @@ TERMINAL_MANAGER_PUTC ( _terminal_manager_putc )
 	line = tty_get_offset_line ( line_count, height, chunk );
 
 	/* Cell to write the character to */
-	cell = tty_get_current_cell ( line );
+	cell = tty_get_current_cell ( line, width );
 
 	/* If `cell == NULL`, the line is full */
 	if ( cell == NULL )
@@ -259,7 +260,7 @@ TERMINAL_MANAGER_PUTC ( _terminal_manager_putc )
 
 		/* Update pointers */
 		line = tty_get_offset_line ( line_count, height, chunk );
-		cell = tty_get_current_cell ( line );
+		cell = tty_get_current_cell ( line, width );
 	}
 
 	/* Write the character and its style after all */
@@ -285,7 +286,7 @@ TERMINAL_MANAGER_PUTS ( _terminal_manager_puts )
 	/* PARSE SPECIAL CASES BEFORE CALLING `PUTC` */
 
 	for ( uint32_t i = 0; s[i] != '\0'; i++ )
-		_terminal_manager_putc ( s[i] );
+		_terminal_manager_putc ( history, s[i] );
 }
 
 /**
@@ -383,7 +384,7 @@ TERMINAL_MANAGER_SCROLL ( _terminal_manager_scroll )
 		}
 
 		/* Set each line in this interval as dirty */
-		LINE* line = tty_get_offset_line ( top, history );
+		LINE* line = tty_get_offset_line ( line_count, top, chunk );
 		line->dirty = true;
 	}
 }
@@ -401,6 +402,7 @@ TERMINAL_MANAGER_RENDER ( _terminal_manager_render )
 
 	uint32_t height = history->attributes.height;
 	uint32_t width = history->attributes.width;
+	uint32_t line_count = history->attributes.line_count;
 	uint32_t top = history->attributes.viewport_top;
 	CHUNK* chunk = tty_get_viewport_top_chunk ( top, history );
 
@@ -427,7 +429,7 @@ TERMINAL_MANAGER_RENDER ( _terminal_manager_render )
 		 * The index is obtained by making a mod operation
 		 * (`top % height`), which will result on the offset
 		 **/
-		LINE* line = tty_get_offset_line ( top, chunk );
+		LINE* line = tty_get_offset_line ( line_count, top, chunk );
 
 		/* If current line is dirty, render it */
 		if ( line->dirty )
