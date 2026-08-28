@@ -27,8 +27,8 @@ pub fn addSubsystem(
     };
 
     const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
-       "-D", b.fmt("MULTIBOOT_SUPPORT={d}", .{config.multiboot}),
-       "-D", b.fmt("MULTIBOOT2_SUPPORT={d}", .{config.multiboot2}),
+       b.fmt("-DMULTIBOOT_SUPPORT={d}", .{config.multiboot}),
+       b.fmt("-DMULTIBOOT2_SUPPORT={d}", .{config.multiboot2}),
     });
 
     const asflags = helpers.flags.mergeFlags(b, cflags, flags.asflags);
