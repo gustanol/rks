@@ -27,8 +27,8 @@ pub fn addSubsystem(
 
     const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
         "-I", b.fmt("{s}/include", .{path}),
-        "-D", b.fmt("ALLOC_ENABLE_HEAP={d}", .{config.heap}),
-        "-D", b.fmt("ALLOC_ENABLE_SLAB={d}", .{config.slab}),
+        b.fmt("-DALLOC_ENABLE_HEAP={d}", .{config.heap}),
+        b.fmt("-DALLOC_ENABLE_SLAB={d}", .{config.slab}),
     });
 
     kernel.root_module.addCSourceFiles(.{

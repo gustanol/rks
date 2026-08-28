@@ -26,8 +26,8 @@ pub fn addSubsystem(
 
     const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
         "-I", b.fmt("{s}/include", .{path}),
-        "-D", b.fmt("PMM_ENABLE_BITMAP={d}", .{config.bitmap}),
-        "-D", b.fmt("PMM_ENABLE_BUDDY={d}", .{config.buddy}),
+        b.fmt("-DPMM_ENABLE_BITMAP={d}", .{config.bitmap}),
+        b.fmt("-DPMM_ENABLE_BUDDY={d}", .{config.buddy}),
     });
 
     kernel.root_module.addCSourceFiles(.{
