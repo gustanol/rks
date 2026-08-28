@@ -6,7 +6,7 @@ const Config = struct {
     vga: u32,
     framebuffer: u32,
     tty_lines: u32,
-    tty_cells: u32
+    tty_columns: u32
 };
 
 pub fn addSubsystem(
@@ -29,10 +29,10 @@ pub fn addSubsystem(
 
     const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
         "-I", b.fmt("{s}/include", .{path}),
-        "-D", b.fmt("TERMINAL_VGA_SUPPORT={d}", .{config.vga}),
-        "-D", b.fmt("TERMINAL_FRAMEBUFFER_SUPPORT={d}", .{config.framebuffer}),
-        "-D", b.fmt("TTY_CHUNK_LINES={d}", .{config.tty_lines}),
-        "-D", b.fmt("TTY_CHUNK_CELLS={d}", .{config.tty_cells}),
+        b.fmt("-DTERMINAL_VGA_SUPPORT={d}", .{config.vga}),
+        b.fmt("-DTERMINAL_FRAMEBUFFER_SUPPORT={d}", .{config.framebuffer}),
+        b.fmt("-DTTY_LINES={d}", .{config.tty_lines}),
+        b.fmt("-DTTY_COLUMNS={d}", .{config.tty_columns}),
     });
 
     kernel.root_module.addCSourceFiles(.{
