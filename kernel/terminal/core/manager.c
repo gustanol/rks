@@ -40,7 +40,7 @@ typedef struct line
 {
 	struct
 	{
-		CELL base[TTY_LINE_CELLS];
+		CELL base[TTY_COLUMNS];
 		uint32_t current;
 	} cells;
 
@@ -55,7 +55,7 @@ typedef struct chunk
 	{
 
 		/* Array of lines descriptors */
-		LINE base[TTY_CHUNK_LINES];
+		LINE base[TTY_LINES];
 
 		/* Current available line */
 		uint32_t current;
@@ -521,8 +521,8 @@ TERMINAL_MANAGER_CREATE ( _terminal_manager_create )
 
 	/* Set this history */
 	tty->history = history;
-	history->attributes.width = TTY_LINE_CELLS;
-	history->attributes.height = TTY_CHUNK_LINES;
+	history->attributes.width = TTY_COLUMNS;
+	history->attributes.height = TTY_LINES;
 
 	/* If `count` and `capability` are equal, no more pointers are available */
 	if ( tty_count == tty_capability )
