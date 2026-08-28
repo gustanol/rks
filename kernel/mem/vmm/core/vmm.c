@@ -52,7 +52,7 @@ vmm_init ( void )
 	g_vmm->hhdm_offset = ( vaddr_t ) HHDM_BASE;
 
 	/* Now we've got HHDM mapped, there's no reason to keep identity mapping */
-	kerr_t err g_vmm->ops->unmap_identity ( g_vmm->kernel.addr_space );
+	kerr_t err = g_vmm->ops->unmap_identity ( g_vmm->kernel.addr_space );
 
 	/* Print the error source */
 	if ( !IS_RET_OK ( err ) )
