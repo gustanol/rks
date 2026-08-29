@@ -184,7 +184,7 @@ static CHUNK* _terminal_manager_alloc_chunk ( HISTORY * history );
  * Interface:
  *   - `kernel/terminal/include/terminal/manager.h`
  **/
-TERMINAL_MANAGER_INIT ( _terminal_manager_INIT )
+TERMINAL_MANAGER_INIT
 {
 
 	/* Tries to create a new TTY */
@@ -448,7 +448,7 @@ TERMINAL_MANAGER_RENDER ( _terminal_manager_render )
 
 					/**
 					 * As the current cell style is different,
-					 * We must write the last substring `til this point
+					 * We must write the last substring 'til this point
 					 * And update the current style
 					 **/
 
@@ -466,7 +466,7 @@ TERMINAL_MANAGER_RENDER ( _terminal_manager_render )
 					 **/
 					TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
 					    g_terminal->backends.ops_list[backend]->write_at ( top % height, write_from,
-					    &line->cells[write_from], i - write_from );
+					    &line->cells.base[write_from], i - write_from );
 
 					/* Update the current substring state */
 					current_style = line->cells.base[i].style;
@@ -481,7 +481,7 @@ TERMINAL_MANAGER_RENDER ( _terminal_manager_render )
 			/* Write the rest of the line */
 			TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
 			    g_terminal->backends.ops_list[backend]->write_at ( top % height, write_from,
-			    &line->cells[write_from], width );
+			    &line->cells.base[write_from].c, width );
 
 			/* All line written */
 			line->dirty = false;
@@ -532,6 +532,9 @@ TERMINAL_MANAGER_CREATE ( _terminal_manager_create )
 		uint32_t old_capability = tty_capability;
 		tty_capability += CAPABILITY_INCREASE;
 
+		/* Current copy to be freed later */
+		TTY* base_cpy = g_terminal->tty.list;
+
 		/* Tries to allocate a new array of TTY pointers */
 		TTY* new_list = k_calloc ( sizeof ( TTY ) * ( tty_capability ) );
 		if ( IS_KERR ( new_list ) )
@@ -549,7 +552,7 @@ TERMINAL_MANAGER_CREATE ( _terminal_manager_create )
 	}
 
 	/* Set the TTY pointer and counters */
-	g_terminal->tty.list[tty_count++] = tty;
+	g_terminal->tty.list[tty_count++] = *tty;
 	g_terminal->tty.count = tty_count;
 	g_terminal->tty.capability = tty_capability;
 
@@ -565,7 +568,7 @@ TERMINAL_MANAGER_CREATE ( _terminal_manager_create )
 	if ( history != NULL && !IS_KERR ( history ) )
 		k_mfree ( history );
 
-	return KERR_ENCODE ( KERR_INTERNAL );
+	return ENCODE_KERR ( KERR_INTERNAL );
 }
 
 /**
@@ -583,7 +586,7 @@ TERMINAL_MANAGER_DESTROY ( _terminal_manager_destroy )
 	if ( id >= g_terminal->tty.count )
 		return KERR_INVAL;
 
-	TTY* tty = g_terminal->tty.list[id];
+	TTY* tty = &g_terminal->tty.list[id];
 	HISTORY* history = tty->history;
 
 	/* Frees each allocated chunk in this history */
@@ -624,6 +627,9 @@ _terminal_manager_alloc_chunk ( HISTORY* history )
 		uint32_t old_capability = chunk_capability;
 		chunk_capability += CAPABILITY_INCREASE;
 
+		/* Current chunk pointers array copy to be freed later */
+		CHUNK** base_cpy = history->chunks.base;
+
 		/* Tries to allocate a new array of pointers */
 		CHUNK** new_base = k_calloc ( sizeof ( CHUNK * ) * ( chunk_capability ) );
 		if ( IS_KERR ( new_base ) )
@@ -650,5 +656,5 @@ _terminal_manager_alloc_chunk ( HISTORY* history )
 		return NULL;
 
 	/* Set the chunk */
-	history->chunks.base[history->chunk.count++] = chunk;
+	history->chunks.base[history->chunks.count++] = chunk;
 }

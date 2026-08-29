@@ -1,6 +1,7 @@
 #ifndef _KERNEL_TERMINAL_MANAGER_H
 #define _KERNEL_TERMINAL_MANAGER_H
 
+#include <kernel/kerr/kerr.h>
 #include <kernel/terminal/types.h>
 #include <stddef.h>
 #include <stdint.h>
