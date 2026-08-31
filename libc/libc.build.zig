@@ -8,8 +8,6 @@ pub fn addLibrary(
 ) void {
     const path = "libc";
 
-    kernel.root_module.addIncludePath(b.path(b.fmt("{s}/include", .{path})));
-
     const libc = b.addStaticLibrary(.{
         .name = "c",
         .root_source_file = b.path(b.fmt("{s}/main.zig", .{path})),

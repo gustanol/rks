@@ -12,10 +12,6 @@ pub fn addKernel(
     kernel: *std.Build.Step.Compile,
     flags: Flag,
 ) void {
-    const path = "kernel";
-
-    // Top-level include folder
-    kernel.root_module.addIncludePath(b.path(b.fmt("{s}/include", .{path})));
 
     // Invoke subsystems
     arch.addSubsystem(b, kernel, flags);

@@ -52,6 +52,9 @@ pub fn build(b: *std.Build) void {
         .cflags = global_cflags,
     };
 
+    // Top-level include folder
+    kernel.root_module.addIncludePath(b.path("include"));
+
     kernel_build.addKernel(b, kernel, flags);
     libc_build.addLibrary(b, kernel, target, optimize);
     b.installArtifact(kernel);
