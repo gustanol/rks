@@ -1,6 +1,6 @@
-#include <rks/kernel/compiler/sections.h>
-#include <rks/lib/bitwise.h>
-#include <x86/mem/early_alloc.h>
+#include <arch/mem/early_alloc.h>
+#include <kernel/compiler/sections.h>
+#include <lib/bitwise.h>
 
 /* External symbols */
 extern void BOOTSTRAP_ARENA_START ( void );
