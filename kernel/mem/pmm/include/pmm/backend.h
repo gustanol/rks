@@ -108,7 +108,7 @@ struct pmm_ops
 struct pmm_init_backend_ctx
 {
 	size_t mem_total;
-	uint32_t frames_total;
+	uint32_t total_frames;
 };
 
 /* PMM backend structure context */

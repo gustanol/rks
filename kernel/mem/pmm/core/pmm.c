@@ -1,10 +1,10 @@
 #include <arch/const.h>
-#include <pmm/internal.h>
 #include <kernel/kerr/kerr.h>
 #include <kernel/mem/pmm/frames.h>
 #include <kernel/mem/pmm/init.h>
 #include <kernel/mem/vmm/types.h>
 #include <kernel/subsys/registry.h>
+#include <pmm/internal.h>
 
 /* Static PMM context structure */
 static struct pmm i_pmm;
@@ -34,14 +34,14 @@ pmm_init ( struct mmap_tag* mmap )
 	g_pmm->memory.total = 0;
 
 	/* Guarantee `mmap->entry` is usable */
-	KERR_RET_IF ( mmap->entry == NULL, KERR_NOTMAPPED, "Not valid MMAP entries" );
-	KERR_PROPAGATE ( mmap->entry );
+	KERR_RET_IF ( mmap->entries == NULL, KERR_NOTMAPPED, "Not valid MMAP entries" );
+	KERR_PROPAGATE ( mmap->entries );
 
 	/* It's already unsigned */
 	KERR_RET_IF ( mmap->entry_count == 0, KERR_INTERNAL, "Zero MMAP entries count" );
 
 	/* First loop to get all available memory */
-	for ( u32 i = 0; i < mmap->entry_count; i++ )
+	for ( uint32_t i = 0; i < mmap->entry_count; i++ )
 
 	    /* Only get available memory */
 		if ( mmap->entries[i].type == MEM_AVAILABLE )
@@ -62,16 +62,16 @@ pmm_init ( struct mmap_tag* mmap )
 
 	/* Check integrity */
 	KERR_RET_IF ( backend == NULL, KERR_INTERNAL, "No registered PMM backend" );
-	KERR_RET_IF ( backend->init == NULL, KERR_INTERNAL,
-	    "[%s] backend has no init function", backend->name );
 
 	/* Get the specific PMM backend data context */
 	struct pmm_backend* pmm_backend = pmm_backend_from_base ( backend );
+	KERR_RET_IF ( pmm_backend->init == NULL, KERR_INTERNAL,
+	    "[%s] backend has no init function", backend->name );
 
 	/* Context (Useful non-specific data) */
 	struct pmm_init_backend_ctx ctx = {
 		.mem_total = g_pmm->memory.total,
-		.frames_total = g_pmm->frames.total,
+		.total_frames = g_pmm->frames.total,
 	};
 
 	/* Calls it */
@@ -86,20 +86,21 @@ pmm_init ( struct mmap_tag* mmap )
 	g_pmm->ops = ( struct pmm_ops * ) pmm_backend->ops;
 
 	/* Marks available entries as free regions */
-	for ( u32 i = 0; i < mmap->entry_count; i++ )
+	for ( uint32_t i = 0; i < mmap->entry_count; i++ )
 
 	    /* Available memory entries */
 		if ( mmap->entries[i].type == MEM_AVAILABLE )
 
 		    /* We can mark this region as free to use */
-			g_pmm->ops->free_region ( mmap->entries[i].addr, mmap->entries[i].len );
+			g_pmm->ops->free_region ( mmap->entries[i].addr, mmap->entries[i].len,
+	            g_pmm->frames.total );
 
 	/**
-         * Mark the whole kernel size as used
-         * Note this already includes bootstrap region
-         **/
+	 * Mark the whole kernel size as used
+	 * Note this already includes bootstrap region
+	 **/
 	g_pmm->ops->fill_region ( KERNEL_START - KERNEL_VIRT_OFF,
-	    KERNEL_END - KERNEL_START, g_pmm->frame.total );
+	    KERNEL_END - KERNEL_START, g_pmm->frames.total );
 
 	/* Already to be used by dispatchers */
 	g_pmm->ready = 1;

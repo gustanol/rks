@@ -1,27 +1,26 @@
 #include "bitmap.h"
 #include <arch/const.h>
 #include <arch/mem/early_alloc.h>
-#include <pmm/backend.h>
+#include <lib/bitwise.h>
 #include <kernel/mem/pmm/frames.h>
 #include <kernel/mem/vmm/types.h>
-
-#include <lib/bitwise.h>
+#include <pmm/backend.h>
 
 /* Prototypes */
 static PMM_BACKEND_INIT ( __bitmap_init );
 static PMM_BACKEND_ALLOC_FRAME ( _bitmap_alloc_frame );
 static PMM_BACKEND_FREE_FRAME ( _bitmap_free_frame );
 static PMM_BACKEND_ALLOC_REGION ( _bitmap_alloc_region );
-static PMM_BACKEND_FILL_REGION ( _bitmap_fill_frame );
-static PMM_BACKEND_FREE_REGION ( _bitmap_free_frame );
+static PMM_BACKEND_FILL_REGION ( _bitmap_fill_region );
+static PMM_BACKEND_FREE_REGION ( _bitmap_free_region );
 
 /* PMM operations */
 static const struct pmm_ops bitmap_ops = {
 	.alloc_frame = _bitmap_alloc_frame,
 	.free_frame = _bitmap_free_frame,
 	.alloc_region = _bitmap_alloc_region,
-	.free_region = _bitmap_region_free,
-	.fill_region = _bitmap_region_used,
+	.fill_region = _bitmap_fill_region,
+	.free_region = _bitmap_free_region,
 };
 
 /* PMM backend context structure */
