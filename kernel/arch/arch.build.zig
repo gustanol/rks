@@ -1,8 +1,9 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const Flag = @import("../../shared.zig").Flag;
 
 // Every architecture build file
-const x86 = @import("x86/x86.build.zig");
+const x86_64 = @import("x86_64/x86_64.build.zig");
 
 pub fn addSubsystem(
     b: *std.Build,
@@ -14,7 +15,7 @@ pub fn addSubsystem(
     const arch = kernel.root_module.resolved_target.?.result.cpu.arch;
 
     switch (arch) {
-        .x86 => x86.addSubsystem(b, kernel, flags),
+        .x86_64 => x86_64.addSubsystem(b, kernel, flags),
         else => @panic("Unsupported target architecture"),
     }
 }

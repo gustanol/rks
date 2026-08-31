@@ -11,7 +11,7 @@ pub fn addSubsystem(
     kernel: *std.Build.Step.Compile,
     flags: Flag,
 ) void {
-    const path = "kernel/arch/x86";
+    const path = "kernel/arch/x86_64";
 
     // This architecture include path
     kernel.root_module.addIncludePath(
@@ -20,7 +20,7 @@ pub fn addSubsystem(
 
     // Linker script
     kernel.setLinkerScript(
-        b.path(b.fmt("{s}/x86.ld", .{path}))
+        b.path(b.fmt("{s}/x86_64.ld", .{path}))
     );
 
     boot.addSubsystem(b, kernel, flags);

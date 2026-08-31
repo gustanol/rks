@@ -7,7 +7,7 @@ pub fn addSubsystem(
     kernel: *std.Build.Step.Compile,
     flags: Flag,
 ) void {
-    const path = "kernel/arch/x86/mem";
+    const path = "kernel/arch/x86_64/mem";
 
     const c_sources = &[_][]const u8{
         "early_alloc.c",

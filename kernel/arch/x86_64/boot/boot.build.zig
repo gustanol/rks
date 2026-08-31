@@ -12,7 +12,7 @@ pub fn addSubsystem(
     kernel: *std.Build.Step.Compile,
     flags: Flag,
 ) void {
-    const path = "kernel/arch/x86/boot";
+    const path = "kernel/arch/x86_64/boot";
 
     const config = helpers.config.loadLocalConfigFile(
         Config, b, b.fmt("{s}/boot.config.json", .{path})

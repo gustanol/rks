@@ -7,7 +7,7 @@ pub fn addSubsystem(
     kernel: *std.Build.Step.Compile,
     flags: Flag,
 ) void {
-    const path = "kernel/arch/x86/interrupt";
+    const path = "kernel/arch/x86_64/interrupt";
 
     const c_sources = &[_][]const u8{
         "handlers/generic.c",

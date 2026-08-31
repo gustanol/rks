@@ -7,7 +7,7 @@ pub fn addSubsystem(
     kernel: *std.Build.Step.Compile,
     flags: Flag,
 ) void {
-    const path = "kernel/arch/x86/cpu";
+    const path = "kernel/arch/x86_64/cpu";
 
     const c_sources = &[_][]const u8{
         "descriptors/gdt/long_gdt.c",

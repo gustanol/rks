@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const Flag = @import("shared.zig").Flag;
 
 const kernel_build = @import("kernel/kernel.build.zig");
@@ -25,16 +26,12 @@ const global_asflags = &[_][]const u8{
 pub fn build(b: *std.Build) void {
 
     // Architecture selection
-    const arch_opt = b.option([]const u8, "arch", "Target architecture (x86, aarch64)")
-    orelse "x86";
-
-    // Select chosen architecture from the enum `std.Target.Cpu.Arch
-    const cpu_arch =
-        std.meta.stringToEnum(std.Target.Cpu.Arch, arch_opt) orelse .x86;
+    const arch = b.option(std.Target.Cpu.Arch, "arch", "Override target CPU architecture")
+    orelse builtin.cpu.arch;
 
     // This target options
     const target = b.resolveTargetQuery(.{
-        .cpu_arch = cpu_arch, // Chosen architecture
+        .cpu_arch = arch, // Chosen architecture
         .os_tag = .freestanding,
         .abi = .none,
     });
