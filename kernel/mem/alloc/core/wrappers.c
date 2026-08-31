@@ -34,11 +34,11 @@ alloc_heap_destroy ( HEAP* heap )
 {
 
 	/**
-         * Validate arguments
-         * This is going to repeat for next functions
-         **/
-	KERR_RET_IF ( heap == NULL, KERR_INVAL );
-	KERR_RET_IF ( IS_KERR ( heap ), KERR_INVAL );
+	 * Validate arguments
+	 * This is going to repeat for next functions
+	 **/
+	KERR_RET_IF ( heap == NULL, KERR_INVAL, "The given HEAP object is NULL\n" );
+	KERR_PROPAGATE ( heap );
 
 	return _alloc_dispatch_heap_destroy ( heap );
 }
@@ -57,9 +57,9 @@ alloc_heap_destroy ( HEAP* heap )
 void*
 alloc_heap_malloc ( HEAP* heap, size_t size )
 {
-	KERR_RET_ENCODE_IF ( heap == NULL, KERR_INVAL );
-	KERR_RET_ENCODE_IF ( IS_KERR ( heap ), KERR_INVAL );
-	KERR_RET_ENCODE_IF ( size == 0, KERR_INVAL );
+	KERR_RET_ENCODE_IF ( heap == NULL, KERR_INVAL, "Null HEAP object\n" );
+	KERR_PROPAGATE_ENCODE ( heap );
+	KERR_RET_ENCODE_IF ( size == 0, KERR_INVAL, "Invalid size: 0\n" );
 
 	return _alloc_dispatch_heap_malloc ( heap, size );
 }
@@ -78,10 +78,10 @@ alloc_heap_malloc ( HEAP* heap, size_t size )
 kerr_t
 alloc_heap_mfree ( HEAP* heap, void* ptr )
 {
-	KERR_RET_IF ( heap == NULL, KERR_INVAL );
-	KERR_RET_IF ( IS_KERR ( heap ), KERR_INVAL );
-	KERR_RET_IF ( ptr == NULL, KERR_INVAL );
-	KERR_RET_IF ( IS_KERR ( ptr ), KERR_INVAL );
+	KERR_RET_IF ( heap == NULL, KERR_INVAL, "Null HEAP object\n" );
+	KERR_PROPAGATE ( heap );
+	KERR_RET_IF ( ptr == NULL, KERR_INVAL, "Null payload pointer\n" );
+	KERR_PROPAGATE ( ptr );
 
 	return _alloc_dispatch_heap_mfree ( heap, ptr );
 }
@@ -100,9 +100,9 @@ alloc_heap_mfree ( HEAP* heap, void* ptr )
 kerr_t
 alloc_heap_grow ( HEAP* heap, size_t frames_needed )
 {
-	KERR_RET_IF ( heap == NULL, KERR_INVAL );
-	KERR_RET_IF ( IS_KERR ( heap ), KERR_INVAL );
-	KERR_RET_IF ( frames_needed == 0, KERR_INVAL );
+	KERR_RET_IF ( heap == NULL, KERR_INVAL, "Null HEAP object\n" );
+	KERR_PROPAGATE ( heap );
+	KERR_RET_IF ( frames_needed == 0, KERR_INVAL, "Invalid frames amount: 0\n" );
 
 	return _alloc_dispatch_heap_grow ( heap, frames_needed );
 }
@@ -120,8 +120,6 @@ alloc_heap_grow ( HEAP* heap, size_t frames_needed )
 void*
 k_malloc ( size_t size )
 {
-	KERR_RET_ENCODE_IF ( size == 0, KERR_INVAL );
-
 	return _alloc_k_malloc ( size );
 }
 
@@ -141,11 +139,10 @@ k_calloc ( size_t size )
 
 	/* Tries allocating */
 	void* ptr = k_malloc ( size );
-	KERR_RET_ENCODE_IF ( IS_KERR ( ptr ), GET_KERR ( ptr ) );
+	KERR_PROPAGATE_ENCODE ( ptr );
 
 	/* Initializes it to zero */
 	memset ( ptr, 0, size );
-
 	return ptr;
 }
 
@@ -162,8 +159,8 @@ k_calloc ( size_t size )
 kerr_t
 k_mfree ( void* ptr )
 {
-	KERR_RET_IF ( ptr == NULL, KERR_INVAL );
-	KERR_RET_IF ( IS_KERR ( ptr ), KERR_INVAL );
+	KERR_RET_IF ( ptr == NULL, KERR_INVAL, "Null payload start pointer\n" );
+	KERR_PROPAGATE ( ptr );
 
 	return _alloc_dispatch_k_mfree ( ptr );
 }
