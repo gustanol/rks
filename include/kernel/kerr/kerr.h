@@ -1,5 +1,5 @@
-#ifndef _KERNEL_ERR_H
-#define _KERNEL_ERR_H
+#ifndef _KERNEL_KERR_H
+#define _KERNEL_KERR_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -9,53 +9,66 @@
 
 /* kerr_t -> tagged error convertor */
 #define ENCODE_KERR(err) \
-        ( ( void * ) ( KERR_PTR_BASE | ( ( uint64_t ) ( err ) & 0xFFFFULL ) ) )
+	( ( KERR_PTR_BASE ) | ( ( uint64_t ) ( err ) & 0xFFFFULL ) )
+
+/* Encode a `kerr_t` for functions that return a pointer */
+#define ENCODE_KERR_PTR(err) \
+	( void * ) ENCODE_KERR ( err );
 
 /* Checks a valid encoded kerr_t */
 #define IS_KERR(ptr) \
-        ( ( ( uint64_t ) ( ptr ) & KERR_PTR_MASK ) == KERR_PTR_BASE )
+	( ( ( uint64_t ) ( ptr ) & KERR_PTR_MASK ) == KERR_PTR_BASE )
 
 /* Enconded kerr_t extractor */
 #define GET_KERR(ptr) \
-        ( ( kerr_t ) ( ( uint64_t ) ( ptr ) & 0xFFFFULL ) )
+	( ( kerr_t ) ( ( uint64_t ) ( ptr ) & 0xFFFFULL ) )
 
 #define IS_RET_OK(err) \
-        ( ( err ) == KERR_OK )
+	( ( err ) == KERR_OK )
 
 /* Return a kerr_t on condition pass */
 #define KERR_RET_IF(cond, err, fmt, ...) \
-        ({ \
-                if ( cond ) { \
-                        /* klog_err ( fmt, ##__VA_ARGS__ ); */ \
-                        return ( err ); \
-                } \
-        })
+	({ \
+			if ( cond ) { \
+					/* klog_err ( fmt, ##__VA_ARGS__ ); */ \
+					return ( err ); \
+			} \
+	})
 
 /**
  * Instead of returning the error code directly, encode it first
  * For functions that does not return a `kerr_t`
  **/
 #define KERR_RET_ENCODE_IF(cond, err, fmt, ...) \
-        ({ \
-                if ( cond ) { \
-                       /* klog_err ( fmt, ##__VA_ARGS__ ); */ \
-                        return ENCODE_KERR ( err ); \
-                } \
-        })
+	({ \
+			if ( cond ) { \
+				   /* klog_err ( fmt, ##__VA_ARGS__ ); */ \
+					return ENCODE_KERR ( err ); \
+			} \
+	})
+
+/* Uses `ENCODE_KERR_PTR` */
+#define KERR_RET_ENCODE_PTR_IF(cond, err, fmt, ...) \
+	({ \
+		if ( cond ) { \
+			/* klog_err ( fmt, ##__VA_ARGS__ ); */ \
+			return ENCODE_KERR_PTR ( err ); \
+		} \
+	})
 
 /* Forward if `obj` is already an encoded error */
 #define KERR_PROPAGATE(obj) \
-        ({ \
-                if ( IS_KERR ( obj ) ) \
-                        return GET_KERR ( obj ); \
-        })
+	({ \
+			if ( IS_KERR ( obj ) ) \
+					return GET_KERR ( obj ); \
+	})
 
 /* If `obj` is a KERR, just return it (it's already encoded) */
 #define KERR_PROPAGATE_ENCODE(obj) \
-        ({ \
-                if ( IS_KERR ( obj ) ) \
-                        return ( obj ); \
-        })
+	({ \
+			if ( IS_KERR ( obj ) ) \
+					return ( obj ); \
+	})
 
 /* General error types */
 typedef enum
@@ -76,4 +89,4 @@ typedef enum
 /* Error -> String convertor */
 const char* kerr_str ( kerr_t err );
 
-#endif /* _KERNEL_ERR_H */
+#endif /* _KERNEL_KERR_H */

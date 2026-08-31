@@ -5,11 +5,11 @@
  *
  * It uses X-Macros to generate at the correct order
  **/
-static const char const* kerr_strings[__KERR_COUNT] = {
+static const char *kerr_strings[__KERR_COUNT] = {
 
 /* CORRECT THE INCLUDE PATH IF IT CHANGES LATER */
 #define X(name, str) [name] = str,
-#include <kerr.def>
+#include <kernel/kerr/kerr.def>
 #undef X
 };
 
@@ -23,13 +23,13 @@ static const char const* kerr_strings[__KERR_COUNT] = {
  * Callers:
  *   - Many
  **/
-const char*
-kerr_str ( kerr_t err )
+const char *
+kerr_str (kerr_t err)
 {
 
 	/**
          * Simply gets the associated message
          * Complexity: O(1)
          **/
-	return kerr_strings[err];
+  return kerr_strings[err];
 }
