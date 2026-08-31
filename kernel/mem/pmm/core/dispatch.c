@@ -28,7 +28,7 @@ _pmm_dispatch_alloc_frame ( void )
 	uint32_t total_frames = g_pmm->frames.total;
 
 	/* Allocates a new physical frame */
-	paddr_t phys_addr = get_ops (  )->alloc_frame (  );
+	paddr_t phys_addr = get_ops (  )->alloc_frame ( total_frames );
 
 	/* If correctly allocated, there's no kerr_t */
 	if ( !IS_KERR ( phys_addr ) )
