@@ -3,7 +3,7 @@ const builtin = @import("builtin");
 const Flag = @import("shared.zig").Flag;
 
 const kernel_build = @import("kernel/kernel.build.zig");
-const libc_build = @import("libc/libc.build.zig");
+const lib_build = @import("lib/lib.build.zig");
 
 // Global CFLAGS that will be shared between all C/Zig files
 const global_cflags = &[_][]const u8{
@@ -56,6 +56,6 @@ pub fn build(b: *std.Build) void {
     kernel.root_module.addIncludePath(b.path("include"));
 
     kernel_build.addKernel(b, kernel, flags);
-    libc_build.addLibrary(b, kernel, target, optimize);
+    lib_build.addLibrary(b, kernel, target, optimize);
     b.installArtifact(kernel);
 }

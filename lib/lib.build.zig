@@ -6,14 +6,14 @@ pub fn addLibrary(
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
 ) void {
-    const path = "libc";
+    const path = "lib";
 
-    const libc = b.addStaticLibrary(.{
-        .name = "c",
+    const klib = b.addStaticLibrary(.{
+        .name = "klib",
         .root_source_file = b.path(b.fmt("{s}/main.zig", .{path})),
         .target = target,
         .optimize = optimize,
     });
 
-    kernel.linkLibrary(libc);
+    kernel.linkLibrary(klib);
 }
