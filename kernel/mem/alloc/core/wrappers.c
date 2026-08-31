@@ -3,6 +3,8 @@
 #include <kernel/mem/alloc/allocators/heap.h>
 #include <string.h>
 
+static const char* heap_is_null = "The given HEAP object is null\n";
+
 /**
  * Public heap context creator
  * Public wrapper
@@ -37,7 +39,7 @@ alloc_heap_destroy ( HEAP* heap )
 	 * Validate arguments
 	 * This is going to repeat for next functions
 	 **/
-	KERR_RET_IF ( heap == NULL, KERR_INVAL, "The given HEAP object is NULL\n" );
+	KERR_RET_IF ( heap == NULL, KERR_INVAL, heap_is_null );
 	KERR_PROPAGATE ( heap );
 
 	return _alloc_dispatch_heap_destroy ( heap );
@@ -57,9 +59,9 @@ alloc_heap_destroy ( HEAP* heap )
 void*
 alloc_heap_malloc ( HEAP* heap, size_t size )
 {
-	KERR_RET_ENCODE_IF ( heap == NULL, KERR_INVAL, "Null HEAP object\n" );
+	KERR_RET_ENCODE_PTR_IF ( heap == NULL, KERR_INVAL, heap_is_null );
 	KERR_PROPAGATE_ENCODE ( heap );
-	KERR_RET_ENCODE_IF ( size == 0, KERR_INVAL, "Invalid size: 0\n" );
+	KERR_RET_ENCODE_PTR_IF ( size == 0, KERR_INVAL, "Invalid size: 0\n" );
 
 	return _alloc_dispatch_heap_malloc ( heap, size );
 }
@@ -78,7 +80,7 @@ alloc_heap_malloc ( HEAP* heap, size_t size )
 kerr_t
 alloc_heap_mfree ( HEAP* heap, void* ptr )
 {
-	KERR_RET_IF ( heap == NULL, KERR_INVAL, "Null HEAP object\n" );
+	KERR_RET_IF ( heap == NULL, KERR_INVAL, heap_is_null );
 	KERR_PROPAGATE ( heap );
 	KERR_RET_IF ( ptr == NULL, KERR_INVAL, "Null payload pointer\n" );
 	KERR_PROPAGATE ( ptr );
@@ -100,7 +102,7 @@ alloc_heap_mfree ( HEAP* heap, void* ptr )
 kerr_t
 alloc_heap_grow ( HEAP* heap, size_t frames_needed )
 {
-	KERR_RET_IF ( heap == NULL, KERR_INVAL, "Null HEAP object\n" );
+	KERR_RET_IF ( heap == NULL, KERR_INVAL, heap_is_null );
 	KERR_PROPAGATE ( heap );
 	KERR_RET_IF ( frames_needed == 0, KERR_INVAL, "Invalid frames amount: 0\n" );
 
@@ -120,7 +122,7 @@ alloc_heap_grow ( HEAP* heap, size_t frames_needed )
 void*
 k_malloc ( size_t size )
 {
-	return _alloc_k_malloc ( size );
+	return _alloc_dispatch_k_malloc ( size );
 }
 
 /**

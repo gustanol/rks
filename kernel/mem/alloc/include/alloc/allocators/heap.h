@@ -1,27 +1,87 @@
-#ifndef _KERNEL_ALLOC_BACKEND_HEAP_H
-#define _KERNEL_ALLOC_BACKEND_HEAP_H
+#ifndef _KERNEL_ALLOC_ALLOCATOR_HEAP_H
+#define _KERNEL_ALLOC_ALLOCATOR_HEAP_H
 
 #include <kernel/kerr/kerr.h>
 #include <kernel/mem/vmm/types.h>
 #include <stdbool.h>
 
+/**
+ * Heap allocator context creator
+ * Allocator function
+ *
+ * Return -> `struct heap *`: Heap context pointer (opaque type only accessible through ALLOC subsystem)
+ * Arguments:
+ *   1. `void`
+ * Prototype
+ **/
+#define HEAP_ALLOC_CREATE \
+	struct heap* _heap_create ( void )
+
+/**
+ * Heap allocator context destroyer 
+ * Allocator function
+ *
+ * Return -> `struct heap *`: Heap context pointer (opaque type only accessible through ALLOC subsystem)
+ * Arguments:
+ *   1. `struct heap* heap`: Heap object to be destroyed
+ * Prototype
+ **/
+#define HEAP_ALLOC_DESTROY(name) \
+	  kerr_t name ( struct heap* heap)
+
+/**
+ * Heap allocator memory allocator
+ * Allocator function
+ *
+ * Return -> `void *`: Pointer to allocated object
+ * Arguments:
+ *   1. `struct heap* heap`: Heap state
+ *   2. `size_t size`: Object size
+ * Prototype
+ **/
+#define HEAP_ALLOC_MALLOC(name) \
+	void* name ( struct heap* heap, size_t size )
+
+/**
+ * Heap allocator memory freer
+ * Allocator function
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `void* ptr`: Payload base address
+ * Prototype
+ **/
+#define HEAP_ALLOC_MFREE(name) \
+	  kerr_t name ( void* payload )
+
+/**
+ * Heap area grower
+ * Backend function
+ *
+ * Return -> `kerr_t`: Kernel global error type
+ * Arguments:
+ *   1. `struct heap* heap`: Heap to be grown
+ *   2. `size_t frames_needed`: As it grows by frames, the minimum amount to be grown
+ * Prototype
+ **/
+#define HEAP_ALLOC_GROW(name) \
+	  kerr_t name ( struct heap* heap, size_t frames_needed )
+
 /* Heap allocator operation functions */
 struct heap_ops
 {
-	/* Context creator */
-	struct heap* ( *create ) ( void );
 
 	/* Context destroyer */
-	  kerr_t ( *destroy ) ( struct heap * );
+	HEAP_ALLOC_DESTROY ( ( *destroy ) );
 
 	/* Memory allocator */
-	void* ( *malloc ) ( struct heap *, size_t );
+	HEAP_ALLOC_MALLOC ( ( *malloc ) );
 
 	/* Memory freer */
-	  kerr_t ( *mfree ) ( void*  );
+	HEAP_ALLOC_MFREE ( ( *mfree ) );
 
 	/* Heap grower */
-	  kerr_t ( *grow ) ( struct heap *, size_t );
+	HEAP_ALLOC_GROW ( ( *grow ) );
 };
 
 /**
@@ -41,6 +101,6 @@ struct heap
 };
 
 /* Heap creator function prototype */
-struct heap* _heap_create ( void );
+HEAP_ALLOC_CREATE;
 
-#endif /* _KERNEL_ALLOC_BACKEND_HEAP_H */
+#endif /* _KERNEL_ALLOC_ALLOCATOR_HEAP_H */

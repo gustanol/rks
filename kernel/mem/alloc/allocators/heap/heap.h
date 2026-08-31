@@ -3,7 +3,10 @@
 
 #include <kernel/kerr/kerr.h>
 #include <kernel/mem/vmm/types.h>
-#include <kernel/lib/bitwise.h>
+#include <lib/bitwise.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define CHUNK_LIMIT_BOUNDARY 64
 #define CHUNK_ALIGN 0x10

@@ -1,39 +1,35 @@
 #include "heap.h"
-#include <alloc/backend.h>
 #include <alloc/allocators/heap.h>
 #include <kernel/mem/pmm.h>
 #include <kernel/mem/vmm/map.h>
-#include <lib/string.h>
+#include <string.h>
+
+/* Prototypes */
+static HEAP_ALLOC_DESTROY ( _heap_destroy );
+static HEAP_ALLOC_MALLOC ( _heap_malloc );
+static HEAP_ALLOC_MFREE ( _heap_mfree );
+static HEAP_ALLOC_GROW ( _heap_grow );
 
 /* Operations */
 const struct heap_ops ops = {
-	.create = _heap_create,
 	.destroy = _heap_destroy,
 	.malloc = _heap_malloc,
-	.free = _heap_free,
+	.mfree = _heap_mfree,
+	.grow = _heap_grow,
 };
 
-/* Prototypes */
-static kerr_t _heap_destroy ( struct heap* heap );
-static void* _heap_malloc ( struct heap* heap, size_t size );
-static kerr_t _heap_free ( void* ptr );
-static vaddr_t _heap_grow ( struct heap* heap, size_t frames_needed );
-
-static __heap_alloc_and_map ( size_t frames_needed );
+static vaddr_t __heap_alloc_and_map ( size_t frames_needed );
 static void _heap_merge_chunks ( struct chunk_header* left, struct chunk_header* right );
 
 /**
- * Heap backend context creator
- * Backend function
+ * Heap allocator creator 
  *
- * Return -> `struct heap *`: Heap context pointer (opaque type only accessible through ALLOC subsystem)
- * Arguments:
- *   1. `void`
- * Callers:
- *   - ALLOC implementations
+ * Implements the ALLOC allocator creator interface
+ *
+ * Interface:
+ *   - `kernel/mem/alloc/include/alloc/allocator/heap.h`
  **/
-struct heap*
-_heap_create ( void )
+HEAP_ALLOC_CREATE
 {
 
 	/* Gets a mapped init heap region */
@@ -53,14 +49,14 @@ _heap_create ( void )
 
 	this_heap->limit = HEAP_INITIAL_SIZE;   /* Current limit size */
 	this_heap->ops = &ops;      /* Global operations */
-	this_heap->ready = 1;       /* Everything was already set */
+	this_heap->ready = true;    /* Everything was already set */
 
 	/* Defines the whole heap initially as a single chunk to be splitted */
 	struct chunk_header* this_header = ( struct chunk_header * ) this_heap->arena_start;
 
 	/* Sets it */
 	this_header->size = heap->limit;    /* The whole size */
-	this_header->is_free = 1;   /* It's free to use */
+	this_header->is_free = true;    /* It's free to use */
 	this_header->prev_free = 0; /* There's no previous chunk */
 	this_header->next_free = 0; /* There's no next chunk, This is the first one */
 	this_header->next = NULL;   /* The next chunk wasn't set yet */
@@ -70,18 +66,14 @@ _heap_create ( void )
 }
 
 /**
- * Heap backend memory allocator
- * Backend function
+ * Heap allocator memory allocator 
  *
- * Return -> `void *`: Pointer to allocated object
- * Arguments:
- *   1. `struct heap* heap`: Heap state
- *   2. `size_t size`: Object size
- * Callers:
- *   - ALLOC implementations
+ * Implements the ALLOC `malloc` interface
+ *
+ * Interface:
+ *   - `kernel/mem/alloc/include/alloc/allocator/heap.h`
  **/
-void*
-_heap_malloc ( struct heap* heap, size_t size )
+HEAP_ALLOC_MALLOC ( _heap_malloc )
 {
 
 	/* The heap state is not prepared */
@@ -122,7 +114,7 @@ _heap_malloc ( struct heap* heap, size_t size )
 				new_chunk->size = current_chunk->size - new_chunk_size;
 
 				/* Just set. It's free */
-				new_chunk->is_free = 1;
+				new_chunk->is_free = true;
 				new_chunk->prev_free = 0;   /* Current chunk */
 				new_chunk->next_free = current_chunk->next_free;
 
@@ -137,7 +129,7 @@ _heap_malloc ( struct heap* heap, size_t size )
 
 				/* It was shrank */
 				current_chunk->size = new_chunk_size;
-				current_chunk->next_free = 1;   /* New chunk */
+				current_chunk->next_free = true;    /* New chunk */
 				current_chunk->next = new_chunk;    /* The new chunk */
 			}
 
@@ -167,7 +159,7 @@ _heap_malloc ( struct heap* heap, size_t size )
 
 			/* The whole size to permit it to be splitted later */
 			new_chunk->size = SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
-			new_chunk->is_free = 1; /* It's free for the next iteration */
+			new_chunk->is_free = true;  /* It's free for the next iteration */
 			new_chunk->prev_free = current_chunk->is_free;
 			new_chunk->next_free = 0;   /* The newest */
 			new_chunk->next = NULL; /* The last element */
@@ -186,24 +178,21 @@ _heap_malloc ( struct heap* heap, size_t size )
 }
 
 /**
- * Heap backend memory freer
- * Backend function
+ * Heap allocator memory liberator
  *
- * Return -> `kerr_t`: Kernel global error type
- * Arguments:
- *   1. `void* ptr`: Payload base address
- * Callers:
- *   - ALLOC implementations
+ * Implements the ALLOC `mfree` interface
+ *
+ * Interface:
+ *   - `kernel/mem/alloc/include/alloc/allocator/heap.h`
  **/
-kerr_t
-_heap_mfree ( void* ptr )
+HEAP_ALLOC_MFREE ( _heap_mfree )
 {
 
 	/* Gets its header metadata */
 	struct chunk_header* this_header = this_header_from_payload ( ptr );
 
 	/* Set it as free to use */
-	this_header->is_free = 1;
+	this_header->is_free = true;
 
 	/* Gets this chunk's footer */
 	struct chunk_footer* this_footer = this_footer_from_header ( this_header );
@@ -249,8 +238,8 @@ _heap_mfree ( void* ptr )
 	/* If neither of them are free, we can update 'em safely */
 	else
 	{
-		prev_header->next_free = 1;
-		next_header->prev_free = 1;
+		prev_header->next_free = true;
+		next_header->prev_free = true;
 	}
 
 	/* Everything's okay */
@@ -258,18 +247,14 @@ _heap_mfree ( void* ptr )
 }
 
 /**
- * Heap area grower
- * Backend function
+ * Heap allocator region grower
  *
- * Return -> `kerr_t`: Kernel global error type
- * Arguments:
- *   1. `struct heap* heap`: Heap to be grown
- *   2. `size_t frames_needed`: As it grows by frames, the minimum amount to be grown
- * Callers:
- *   - ALLOC implementations
+ * Implements the ALLOC `grow` interface
+ *
+ * Interface:
+ *   - `kernel/mem/alloc/include/alloc/allocator/heap.h`
  **/
-kerr_t
-_heap_grow ( struct heap* heap, size_t frames_needed )
+HEAP_ALLOC_GROW ( _heap_grow )
 {
 
 	/* Gets another mapped region */
@@ -290,7 +275,7 @@ _heap_grow ( struct heap* heap, size_t frames_needed )
 	heap->limit += SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
 
 	/* Unlocks it to proceed */
-	heap->ready = 1;
+	heap->ready = true;
 
 	/* Success */
 	return KERR_OK;
@@ -335,9 +320,9 @@ __heap_alloc_and_map ( size_t frames_needed )
  *   1. `struct chunk_header* left`: Left chunk header to be modified
  *   2. `struct chunk_header* right`: Right chunk header to be the new boundary
  * Callers:
- *   - `_heap_free`
+ *   - `_heap_mfree`
  **/
-static void
+void
 __heap_merge_chunks ( struct chunk_header* left, struct chunk_header* right )
 {
 

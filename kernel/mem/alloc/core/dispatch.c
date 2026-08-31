@@ -1,6 +1,8 @@
 #include <alloc/dispatch.h>
 #include <alloc/internal.h>
 
+static const char* heap_not_ready = "The give heap is not ready\n";
+
 /**
  * Private heap creator
  * Private dispatcher
@@ -31,7 +33,7 @@ kerr_t
 _alloc_dispatch_heap_destroy ( struct heap* heap )
 {
 
-	KERR_RET_IF ( !heap->ready, KERR_NOTREADY, "Given heap is not ready" );
+	KERR_RET_IF ( !heap->ready, KERR_NOTREADY, heap_not_ready );
 
 	/* Get the function pointer from the internal operations */
 	return heap->ops->destroy ( heap );
@@ -52,7 +54,7 @@ void*
 _alloc_dispatch_heap_malloc ( struct heap* heap, size_t size )
 {
 
-	KERR_RET_ENCODE_IF ( !heap->ready, KERR_NOTREADY, "Given heap is not ready" );
+	KERR_RET_ENCODE_PTR_IF ( !heap->ready, KERR_NOTREADY, heap_not_ready );
 
 	return heap->ops->malloc ( heap, size );
 }
@@ -72,7 +74,7 @@ kerr_t
 _alloc_dispatch_heap_mfree ( struct heap* heap, void* ptr )
 {
 
-	KERR_RET_IF ( !heap->ready, KERR_NOTREADY, "Given heap is not ready" );
+	KERR_RET_IF ( !heap->ready, KERR_NOTREADY, heap_not_ready );
 
 	return heap->ops->mfree ( ptr );
 }
@@ -92,7 +94,7 @@ kerr_t
 _alloc_dispatch_heap_grow ( struct heap* heap, size_t frames_needed )
 {
 
-	KERR_RET_IF ( !heap->ready, KERR_NOTREADY, "Given heap is not ready" );
+	KERR_RET_IF ( !heap->ready, KERR_NOTREADY, heap_not_ready );
 
 	return heap->ops->grow ( heap, frames_needed );
 }
