@@ -1,6 +1,8 @@
 #ifndef _KERNEL_CONTAINER_OF_H
 #define _KERNEL_CONTAINER_OF_H
 
+#include <stddef.h>
+
 /**
  * Calculate the original object pointer from one of its members
  *
@@ -27,9 +29,9 @@
  *     - A cast to the type
  **/
 #define container_of(ptr, type, member) \
-        ({ \
-                const typeof ( ( ( type * ) 0 )->member )* __mptr = ( ptr ); \
-                ( type * ) ( ( char * ) __mptr - __builtin_offsetof ( type, member ) ); \
-        })
+	({ \
+		const typeof ( ( ( type * ) 0 )->member )* __mptr = ( ptr ); \
+		( type * ) ( ( char * ) __mptr - offsetof ( type, member ) ); \
+	})
 
 #endif /* _KERNEL_CONTAINER_OF_H */
