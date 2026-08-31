@@ -28,8 +28,6 @@ vmm_init ( void )
 
 	/* Treat common errors */
 	KERR_RET_IF ( backend == NULL, KERR_INTERNAL, "No registered VMM backends" );
-	KERR_RET_IF ( backend->init == NULL, KERR_INTERNAL,
-	    "Registered VMM backend has no init function" );
 
 	/* Specific VMM backend context */
 	struct vmm_backend* vmm_backend = vmm_backend_from_base ( backend );
