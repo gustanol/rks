@@ -11,10 +11,7 @@
 
 /* VMM backend registration macro */
 #define REGISTER_VMM_BACKEND(BACKEND) \
-	({ \
-		const struct vmm_backend* __tmp = &( BACKEND ); \
-		REGISTER_SUBSYS_BACKEND ( &( __tmp )->base ); \
-	})
+	REGISTER_SUBSYS_BACKEND ( ( BACKEND ).base );
 
 /**
  * VMM backend initialization function

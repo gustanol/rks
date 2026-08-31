@@ -10,10 +10,7 @@
 
 /* Terminal backend registration macro */
 #define REGISTER_TERMINAL_BACKEND(BACKEND) \
-	({ \
-        const struct terminal_backend* __tmp = &( BACKEND ); \
-        REGISTER_SUBSYSTEM_BACKEND ( &__tmp->base ); \
-    })
+	REGISTER_SUBSYSTEM_BACKEND ( ( BACKEND ).base );
 
 /**
  * Terminal backend initialization entry
