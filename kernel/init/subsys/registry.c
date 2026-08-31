@@ -91,7 +91,7 @@ subsys_find_multiple_backends ( uint32_t tag )
 			list->arr[i++] = backend;
 
 		/* Only break after all fillings */
-		if ( i >= len )
+		if ( i >= list->count )
 			break;
 	}
 

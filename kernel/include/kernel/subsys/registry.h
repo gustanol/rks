@@ -7,7 +7,7 @@
 /* Generic macro to register a new subsystem backend */
 #define REGISTER_SUBSYSTEM_BACKEND(BASE) \
         __attribute__ ( ( section ( ".subsys.registry" ), used ) ) \
-        const struct subsys_backend *const __REG_BACKEND ## BASE = &( BASE );
+        const struct subsys_backend* __REG_BACKEND_##__COUNTER__ = &( BASE );
 
 /* Subsystem backend descriptor */
 struct subsys_backend
