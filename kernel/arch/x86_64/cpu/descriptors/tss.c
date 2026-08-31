@@ -1,4 +1,3 @@
-#include <arch/mem/early_alloc.h>
 #include <cpu/descriptors/tss.h>
 
 /* Helper macro used to load a new TSS */
@@ -24,17 +23,11 @@ void
 _setup_tss ( void )
 {
 
-	/* TSS allocation */
-	struct tss* tss = ( struct tss * ) early_alloc ( sizeof ( struct tss ) );
-
 	/* Top of the current kernel stack memory */
 	extern void kernel_stack_top ( void );
 
-	/* *INDENT-OFF* */
-
 	/* Populates the TSS before loading it */
-	tss = ( struct tss )
-	{
+	struct tss tss = {
 		.reserved0 = { 0 },
 		.rsp0 = ( vaddr_t ) kernel_stack_top,
 
@@ -51,7 +44,8 @@ _setup_tss ( void )
 		.reserved3 = { 0 },
 	};
 
-	/* *INDENT-ON* */
+	/* Assigns by taking the pointer */
+	g_tss = &tss;
 
 	/* Load the TSS by its GDT descriptor index */
 	LOAD_TSS ( 0x38 );

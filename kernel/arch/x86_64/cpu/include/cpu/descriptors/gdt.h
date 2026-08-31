@@ -1,5 +1,5 @@
-#ifndef _X86_CPU_GDT_H
-#define _X86_CPU_GDT_H
+#ifndef _X86_64_CPU_GDT_H
+#define _X86_64_CPU_GDT_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -92,4 +92,4 @@ enum
 	TSS_B = 0xB,
 } segment_type;
 
-#endif /* _X86_CPU_GDT_H */
+#endif /* _X86_64_CPU_GDT_H */

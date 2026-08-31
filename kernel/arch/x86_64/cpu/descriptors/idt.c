@@ -14,19 +14,22 @@
 
 /* Macro used to populate the IDT entries by passing the attributes directly */
 #define IDT_ENTRY(OFFSET, SELECTOR, IST, TYPE_ATTRIBUTES) \
- ( struct idt_entry ) \
- { \
-        .offset_l = ( ( vaddr_t ) ( OFFSET ) ) & 0xFFFF, \
-        .selector = ( SELECTOR ), \
-        .ist = ( IST ), \
-        .type_attributes = ( TYPE_ATTRIBUTES ), \
-        .offset_m = ( ( vaddr_t ) ( OFFSET ) >> 16 ) & 0xFFFF, \
-        .offset_u = ( ( vaddr_t ) ( OFFSET ) >> 32 ) & 0xFFFFFFFF, \
-        .reserved = { 0 }, \
- }
+	( struct idt_entry ) \
+	{ \
+		.offset_l = ( ( uint64_t ) ( OFFSET ) ) & 0xFFFF, \
+		.selector = ( SELECTOR ), \
+		.ist = ( IST ), \
+		.type_attributes = ( TYPE_ATTRIBUTES ), \
+		.offset_m = ( ( uint64_t ) ( OFFSET ) >> 16 ) & 0xFFFF, \
+		.offset_u = ( ( uint64_t ) ( OFFSET ) >> 32 ) & 0xFFFFFFFF, \
+		.reserved = { }, \
+	}
 
 /* Prototypes */
 static void __set_idt_entries ( struct idt_entry* idt );
+
+/* IDT static object */
+struct idt_entry idt[IDT_ENTRIES];
 
 /**
  * Set and load a new 64-bit Interrupt Descriptor Table
@@ -42,30 +45,17 @@ void
 _setup_idt ( void )
 {
 
-	/* IDT allocation  */
-	struct idt_entry* idt =
-	    ( struct idt_entry * ) early_alloc ( sizeof ( idt_entry ) * IDT_ENTRIES );
-
-	/* IDT descriptor */
-	struct idt_descriptor* desc =
-	    ( struct idt_descriptor * ) early_alloc ( sizeof ( idt_descriptor ) );
-
 	/* Sets just the necessary ISRs */
 	__set_idt_entries ( idt );
 
-	/* *INDENT-OFF* */
-
 	/* Set the IDT descriptor */
-	idt_descriptor = ( idt_desc_t )
-	{
-		.limit = ( IDT_ENTRIES * sizeof ( idt_entry_t ) ) - 1,
-		.base = ( addr_t ) & idt,
+	struct idt_descriptor desc = {
+		.limit = ( IDT_ENTRIES * sizeof ( struct idt_entry ) ) - 1,
+		.base = ( uint64_t ) & idt,
 	};
 
-	/* *INDENT-ON* */
-
 	/* Loads it */
-	LOAD_IDT ( &idt_descriptor );
+	LOAD_IDT ( &desc );
 }
 
 /*
@@ -74,7 +64,7 @@ _setup_idt ( void )
  *
  * Return -> `void`
  * Arguments:
- *   1. `struct idt_entry* idt`: IDT pointer
+ *   1. `struct idt_entry* idt`: IDT array pointer
  * Callers:
  *   - `_setup_idt`
  */

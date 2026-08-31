@@ -1,4 +1,3 @@
-#include <arch/mem/early_alloc.h>
 #include <cpu/descriptors/gdt.h>
 #include <cpu/descriptors/tss.h>
 
@@ -17,12 +16,12 @@
 #define GDT_ENTRY(LIMIT_LOWER, BASE, ACCESS_BYTE, FLAGS_LIMIT) \
 	( struct gdt_entry ) \
 	{ \
-		.limit_l = ( u16 ) ( LIMIT_LOWER ), \
-		.base_l = ( u32 ) ( BASE ) & 0xFFFF, \
-		.base_m = ( ( u32 ) ( BASE ) >> 16 ) & 0xFF, \
-		.access_byte = ( ubyte_t ) ( ACCESS_BYTE ), \
-		.flags_limit = ( ubyte_t ) ( FLAGS_LIMIT ), \
-		.base_u = ( ( u32 ) ( BASE ) >> 24 ) & 0xFF, \
+		.limit_l = ( uint16_t ) ( LIMIT_LOWER ), \
+		.base_l = ( uint32_t ) ( BASE ) & 0xFFFF, \
+		.base_m = ( ( uint32_t ) ( BASE ) >> 16 ) & 0xFF, \
+		.access_byte = ( uint8_t ) ( ACCESS_BYTE ), \
+		.flags_limit = ( uint8_t ) ( FLAGS_LIMIT ), \
+		.base_u = ( ( uint32_t ) ( BASE ) >> 24 ) & 0xFF, \
 	}
 
 /**
@@ -30,15 +29,18 @@
  * NOTE: The previous common segment must had been defined first
  **/
 #define GDT_SYSTEM_ENTRY(SEGMENT) \
-	(gdt_entry_t) { \
+	( struct gdt_entry ) { \
 		.system_segment = { \
-			.base_ih = ( ( vaddr_t ) ( SEGMENT ) >> 32 ) & 0xFFFFFFFF, \
+			.base_ih = ( ( uint64_t ) ( SEGMENT ) >> 32 ) & 0xFFFFFFFF, \
 			.reserved = { 0 }, \
 		} \
 	}
 
 /* Prototypes */
 static void __set_gdt_entries ( struct gdt_entry* gdt );
+
+/* GDT static object */
+struct gdt_entry gdt[GDT_ENTRIES];
 
 /**
  * Set a 64-bit Global Descriptor Table
@@ -54,30 +56,18 @@ void
 _setup_long_gdt ( void )
 {
 
-	/* GDT allocation */
-	struct gdt_entry* gdt =
-	    ( struct gdt_entry * ) early_alloc ( sizeof ( gdt_entry ) * GDT_ENTRIES );
-
-	/* GDT descriptor */
-	struct gdt_descriptor* desc =
-	    ( struct gdt_descriptor * ) early_alloc ( sizeof ( gdt_descriptor ) );
-
 	/* Setups all needed GDT entries */
-	_set_gdt_entries ( gdt );
-
-	/* *INDENT-OFF* */
+	__set_gdt_entries ( gdt );
 
 	/* Fills the GDT descriptor */
-	desc = ( struct gdt_descriptor )
-	{
+	struct gdt_descriptor desc = {
 		.limit = ( GDT_ENTRIES * sizeof ( struct gdt_entry ) ) - 1,
-		.start = ( vaddr_t ) & gdt,
+		.start = ( uint64_t ) & gdt,
 	};
 
-	/* *INDENT-ON* */
 
 	/* Effectively load it */
-	LOAD_GDT ( &gdt_descriptor );
+	LOAD_GDT ( &desc );
 }
 
 /**
@@ -86,7 +76,7 @@ _setup_long_gdt ( void )
  *
  * Return -> `void`
  * Arguments:
- *   1. `struct gdt_entry* gdt`: GDT pointer
+ *   1. `struct gdt_entry* gdt`: GDT array pointer
  * Callers
  *   - `_setup_long_gdt`
  **/
@@ -156,10 +146,10 @@ __set_gdt_entries ( struct gdt_entry* gdt )
 	 * Access byte: 0b10000000
 	 * Flags/limit: 0b00000000
 	 **/
-	gdt[7] = GDT_ENTRY ( sizeof ( tss ) - 1, ( vaddr_t ) & tss, 0x80 | TSS_A, 0x00 );
+	gdt[7] = GDT_ENTRY ( sizeof ( struct tss ) - 1, ( uint64_t ) g_tss, 0x80 | TSS_A, 0x00 );
 
 	/**
-	 * 32 upper bits of TSS virtual address (0x40)
+	 * 32 upper bits of g_tss virtual address (0x40)
 	 **/
-	gdt[8] = GDT_SYSTEM_ENTRY ( ( vaddr_t ) & tss );
+	gdt[8] = GDT_SYSTEM_ENTRY ( ( uint64_t ) g_tss );
 }
