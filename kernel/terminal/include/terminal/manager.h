@@ -67,7 +67,7 @@
  * Prototype
  **/
 #define TERMINAL_MANAGER_PUTS(name) \
-	void name ( HISTORY* history, const char* s );
+	void name ( HISTORY* history, const char* s )
 
 /**
  * Terminal manager function to add a new character
