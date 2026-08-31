@@ -1,0 +1,8 @@
+#ifndef _LIB_STDBOOL_H
+#define _LIB_STDBOOL_H
+
+#define bool _Bool
+#define true 1
+#define false 0
+
+#endif /* _LIB_STDBOOL_H */
