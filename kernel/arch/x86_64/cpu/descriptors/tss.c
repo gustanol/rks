@@ -28,8 +28,8 @@ _setup_tss ( void )
 
 	/* Populates the TSS before loading it */
 	struct tss tss = {
-		.reserved0 = { 0 },
-		.rsp0 = ( vaddr_t ) kernel_stack_top,
+		.reserved0 = { },
+		.rsp0 = ( uint64_t ) kernel_stack_top,
 
 		/*
 		 * .rsp1 = stack1
@@ -39,9 +39,9 @@ _setup_tss ( void )
 		 * Commonly, using `early_alloc` or any other method
 		 */
 
-		.reserved1 = { 0 },
-		.reserved2 = { 0 },
-		.reserved3 = { 0 },
+		.reserved1 = { },
+		.reserved2 = { },
+		.reserved3 = { },
 	};
 
 	/* Assigns by taking the pointer */
