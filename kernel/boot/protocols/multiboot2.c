@@ -1,3 +1,4 @@
+#include <arch/mem/early_alloc.h>
 #include <boot/vendor/protocols/multiboot2.h>
 #include <string.h>
 
@@ -12,6 +13,18 @@
  **/
 #define MULTIBOOT2_FIND_TAG \
 	void* _multiboot2_find_tag ( void* info_ptr, multiboot2_uint32_t type )
+
+/**
+ * Multiboot2 protocol MMAP parser 
+ * Private helper
+ *
+ * Return `void`
+ * Arguments:
+ *   1. `struct multiboot2_tag_mmap* mmap_tag`: Gotten Multiboot2 MMAP tag
+ *   2. `struct mmap_tag* boot_mmap`: Generic MMAP tag type
+ **/
+#define MULTIBOOT2_PARSE_MMAP \
+	void _multiboot2_parse_mmap ( struct multiboot2_tag_mmap* mmap_tag, struct mmap_tag* boot_mmap )
 
 /* Static prototypes */
 static MULTIBOOT2_FIND_TAG;
@@ -74,6 +87,37 @@ multiboot2_parser ( uint64_t info_ptr, struct boot_info* boot )
 	/* If it was found, parses it */
 	if ( multiboot2_framebuffer_tag != NULL )
 		_multiboot2_parse_framebuffer ( multiboot2_framebuffer_tag, &boot_info->framebuffer );
+}
+
+/**
+ * Internal MMAP parser 
+ *
+ * Signature macro
+ * Interface defined in this file
+ **/
+MULTIBOOT2_PARSE_MMAP
+{
+
+	/* Ignores the first 16 bytes of this tag and count only from `entries` */
+	boot_mmap->entry_count = ( mmap_tag->size - 16 ) / mmap_tag->entry_size;
+
+	/* Allocates the required amount of entries */
+	boot_mmap->entries =
+	    ( struct mmap_entry * ) early_alloc ( sizeof ( struct mmap_entry ) *
+	    boot_mmap->entry_count );
+
+	/* Iterates for every entry */
+	for ( multiboot2_uint32_t i = 0; i < entry_count; i++ )
+	{
+
+		/* Get the current Multiboot2 MMAP entry */
+		struct multiboot2_mmap_entry* entry = &mmap_tag->entries[i];
+
+		/* Fills the current boot MMAP entry with this entry */
+		boot_mmap->entries[i].addr = entry->addr;   /* Physical addresss */
+		boot_mmap->entries[i].len = entry->len; /* Map length */
+		boot_mmap->entries[i].type = entry->type;   /* MMAP type (enum mem_type) */
+	}
 }
 
 /**
