@@ -101,11 +101,10 @@ multiboot2_parser ( uint64_t info_ptr, struct boot_info* boot )
 		    ( struct multiboot2_tag_old_acpi * ) _multiboot2_find_tag ( ( void * ) info_ptr,
 		    MULTIBOOT2_TAG_TYPE_ACPI_OLD );
 
-		if ( multiboo2_old_acpi_tag != NULL )
-			_multiboot2_parse_acpi ( multiboot2_old_acpi_tag, &boot_info->rsdp, false );
+		if ( multiboot2_old_acpi_tag != NULL )
+			boot_info->rsdp = ( struct rsdp_info * ) multiboot2_old_acpi_tag->rsdp;
 	} else
-		/* REMIND: `true`: it is new */
-		_multiboot2_parse_acpi ( multiboot2_new_acpi_tag, &boot_info->rsdp, true );
+		boot_info->rsdp = ( struct rsdp_info * ) multiboot2_new_acpi_tag->rsdp;
 
 	/* Get the framebuffer tag */
 	multiboot2_framebuffer_tag =

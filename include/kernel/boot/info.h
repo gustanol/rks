@@ -4,7 +4,7 @@
 #include "fb.h"
 #include "loader.h"
 #include "mmap.h"
-#include "rsdp.h"
+#include "acpi.h"
 
 /* Generic boot information */
 struct boot_info
@@ -16,7 +16,7 @@ struct boot_info
 	struct framebuffer_info framebuffer;
 
 	/* RSDP */
-	struct rsdp_info rsdp;
+	struct rsdp_info* rsdp;
 
 	/* Kernel command line */
 	char** cmdline;

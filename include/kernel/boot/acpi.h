@@ -1,5 +1,5 @@
-#ifndef _KERNEL_BOOT_RSDP_H
-#define _KERNEL_BOOT_RSDP_H
+#ifndef _KERNEL_BOOT_ACPI_H
+#define _KERNEL_BOOT_ACPI_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -21,4 +21,4 @@ struct rsdp_info
 	uint8_t reserved[3];
 } __attribute__ ( ( packed ) );
 
-#endif /* _KERNEL_BOOT_RSDP_H */
+#endif /* _KERNEL_BOOT_ACPI_H */
