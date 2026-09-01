@@ -1,15 +1,13 @@
-#include <x86/const.h>
+#include <arch/const.h>
 
 .section .bootstrap.data, "aw"
 .align 0x1000
 
-/* Global/extern symbols
- * ===================== */
+/* Global/extern symbols */
 .globl enable_pae
 .extern early_kernel_higher_half
 
-/* Constants
- * =================== */
+/* Constants */
 .equ CR4_PAE, 1 << 5
 .equ PAGE_PRW, 0x3
 .equ PAGE_HUGE, 1 << 7
@@ -80,6 +78,8 @@ map_identity:
 	 *
 	 * Notice the mapping size doesn't care once it's unmapped later
 	 **/
+
+	/* Set the huge page bit */
 	orl $PAGE_HUGE, %eax
 
 	/* Writing */
