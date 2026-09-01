@@ -1,5 +1,5 @@
-#ifndef BOOT_H
-#define BOOT_H
+#ifndef _KERNEL_BOOT_INFO_H
+#define _KERNEL_BOOT_INFO_H
 
 #include "fb.h"
 #include "loader.h"
@@ -22,7 +22,4 @@ struct boot_info
 	const char* cmdline;
 };
 
-/* Prototypes */
-void parse_boot ( struct loader_info* loader, struct boot_info* boot );
-
-#endif /* BOOT_H */
+#endif /* _KERNEL_BOOT_INFO_H */
