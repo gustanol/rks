@@ -21,13 +21,26 @@ struct framebuffer_info
 	/* Bits per pixel */
 	uint8_t bpp;
 
-	/* Formatter */
 	struct
 	{
-		uint8_t red_shift;
-		uint8_t green_shift;
-		uint8_t blue_shift;
-	} fmt;
+		struct
+		{
+			uint8_t pos;
+			uint8_t mask;
+		} red;
+
+		struct
+		{
+			uint8_t pos;
+			uint8_t mask;
+		} green;
+
+		struct
+		{
+			uint8_t pos;
+			uint8_t mask;
+		} blue;
+	} rgb;
 };
 
 #endif /* _KERNEL_BOOT_FB_H */

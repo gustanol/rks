@@ -26,9 +26,37 @@
 #define MULTIBOOT2_PARSE_MMAP \
 	void _multiboot2_parse_mmap ( struct multiboot2_tag_mmap* mmap_tag, struct mmap_tag* boot_mmap )
 
+/**
+ * Multiboot2 protocol Framebuffer parser 
+ * Private helper
+ *
+ * Return `void`
+ * Arguments:
+ *   1. `struct multiboot2_tag_framebuffer* framebuffer_tag`: Gotten Multiboot2 Framebuffer tag
+ *   2. `struct framebuffer_info* boot_framebuffer`: Generic Framebuffer tag type
+ **/
+#define MULTIBOOT2_PARSE_FRAMEBUFFER \
+	void _multiboot2_parse_framebuffer ( \
+		struct multiboot2_tag_framebuffer* framebuffer_tag, \
+		struct framebuffer_info* boot_framebuffer \
+	)
+
 /* Static prototypes */
 static MULTIBOOT2_FIND_TAG;
+static MULTIBOOT2_PARSE_MMAP;
+static MULTIBOOT2_PARSE_FRAMEBUFFER;
 
+/**
+ * Multiboot2 info structure parser
+ * Public helper
+ *
+ * Return -> `void`
+ * Arguments:
+ *   1. `uint64_t info_ptr`: Multiboot2 info struct base pointer
+ *   2. `struct boot_info* boot`: Generic boot info
+ * Callers:
+ *   - `boot_parser`
+ **/
 void
 multiboot2_parser ( uint64_t info_ptr, struct boot_info* boot )
 {
@@ -121,6 +149,40 @@ MULTIBOOT2_PARSE_MMAP
 }
 
 /**
+ * Internal Framebuffer parser 
+ *
+ * Signature macro
+ * Interface defined in this file
+ **/
+MULTIBOOT2_PARSE_FRAMEBUFFER
+{
+
+	/* Common set */
+	boot_framebuffer->addr = framebuffer_tag->common.framebuffer_addr;
+	boot_framebuffer->pitch = framebuffer_tag->common.framebuffer_pitch;
+	boot_framebuffer->width = framebuffer_tag->common.framebuffer_width;
+	boot_framebuffer->heigth = framebuffer_tag->common.framebuffer_heigth;
+	boot_framebuffer->bpp = framebuffer_tag->common.framebuffer_bpp;
+
+	/* RGB specific configuration */
+	if ( framebuffer_tag->common.framebuffer_type == MULTIBOOT2_FRAMEBUFFER_TYPE_RGB )
+	{
+
+		/* Red */
+		boot_framebuffer->rgb.red.pos = framebuffer_tag->framebuffer_red_field_position;
+		boot_framebuffer->rgb.red.mask = framebuffer_tag->framebuffer_red_mask_size;
+
+		/* Green */
+		boot_framebuffer->rgb.green.pos = framebuffer_tag->framebuffer_green_field_position;
+		boot_framebuffer->rgb.green.mask = framebuffer_tag->framebuffer_green_mask_size;
+
+		/* Blue */
+		boot_framebuffer->rgb.blue.pos = framebuffer_tag->framebuffer_blue_field_position;
+		boot_framebuffer->rgb.blue.mask = framebuffer_tag->framebuffer_blue_mask_size;
+	}
+}
+
+/**
  * Internal tag finder
  *
  * Signature macro
@@ -131,7 +193,7 @@ MULTIBOOT2_FIND_TAG
 
 	/* Skip the Multiboot2 header to start searching for the tag */
 	struct multiboot2_tag* tag =
-	    ( struct multiboot2_tag * ) ( ( multiboot2_uint8_t ) info_ptr + MULTIBOOT2_HEADER_ALIGN );
+	    ( struct multiboot2_tag * ) ( ( multiboot2_uint8_t ) info_ptr + 8 );
 
 	/* Do not stop until it's the end */
 	for ( ; tag->type != MULTIBOOT2_TAG_TYPE_END; )
