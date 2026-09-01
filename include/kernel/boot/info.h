@@ -10,16 +10,16 @@
 struct boot_info
 {
 	/* MMAP */
-	struct mmap_tag* mmap;
+	struct mmap_tag mmap;
 
 	/* Firmware framebuffer */
-	struct framebuffer_info* framebuffer;
+	struct framebuffer_info framebuffer;
 
 	/* RSDP */
-	struct rsdp_info* rsdp;
+	struct rsdp_info rsdp;
 
 	/* Kernel command line */
-	const char* cmdline;
+	char** cmdline;
 };
 
 #endif /* _KERNEL_BOOT_INFO_H */
