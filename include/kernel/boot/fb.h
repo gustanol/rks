@@ -9,7 +9,7 @@ struct framebuffer_info
 {
 
 	/* Framebuffer virtual address pointer */
-	uintptr_t* addr;
+	uint64_t addr;
 
 	/* Dimensions */
 	uint32_t width;

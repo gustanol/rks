@@ -1,5 +1,5 @@
 #include <boot/vendor/protocols/multiboot2.h>
-#include <kernel/boot/parser.h.h>
+#include <kernel/boot/parser.h>
 
 /**
  * Bootloader-received information structure parser
