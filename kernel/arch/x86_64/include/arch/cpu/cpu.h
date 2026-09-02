@@ -1,5 +1,5 @@
-#ifndef _X86_CPU_H
-#define _X86_CPU_H
+#ifndef _X86_64_CPU_H
+#define _X86_64_CPU_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -67,4 +67,4 @@ struct cpu
 	struct cpu* self;
 };
 
-#endif /* _X86_CPU_H */
+#endif /* _X86_64_CPU_H */
