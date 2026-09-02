@@ -4,6 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void* _early_alloc ( size_t size, uint32_t align );
+void* early_alloc ( size_t size );
 
 #endif /* _X86_MEM_EARLY_ALLOC_H */
