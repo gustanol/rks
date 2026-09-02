@@ -18,7 +18,7 @@ VMM_BACKEND_CREATE_SPACE ( _paging_create_space )
 
 	/* Stop on error */
 	if ( IS_KERR ( pml4_phys ) )
-		return pml4_phys;
+		return ENCODE_KERR_PTR ( GET_KERR ( pml4_phys ) );
 
 	/* Allocates a new address space */
 	struct addr_space* space = ( struct addr_space * ) k_malloc ( sizeof ( struct addr_space ) );
@@ -65,7 +65,7 @@ VMM_BACKEND_SWITCH_TO_SPACE ( _paging_switch_to_space )
 {
 
 	/* Get the PML4 physical address from the given address space */
-	paddr_t pml4 = ( paddr_t ) space->pml4;
+	paddr_t pml4 = ( paddr_t ) space->pml4_phys;
 
 	/* *INDENT-OFF* */
 
