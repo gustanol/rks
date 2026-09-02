@@ -9,16 +9,16 @@
 .section .bootstrap, "ax"
 
 #ifdef MULTIBOOT_SUPPORT /* If supported */
-#endif MULTIBOOT_SUPPORT
+#endif /* MULTIBOOT_SUPPORT */
 
 #ifdef MULTIBOOT2_SUPPORT /* Defined at build time */
-
-.align MULTIBOOT2_HEADER_ALIGN
 
 #include <boot/vendor/protocols/multiboot2.h>
 
 /* Constants */
-.equ MULTIBOOT2_HEADER_LENGTH ( multiboot2_header_end - multiboot2_header_start )
+.equ MULTIBOOT2_HEADER_LENGTH, ( multiboot2_header_end - multiboot2_header_start )
+
+.align MULTIBOOT2_HEADER_ALIGN
 
 multiboot2_header_start:
 
@@ -34,8 +34,8 @@ multiboot2_header_start:
 
 multiboot2_information_request_header_start:
 
-	.equ MULTIBOOT2_INFORMATION_REQUEST_HEADER_LENGTH ( multiboot2_information_request_header_end - multiboot2_information_request_header_start )
-	.equ MULTIBOOT2_INFORMATION_REQUEST_BODY_LENGTH ( multiboot2_information_request_body_end - multiboot2_information_request_body_start )
+	.equ MULTIBOOT2_INFORMATION_REQUEST_HEADER_LENGTH, ( multiboot2_information_request_header_end - multiboot2_information_request_header_start )
+	.equ MULTIBOOT2_INFORMATION_REQUEST_BODY_LENGTH, ( multiboot2_information_request_body_end - multiboot2_information_request_body_start )
 
 	/* Information tag request */
 	.short MULTIBOOT2_TAG_INFORMATION_REQUEST
