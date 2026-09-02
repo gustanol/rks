@@ -8,6 +8,6 @@
 typedef uint64_t vaddr_t;
 
 /* Opaque address space type */
-typedef struct address_space ADDR_SPACE;
+typedef struct addr_space ADDR_SPACE;
 
 #endif /* _KERNEL_VMM_TYPES_H */
