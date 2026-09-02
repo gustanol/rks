@@ -11,7 +11,7 @@
 
 /* VMM backend registration macro */
 #define REGISTER_VMM_BACKEND(BACKEND) \
-	REGISTER_SUBSYS_BACKEND ( ( BACKEND ).base );
+	REGISTER_SUBSYSTEM_BACKEND ( ( BACKEND ).base )
 
 /**
  * VMM backend initialization function
@@ -22,7 +22,7 @@
  * Prototype
  **/
 #define VMM_BACKEND_INIT(name) \
-	kerr_t name ( const ADDR_SPACE* kernel_addr_space )
+	kerr_t name ( ADDR_SPACE* kernel_addr_space )
 
 /**
  * VMM backend HHDM builder
@@ -109,10 +109,11 @@
  * Return -> `kerr_t`: Global error code
  * Arguments:
  *   1. `ADDR_SPACE* kernel_addr_space`
+ *   2. `vaddr_t hhdm_offset`: Kernel HHDM offset
  * Prototype
  **/
 #define VMM_BACKEND_UNMAP_IDENTITY(name) \
-	kerr_t ( *unmap_identity ) ( ADDR_SPACE* kernel_addr_space )
+	kerr_t name ( ADDR_SPACE* kernel_addr_space, vaddr_t hhdm_offset )
 
 /**
  * VMM backend remapper
@@ -159,7 +160,7 @@
  * Prototype
  **/
 #define VMM_BACKEND_PHYS_TO_VIRT(name) \
-	vaddr_t name ( paddr_t phys_addr, vaddr_t hhdm_offset );
+	vaddr_t name ( paddr_t phys_addr, vaddr_t hhdm_offset )
 
 /**
  * VMM private operations
