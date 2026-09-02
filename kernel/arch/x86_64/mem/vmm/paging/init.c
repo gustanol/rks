@@ -1,16 +1,18 @@
 #include "addr_space.h"
 #include "early_map.h"
 #include "map.h"
+#include "flags.h"
 #include <arch/const.h>
+#include <kernel/mem/pmm/memory.h>
 #include <vmm/backend.h>
 
 /* Static prototypes */
 static VMM_BACKEND_INIT ( __paging_init );
-static VMM_BACKEND_MAP_HHDM ( _paging_map_hhdm );
+static VMM_BACKEND_BUILD_HHDM ( _paging_build_hhdm );
 
 /* Paging backend operations setting */
 static const struct vmm_ops paging_ops = {
-	.early_build_hhdm = _paging_map_hhdm,
+	.early_build_hhdm = _paging_build_hhdm,
 	.unmap_identity = _paging_unmap_identity,
 	.create_space = _paging_create_space,
 	.destroy_space = _paging_destroy_space,
@@ -28,7 +30,7 @@ static const struct vmm_backend paging_backend = {
 	/* *INDENT-OFF* */
 
 	.base = {
-		.name = "x86_vmm_paging",
+		.name = "x86-64_vmm_paging",
 		.tag = SUBSYS_TAG_VMM,
 	},
 
@@ -67,6 +69,7 @@ VMM_BACKEND_INIT ( __paging_init )
 
 	/* Updates the kernel address space */
 	kernel_addr_space->pml4_phys = ( paddr_t ) cr3;
+	return KERR_OK;
 }
 
 /**
@@ -77,7 +80,7 @@ VMM_BACKEND_INIT ( __paging_init )
  * Interface:
  *   - `kernel/mem/vmm/include/vmm/backend.h`
  **/
-VMM_BACKEND_MAP_HHDM ( _paging_map_hhdm );
+VMM_BACKEND_BUILD_HHDM ( _paging_build_hhdm )
 {
 
 	/* Memory size to be mapped */
@@ -85,5 +88,5 @@ VMM_BACKEND_MAP_HHDM ( _paging_map_hhdm );
 
 	/* Map the whole memory size to the HHDM base */
 	_early_map_range ( &kernel_addr_space->pml4_phys,
-	    ( vaddr_t ) HHDM_BASE, ( paddr_t ) 0x0, memory_size, ( PAGE_PRESENT | PAGE_WRITE ) );
+	    ( vaddr_t ) HHDM_BASE, ( paddr_t ) 0x0, memory_size, ( PAGE_PRESENT | PAGE_RW ) );
 }
