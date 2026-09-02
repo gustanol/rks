@@ -1,5 +1,8 @@
+#include "addr_space.h"
 #include "flags.h"
 #include "map.h"
+#include <kernel/mem/pmm/frames.h>
+#include <stdbool.h>
 #include <string.h>
 
 /* Macro used to invalidate the Translation Lookaside Buffer (TLB) */
@@ -9,7 +12,7 @@
 		: \
 		: "r" ( ADDR ) \
 		: "memory" \
-	);
+	)
 
 /**
  * VMM paging internal walker
@@ -33,9 +36,9 @@
 		ADDR_SPACE* space, \
 		vaddr_t virt_addr, \
 		vaddr_t hhdm_offset, \
-		struct* page_walk walk, \
+		struct page_walk* walk, \
 		bool create \
-	);
+	)
 
 /* Page table entry */
 typedef vaddr_t pte_t;
@@ -74,7 +77,7 @@ VMM_BACKEND_MAP ( _paging_map )
 	pte_t* pt_entry;
 
 	/* Calls the walker */
-	err = __paging_walk ( space, virt_addr, hhdm_offset, flags, &walk, true );
+	err = __paging_walk ( space, virt_addr, hhdm_offset, &walk, true );
 	if ( !IS_RET_OK ( err ) )
 		return err;
 
@@ -111,7 +114,7 @@ VMM_BACKEND_UNMAP ( _paging_unmap )
 	pte_t* pt_entry;
 
 	/* Calls the walker */
-	err = __paging_walk ( space, virt_addr, hhdm_offset, flags, &walk, false );
+	err = __paging_walk ( space, virt_addr, hhdm_offset, &walk, false );
 	if ( !IS_RET_OK ( err ) )
 		return err;
 
@@ -124,7 +127,7 @@ VMM_BACKEND_UNMAP ( _paging_unmap )
 
 	/* Fill it with zeros */
 	memset ( pt_entry, 0, PAGE_SIZE );
-	INVLPG ( vaddr );
+	INVLPG ( virt_addr );
 
 	/* Correctly unmapped */
 	return KERR_OK;
@@ -146,7 +149,7 @@ VMM_BACKEND_REMAP ( _paging_remap )
 	pte_t* pt_entry;
 
 	/* As remapping operation, walker can't allocate new pages */
-	err = __paging_walk ( space, virt_addr, hhdm_offset, flags, &walk, false );
+	err = __paging_walk ( space, virt_addr, hhdm_offset, &walk, false );
 	if ( !IS_RET_OK ( err ) )
 		return err;
 
@@ -182,7 +185,8 @@ VMM_BACKEND_UNMAP_IDENTITY ( _paging_unmap_identity )
 	pte_t* pdpt_entry;
 
 	/* Kernel address space PML4 */
-	pml4 = ( struct page_table * ) _paging_phys_to_virt ( space->pml4_phys, hhdm_offset );
+	pml4 =
+	    ( struct page_table * ) _paging_phys_to_virt ( kernel_addr_space->pml4_phys, hhdm_offset );
 
 	/**
 	 * The identity mapping was mapped the following way:
@@ -235,12 +239,12 @@ VMM_BACKEND_VIRT_TO_PHYS ( _paging_virt_to_phys )
 	pte_t* pt_entry;
 
 	/* Calls the walker */
-	err = __paging_walk ( space, virt_addr, hhdm_offset, flags, &walk, false );
+	err = __paging_walk ( space, virt_addr, hhdm_offset, &walk, false );
 	if ( !IS_RET_OK ( err ) )
 		return ENCODE_KERR ( err );
 
 	/* Gets the correct entry */
-	pt_entry = &walk->pt->entries[PT_IDX ( virt_addr )];
+	pt_entry = &walk.pt->entries[PT_IDX ( virt_addr )];
 
 	/* Masks its flags to get the physical address */
 	return ( paddr_t ) ADDR_MASK ( *pt_entry );
@@ -275,20 +279,20 @@ PAGING_WALK
 		return KERR_INVAL;
 
 	/* Page table indexes */
-	uint16_t pml4_idx = PML4_INDEX ( virt_addr );
-	uint16_t pdpt_idx = PDPT_INDEX ( virt_addr );
-	uint16_t pd_idx = PD_INDEX ( virt_addr );
-	uint16_t pt_idx = PT_INDEX ( virt_addr );
-	uint16_t offset = ADDR_OFFSET ( virt_addr );
+	uint16_t pml4_idx = PML4_IDX ( virt_addr );
+	uint16_t pdpt_idx = PDPT_IDX ( virt_addr );
+	uint16_t pd_idx = PD_IDX ( virt_addr );
 
+	/* Page table pointers */
 	struct page_table* pml4;
 	struct page_table* pdpt;
 	struct page_table* pd;
 	struct page_table* pt;
+
+	/* Page table entry pointers */
 	pte_t* pml4_entry;
 	pte_t* pdpt_entry;
 	pte_t* pd_entry;
-	pte_t* pt_entry;
 
 	/* Address space's PML4 */
 	pml4 = ( struct page_table * ) _paging_phys_to_virt ( space->pml4_phys, hhdm_offset );
