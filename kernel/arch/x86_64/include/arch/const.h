@@ -1,9 +1,6 @@
 #ifndef _X86_64_CONST_H
 #define _X86_64_CONST_H
 
-#define PAGE_LSHIFT 12
-#define PAGE_SIZE ( 1ULL << ( PAGE_LSHIFT ) )
-
 #ifndef __ASSEMBLY__
 
 extern void KERNEL_START ( void );
