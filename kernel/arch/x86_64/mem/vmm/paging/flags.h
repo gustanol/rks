@@ -1,5 +1,5 @@
-#ifndef _X86_PAGING_FLAGS
-#define _X86_PAGING_FLAGS
+#ifndef _X86_64_PAGING_FLAGS
+#define _X86_64_PAGING_FLAGS
 
 #define PAGE_ENTRIES 512
 
@@ -42,4 +42,4 @@
 #define IS_PRESENT(ENT) \
         ( ( ENT ) & PAGE_PRESENT )
 
-#endif /* _X86_PAGING_FLAGS */
+#endif /* _X86_64_PAGING_FLAGS */

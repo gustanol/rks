@@ -1,5 +1,5 @@
-#ifndef _X86_PAGING_MAP_H
-#define _X86_PAGING_MAP_H
+#ifndef _X86_64_PAGING_MAP_H
+#define _X86_64_PAGING_MAP_H
 
 #include <kernel/kerr/kerr.h>
 #include <kernel/mem/pmm/types.h>
@@ -14,4 +14,4 @@ VMM_BACKEND_UNMAP_IDENTITY ( _paging_unmap_identity );
 VMM_BACKEND_VIRT_TO_PHYS ( _paging_virt_to_phys );
 VMM_BACKEND_PHYS_TO_VIRT ( _paging_phys_to_virt );
 
-#endif /* _X86_PAGING_MAP_H */
+#endif /* _X86_64_PAGING_MAP_H */
