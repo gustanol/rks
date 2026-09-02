@@ -10,6 +10,8 @@ pub fn addSubsystem(
     const paging_path = "kernel/arch/x86_64/mem/vmm/paging";
     const vmm_path = "kernel/mem/vmm";
 
+    kernel.root_module.addCMacro("PAGE_SIZE", "4096");
+
     const vmm_c_sources = &[_][]const u8{
         "core/dispatch.c",
         "core/vmm.c",
