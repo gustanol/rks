@@ -1,5 +1,5 @@
-#include <mem/vmm/paging/flags.h>
-#include <mem/vmm/paging/map.h>
+#include "flags.h"
+#include "map.h"
 #include <string.h>
 
 /* Macro used to invalidate the Translation Lookaside Buffer (TLB) */

@@ -1,7 +1,7 @@
+#include "addr_space.h"
+#include "early_map.h"
+#include "map.h"
 #include <arch/const.h>
-#include <mem/vmm/paging/addr_space.h>
-#include <mem/vmm/paging/early_map.h>
-#include <mem/vmm/paging/map.h>
 #include <vmm/backend.h>
 
 /* Static prototypes */

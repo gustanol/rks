@@ -1,10 +1,10 @@
+#include "early_map.h"
+#include "flags.h"
 #include <arch/const.h>
 #include <arch/mem/early_alloc.h>
+#include <arch/sections.h>
 #include <kernel/mem/pmm/types.h>
-#include <kernel/sections.h>
 #include <lib/bitwise.h>
-#include <mem/vmm/paging/early_map.h>
-#include <mem/vmm/paging/flags.h>
 
 /**
  * Early page table getter (and allocator when needed)

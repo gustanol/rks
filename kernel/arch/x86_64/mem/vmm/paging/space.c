@@ -1,6 +1,6 @@
+#include "addr_space.h"
 #include <kernel/mem/alloc.h>
 #include <kernel/mem/pmm/frames.h>
-#include <mem/vmm/paging/addr_space.h>
 
 /**
  * Paging backend address space creator
