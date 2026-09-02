@@ -1,8 +1,7 @@
 /* Entry point */
 ENTRY(__rks_start)
 
-/* Global symbols
- * ============== */
+/* Global symbols */
 KERNEL_PHYS_BASE = ALIGN(0x100000, 0x1000);
 KERNEL_VIRT_OFF = ALIGN(0xFFFFFFFF80000000, 0x1000);
 KERNEL_VIRT_BASE = KERNEL_VIRT_OFF + KERNEL_PHYS_BASE;
