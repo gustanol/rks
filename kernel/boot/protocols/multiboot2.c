@@ -83,11 +83,7 @@ multiboot2_parser ( uint64_t info_ptr, struct boot_info* boot )
 
 	/* Only sets it if the tag was correctly found */
 	if ( multiboot2_cmdline_tag != NULL )
-	{
-		size_t cmdline_len = strlen ( multiboot2_cmdline_tag->string );
-		boot->cmdline = early_alloc ( sizeof ( char ) * cmdline_len );
-		strcpy ( *boot->cmdline, multiboot2_cmdline_tag->string );
-	}
+		boot->cmdline = &multiboot2_cmdline_tag->string;
 
 	/* Tries to get the new ACPI version */
 	multiboot2_new_acpi_tag =
