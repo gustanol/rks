@@ -3,7 +3,6 @@ const Flag = @import("../../shared.zig").Flag;
 
 const alloc = @import("alloc/alloc.build.zig");
 const pmm = @import("pmm/pmm.build.zig");
-const vmm = @import("vmm/vmm.build.zig");
 
 pub fn addSubsystem(
     b: *std.Build,
@@ -14,5 +13,4 @@ pub fn addSubsystem(
     // Invoke these subsystems
     alloc.addSubsystem(b, kernel, flags);
     pmm.addSubsystem(b, kernel, flags);
-    vmm.addSubsystem(b, kernel, flags);
 }
