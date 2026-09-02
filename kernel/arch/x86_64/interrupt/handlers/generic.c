@@ -1,5 +1,4 @@
 #include <interrupt/handlers.h>
-#include <kernel/klog/print.h>
 
 /**
  * Generic Interrupt Service Routine handler
@@ -14,9 +13,6 @@
 void
 _isr_generic_handler ( struct interrupt_frame* frame )
 {
-
-	k_print ( "=> Generic ISR handler\n" );
-	k_print ( "=>> Interrupt number: %d\n", frame->int_num );
 
 	/* Treats each ISR by their interrupt number */
 	switch ( frame->int_num )

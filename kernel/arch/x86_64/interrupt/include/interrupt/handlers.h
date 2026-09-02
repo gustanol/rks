@@ -1,5 +1,5 @@
-#ifndef _X86_INTERRUPT_HANDLERS_H
-#define _X86_INTERRUPT_HANDLERS_H
+#ifndef _X86_64_INTERRUPT_HANDLERS_H
+#define _X86_64_INTERRUPT_HANDLERS_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -7,7 +7,7 @@
 #define PAGE_FAULT 14
 
 /* Frame with all pushed registers */
-struct _interrupt_frame
+struct interrupt_frame
 {
 	uint64_t r15,
 	  r14,
@@ -30,9 +30,9 @@ struct _interrupt_frame
 	  rflags,
 	  rsp,
 	  ss;
-} _attribute__ ( ( packed ) );
+} __attribute__ ( ( packed ) );
 
 /* Handlers declaration */
 void __page_fault_handler ( struct interrupt_frame* frame );
 
-#endif /* _X86_INTERRUPT_HANDLERS_H */
+#endif /* _X86_64_INTERRUPT_HANDLERS_H */
