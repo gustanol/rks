@@ -1,13 +1,13 @@
 #include <cpu/descriptors/tss.h>
 
 /* Helper macro used to load a new TSS */
-#define LOAD_TSS(DESCRIPTOR) \
-        __asm__ volatile ( \
-                "ltr %0" \
-                : \
-                : "r"(DESCRIPTOR) \
-                : "memory" \
-        )
+#define LOAD_TSS(descriptor) \
+    __asm__ volatile ( \
+        "ltr %w0" \
+        : \
+        : "r"((uint16_t)(descriptor)) \
+        : "memory" \
+    )
 
 /**
  * Setup and load a 64-bit Task State Segment
