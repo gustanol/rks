@@ -8,11 +8,11 @@
  *
  * Return `void *`: Tag base address pointer
  * Arguments:
- *   1. `void* info_ptr`: Multiboot2 info struct base pointer 
+ *   1. `multiboot2_uint64_t info_ptr`: Multiboot2 info struct base address 
  *   2. `multiboot2_uint32_t type`: Type to be found
  **/
 #define MULTIBOOT2_FIND_TAG \
-	void* _multiboot2_find_tag ( void* info_ptr, multiboot2_uint32_t type )
+	void* _multiboot2_find_tag ( multiboot2_uint64_t info_ptr, multiboot2_uint32_t type )
 
 /**
  * Multiboot2 protocol MMAP parser 
@@ -69,51 +69,51 @@ multiboot2_parser ( uint64_t info_ptr, struct boot_info* boot )
 
 	/* Get the MMAP starter tag */
 	multiboot2_mmap_tag =
-	    ( struct multiboot2_tag_mmap * ) _multiboot2_find_tag ( ( void * ) info_ptr,
+	    ( struct multiboot2_tag_mmap * ) _multiboot2_find_tag ( info_ptr,
 	    MULTIBOOT2_TAG_TYPE_MMAP );
 
 	/* Do not continue if it's NULL */
 	if ( multiboot2_mmap_tag != NULL )
-		_multiboot2_parse_mmap ( multiboot2_mmap_tag, &boot_info->mmap );
+		_multiboot2_parse_mmap ( multiboot2_mmap_tag, &boot->mmap );
 
 	/* Gets the passed command line */
 	multiboot2_cmdline_tag =
-	    ( struct multiboot2_tag_string * ) _multiboot2_find_tag ( ( void * ) info_ptr,
+	    ( struct multiboot2_tag_string * ) _multiboot2_find_tag ( info_ptr,
 	    MULTIBOOT2_TAG_TYPE_CMDLINE );
 
 	/* Only sets it if the tag was correctly found */
 	if ( multiboot2_cmdline_tag != NULL )
 	{
 		size_t cmdline_len = strlen ( multiboot2_cmdline_tag->string );
-		boot_info->cmdline = early_alloc ( sizeof ( char ) * cmdline_len );
-		strcpy ( *boot_info->cmdline, multiboot2_cmdline_tag->string );
+		boot->cmdline = early_alloc ( sizeof ( char ) * cmdline_len );
+		strcpy ( *boot->cmdline, multiboot2_cmdline_tag->string );
 	}
 
 	/* Tries to get the new ACPI version */
 	multiboot2_new_acpi_tag =
-	    ( struct multiboot2_tag_new_acpi * ) _multiboot2_find_tag ( ( void * ) info_ptr,
+	    ( struct multiboot2_tag_new_acpi * ) _multiboot2_find_tag ( info_ptr,
 	    MULTIBOOT2_TAG_TYPE_ACPI_NEW );
 
 	/* If it fails, tries to get the old one */
 	if ( multiboot2_new_acpi_tag == NULL )
 	{
 		multiboot2_old_acpi_tag =
-		    ( struct multiboot2_tag_old_acpi * ) _multiboot2_find_tag ( ( void * ) info_ptr,
+		    ( struct multiboot2_tag_old_acpi * ) _multiboot2_find_tag ( info_ptr,
 		    MULTIBOOT2_TAG_TYPE_ACPI_OLD );
 
 		if ( multiboot2_old_acpi_tag != NULL )
-			boot_info->rsdp = ( struct rsdp_info * ) multiboot2_old_acpi_tag->rsdp;
+			boot->rsdp = ( struct rsdp_info * ) multiboot2_old_acpi_tag->rsdp;
 	} else
-		boot_info->rsdp = ( struct rsdp_info * ) multiboot2_new_acpi_tag->rsdp;
+		boot->rsdp = ( struct rsdp_info * ) multiboot2_new_acpi_tag->rsdp;
 
 	/* Get the framebuffer tag */
 	multiboot2_framebuffer_tag =
-	    ( struct multiboot2_tag_framebuffer * ) _multiboot2_find_tag ( ( void * ) info_ptr,
+	    ( struct multiboot2_tag_framebuffer * ) _multiboot2_find_tag ( info_ptr,
 	    MULTIBOOT2_TAG_TYPE_FRAMEBUFFER );
 
 	/* If it was found, parses it */
 	if ( multiboot2_framebuffer_tag != NULL )
-		_multiboot2_parse_framebuffer ( multiboot2_framebuffer_tag, &boot_info->framebuffer );
+		_multiboot2_parse_framebuffer ( multiboot2_framebuffer_tag, &boot->framebuffer );
 }
 
 /**
@@ -134,7 +134,7 @@ MULTIBOOT2_PARSE_MMAP
 	    boot_mmap->entry_count );
 
 	/* Iterates for every entry */
-	for ( multiboot2_uint32_t i = 0; i < entry_count; i++ )
+	for ( multiboot2_uint32_t i = 0; i < boot_mmap->entry_count; i++ )
 	{
 
 		/* Get the current Multiboot2 MMAP entry */
@@ -160,7 +160,7 @@ MULTIBOOT2_PARSE_FRAMEBUFFER
 	boot_framebuffer->addr = framebuffer_tag->common.framebuffer_addr;
 	boot_framebuffer->pitch = framebuffer_tag->common.framebuffer_pitch;
 	boot_framebuffer->width = framebuffer_tag->common.framebuffer_width;
-	boot_framebuffer->heigth = framebuffer_tag->common.framebuffer_heigth;
+	boot_framebuffer->height = framebuffer_tag->common.framebuffer_height;
 	boot_framebuffer->bpp = framebuffer_tag->common.framebuffer_bpp;
 
 	/* RGB specific configuration */
@@ -192,7 +192,8 @@ MULTIBOOT2_FIND_TAG
 
 	/* Skip the Multiboot2 header to start searching for the tag */
 	struct multiboot2_tag* tag =
-	    ( struct multiboot2_tag * ) ( ( multiboot2_uint8_t ) info_ptr + 8 );
+	    ( struct multiboot2_tag * ) ( ( multiboot2_uint64_t ) ( ( multiboot2_uint8_t ) info_ptr +
+	        8 ) );
 
 	/* Do not stop until it's the end */
 	for ( ; tag->type != MULTIBOOT2_TAG_TYPE_END; )
