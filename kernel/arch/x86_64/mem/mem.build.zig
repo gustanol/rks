@@ -2,6 +2,8 @@ const std = @import("std");
 const helpers = @import("../../../../scripts/zig/helpers.zig");
 const Flag = @import("../../../../shared.zig").Flag;
 
+const paging = @import("vmm/paging/paging.build.zig");
+
 pub fn addSubsystem(
     b: *std.Build,
     kernel: *std.Build.Step.Compile,
@@ -11,10 +13,6 @@ pub fn addSubsystem(
 
     const c_sources = &[_][]const u8{
         "early_alloc.c",
-        "vmm/paging/core/early_map.c",
-        "vmm/paging/core/init.c",
-        "vmm/paging/core/page.c",
-        "vmm/paging/core/space.c",
     };
 
     const as_sources = &[_][]const u8{
@@ -22,7 +20,7 @@ pub fn addSubsystem(
     };
 
     const cflags = helpers.flags.mergeFlags(b, flags.cflags, &.{
-        "-I", b.fmt("{s}/vmm/paging/include", .{path}),
+        "-I", b.fmt("{s}/include", .{path}),
     });
 
     const asflags = helpers.flags.mergeFlags(b, cflags, flags.asflags);
@@ -38,4 +36,6 @@ pub fn addSubsystem(
         .files = as_sources,
         .flags = asflags,
     });
+
+    paging.addSubsystem(b, kernel, flags);
 }
