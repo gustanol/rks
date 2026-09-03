@@ -60,7 +60,7 @@ void*
 alloc_heap_malloc ( HEAP* heap, size_t size )
 {
 	KERR_RET_ENCODE_PTR_IF ( heap == NULL, KERR_INVAL, heap_is_null );
-	KERR_PROPAGATE_ENCODE ( heap );
+	KERR_PROPAGATE_ENCODE_PTR ( heap );
 	KERR_RET_ENCODE_PTR_IF ( size == 0, KERR_INVAL, "Invalid size: 0\n" );
 
 	return _alloc_dispatch_heap_malloc ( heap, size );
@@ -141,7 +141,7 @@ k_calloc ( size_t size )
 
 	/* Tries allocating */
 	void* ptr = k_malloc ( size );
-	KERR_PROPAGATE_ENCODE ( ptr );
+	KERR_PROPAGATE_ENCODE_PTR ( ptr );
 
 	/* Initializes it to zero */
 	memset ( ptr, 0, size );
