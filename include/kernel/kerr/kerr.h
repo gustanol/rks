@@ -29,10 +29,10 @@
 /* Return a kerr_t on condition pass */
 #define KERR_RET_IF(cond, err, fmt, ...) \
 	({ \
-			if ( cond ) { \
-					/* klog_err ( fmt, ##__VA_ARGS__ ); */ \
-					return ( err ); \
-			} \
+		if ( cond ) { \
+			/* klog_err ( fmt, ##__VA_ARGS__ ); */ \
+			return ( err ); \
+		} \
 	})
 
 /**
@@ -41,10 +41,10 @@
  **/
 #define KERR_RET_ENCODE_IF(cond, err, fmt, ...) \
 	({ \
-			if ( cond ) { \
-				   /* klog_err ( fmt, ##__VA_ARGS__ ); */ \
-					return ENCODE_KERR ( err ); \
-			} \
+		if ( cond ) { \
+		   /* klog_err ( fmt, ##__VA_ARGS__ ); */ \
+			return ENCODE_KERR ( err ); \
+		} \
 	})
 
 /* Uses `ENCODE_KERR_PTR` */
@@ -59,15 +59,21 @@
 /* Forward if `obj` is already an encoded error */
 #define KERR_PROPAGATE(obj) \
 	({ \
-			if ( IS_KERR ( obj ) ) \
-					return GET_KERR ( obj ); \
+		if ( IS_KERR ( obj ) ) \
+			return GET_KERR ( obj ); \
 	})
 
 /* If `obj` is a KERR, just return it (it's already encoded) */
 #define KERR_PROPAGATE_ENCODE(obj) \
 	({ \
-			if ( IS_KERR ( obj ) ) \
-					return ( obj ); \
+		if ( IS_KERR ( obj ) ) \
+			return ENCODE_KERR ( GET_KERR ( obj ) ); \
+	})
+
+#define KERR_PROPAGATE_ENCODE_PTR(obj) \
+	({ \
+		if ( IS_KERR ( obj ) ) \
+			return ENCODE_KERR_PTR ( GET_KERR ( obj ) ); \
 	})
 
 /* General error types */
