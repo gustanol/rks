@@ -6,6 +6,22 @@
 #include <stdbool.h>
 
 /**
+ * Heap context data
+ *
+ * `HEAP` is an opaque type
+ * Its type is defined right here
+ * It can only be accessed inside the ALLOC subsystem
+ **/
+struct heap
+{
+	vaddr_t arena_start;        /* Base address */
+	vaddr_t current_arena;      /* Current frame base address */
+	size_t limit;               /* Limit size */
+	bool ready;                 /* Is it ready to be used? */
+	const struct heap_ops* ops; /* Operations */
+};
+
+/**
  * Heap allocator context creator
  * Allocator function
  *
@@ -52,7 +68,7 @@
  * Prototype
  **/
 #define HEAP_ALLOC_MFREE(name) \
-	  kerr_t name ( void* payload )
+	  kerr_t name ( void* ptr )
 
 /**
  * Heap area grower
@@ -82,22 +98,6 @@ struct heap_ops
 
 	/* Heap grower */
 	HEAP_ALLOC_GROW ( ( *grow ) );
-};
-
-/**
- * Heap context data
- *
- * `HEAP` is an opaque type
- * Its type is defined right here
- * It can only be accessed inside the ALLOC subsystem
- **/
-struct heap
-{
-	vaddr_t arena_start;        /* Base address */
-	vaddr_t current_arena;      /* Current frame base address */
-	size_t limit;               /* Limit size */
-	bool ready;                 /* Is it ready to be used? */
-	struct heap_ops* ops;       /* Operations */
 };
 
 /* Heap creator function prototype */
