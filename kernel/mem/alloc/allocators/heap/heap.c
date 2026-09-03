@@ -4,6 +4,29 @@
 #include <kernel/mem/vmm/map.h>
 #include <string.h>
 
+/**
+ * Heap helper used to get a mapped region memory
+ * Private backend helper
+ *
+ * Return -> `vaddr_t`: New allocation base address
+ * Arguments:
+ *   1. `size_t frames_needed`: As it grows by frames, the minimum amount to be grown
+ **/
+#define HEAP_ALLOC_AND_MAP \
+	vaddr_t __heap_alloc_and_map ( size_t frames_needed )
+
+/**
+ * Receiving two headers, merges them into one, always modifying the left one
+ * Private helper
+ *
+ * Return -> `void`
+ * Arguments:
+ *   1. `struct chunk_header* left`: Left chunk header to be modified
+ *   2. `struct chunk_header* right`: Right chunk header to be the new boundary
+ **/
+#define HEAP_MERGE_CHUNKS \
+	void __heap_merge_chunks ( struct chunk_header* left, struct chunk_header* right )
+
 /* Prototypes */
 static HEAP_ALLOC_DESTROY ( _heap_destroy );
 static HEAP_ALLOC_MALLOC ( _heap_malloc );
@@ -18,8 +41,9 @@ const struct heap_ops ops = {
 	.grow = _heap_grow,
 };
 
-static vaddr_t __heap_alloc_and_map ( size_t frames_needed );
-static void _heap_merge_chunks ( struct chunk_header* left, struct chunk_header* right );
+/* Static prototypes */
+static HEAP_ALLOC_AND_MAP;
+static HEAP_MERGE_CHUNKS;
 
 /**
  * Heap allocator creator 
@@ -36,13 +60,13 @@ HEAP_ALLOC_CREATE
 	vaddr_t virt_heap_base = __heap_alloc_and_map ( FRAMES_BY_SIZE ( HEAP_INITIAL_SIZE ) );
 
 	/* Return any error */
-	KERR_PROPAGATE_ENCODE ( virt_heap_base );
+	KERR_PROPAGATE_ENCODE_PTR ( virt_heap_base );
 
 	/* This heap struct starts at the start of this allocation */
-	struct heap* this_heap = virt_heap_base;
+	struct heap* this_heap = ( struct heap * ) virt_heap_base;
 
 	/* Arena region start */
-	this_heap->arena_start = ( char * ) virt_heap_base + sizeof ( struct heap );
+	this_heap->arena_start = ( vaddr_t ) ( ( char * ) virt_heap_base + sizeof ( struct heap ) );
 
 	/* Current base */
 	this_heap->current_arena = this_heap->arena_start;
@@ -55,14 +79,14 @@ HEAP_ALLOC_CREATE
 	struct chunk_header* this_header = ( struct chunk_header * ) this_heap->arena_start;
 
 	/* Sets it */
-	this_header->size = heap->limit;    /* The whole size */
+	this_header->size = this_heap->limit;   /* The whole size */
 	this_header->is_free = true;    /* It's free to use */
 	this_header->prev_free = 0; /* There's no previous chunk */
 	this_header->next_free = 0; /* There's no next chunk, This is the first one */
 	this_header->next = NULL;   /* The next chunk wasn't set yet */
 
 	/* Return the reference */
-	return heap;
+	return this_heap;
 }
 
 /**
@@ -78,7 +102,7 @@ HEAP_ALLOC_MALLOC ( _heap_malloc )
 
 	/* The heap state is not prepared */
 	if ( !heap->ready )
-		return ENCODE_KERR ( KERR_INVAL );
+		return ENCODE_KERR_PTR ( KERR_INVAL );
 
 	/* Current chunk's metadata */
 	struct chunk_header* current_chunk = ( struct chunk_header * ) heap->current_arena;
@@ -105,7 +129,7 @@ HEAP_ALLOC_MALLOC ( _heap_malloc )
 
 				/* New chunk header metadata */
 				struct chunk_header* new_chunk =
-				    ( struct heap_meta * ) ( ( char * ) current_chunk + new_chunk_size );
+				    ( struct chunk_header * ) ( ( char * ) current_chunk + new_chunk_size );
 
 				/**
 				 * Size is simply the displacement ->
@@ -149,10 +173,10 @@ HEAP_ALLOC_MALLOC ( _heap_malloc )
 
 			/* Some error occurred */
 			if ( IS_RET_OK ( err ) )
-				return ENCODE_KERR ( err );
+				return ENCODE_KERR_PTR ( err );
 
 			/* Next chunk's base address */
-			current_chunk->next = heap->current_arena;
+			current_chunk->next = ( struct chunk_header * ) heap->current_arena;
 
 			/* Next chunk's metadata */
 			struct chunk_header* new_chunk = ( struct chunk_header * ) current_chunk->next;
@@ -174,7 +198,7 @@ HEAP_ALLOC_MALLOC ( _heap_malloc )
 	 *
 	 * This shound't be achievable considering errors during heap growns are treated before
 	 **/
-	return ENCODE_KERR ( KERR_NOMEM );
+	return ENCODE_KERR_PTR ( KERR_NOMEM );
 }
 
 /**
@@ -223,7 +247,7 @@ HEAP_ALLOC_MFREE ( _heap_mfree )
 		__heap_merge_chunks ( prev_header, this_header );
 
 		/* Is the next free? */
-		if ( header_meta->next_free )
+		if ( this_header->next_free )
 
 		    /* Previous (already merged) + Next */
 			__heap_merge_chunks ( prev_header, next_header );
@@ -264,15 +288,15 @@ HEAP_ALLOC_GROW ( _heap_grow )
 	heap->ready = 0;
 
 	/* Updated current frame */
-	heap->current_arena = virt_heap_base;
+	heap->current_arena = virt_heap_current_base;
 
 	/**
 	 * New limit
 	 *
-	 * - `FRAMES_BY_SIZE`: At least one frames
+	 * - `FRAMES_BY_SIZE`: At least one frame
 	 * - `SIZE_BY_FRAMES`: Convert this amount in an absolute size
 	 **/
-	heap->limit += SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( size ) );
+	heap->limit += SIZE_BY_FRAMES ( FRAMES_BY_SIZE ( frames_needed ) );
 
 	/* Unlocks it to proceed */
 	heap->ready = true;
@@ -282,17 +306,12 @@ HEAP_ALLOC_GROW ( _heap_grow )
 }
 
 /**
- * Heap helper used to get a mapped region memory
- * Private backend helper
+ * Heap region getter
  *
- * Return -> `vaddr_t`: New allocation base address
- * Arguments:
- *   1. `size_t frames_needed`: As it grows by frames, the minimum amount to be grown
- * Callers:
- *   - Private heap implementations
+ * Statically-defined prototype
+ * Interface defined at this file
  **/
-vaddr_t
-__heap_alloc_and_map ( size_t frames_needed )
+HEAP_ALLOC_AND_MAP
 {
 
 	/* Tries to allocate the requested amount of frames */
@@ -312,18 +331,12 @@ __heap_alloc_and_map ( size_t frames_needed )
 }
 
 /**
- * Receiving two headers, merges them into one, always modifying the left one
- * Private helper
+ * Heap chunks combinator
  *
- * Return -> `void`
- * Arguments:
- *   1. `struct chunk_header* left`: Left chunk header to be modified
- *   2. `struct chunk_header* right`: Right chunk header to be the new boundary
- * Callers:
- *   - `_heap_mfree`
+ * Statically-defined prototype
+ * Interface defined at this file
  **/
-void
-__heap_merge_chunks ( struct chunk_header* left, struct chunk_header* right )
+HEAP_MERGE_CHUNKS
 {
 
 	/* Increases the whole chunk size */

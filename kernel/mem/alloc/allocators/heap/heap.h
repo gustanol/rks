@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define HEAP_INITIAL_SIZE ( 1024 * 1024 )
 #define CHUNK_LIMIT_BOUNDARY 64
 #define CHUNK_ALIGN 0x10
 
