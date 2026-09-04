@@ -19,7 +19,7 @@
  * `PAYLOAD_SIZE` will consider its padding
  **/
 #define CHUNK_SIZE(SIZE) \
-        ( ALIGN_UP ( ( SIZE ) + sizeof ( struct chunk_header ) + sizeof ( struct chunk_footer ) ), ( CHUNK_ALIGN ) )
+        ( ALIGN_UP ( ( SIZE ) + sizeof ( struct chunk_header ) + sizeof ( struct chunk_footer ), ( CHUNK_ALIGN ) ) )
 
 /* Payload chunk's size (unconsidering metadata) */
 #define PAYLOAD_SIZE(SIZE) \

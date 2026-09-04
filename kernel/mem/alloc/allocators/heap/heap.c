@@ -121,7 +121,8 @@ HEAP_ALLOC_MALLOC ( _heap_malloc )
 
 				/**
 				 * Now we know the current chunk is far bigger than needed,
-				 * This is its updated size, where only the `size` is enough
+				 * This is its updated size, where only the `size` is enough for the
+				 * Will-be-created chunk
 				 *
 				 * The macro will consider metadata and align it up
 				 **/
