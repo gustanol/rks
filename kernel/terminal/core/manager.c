@@ -465,8 +465,11 @@ TERMINAL_MANAGER_RENDER ( _terminal_manager_render )
 					 *   It's the end of current substring
 					 **/
 					TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
-					    g_terminal->backends.ops_list[backend]->write_at ( top % height, write_from,
-					    &line->cells.base[write_from], i - write_from );
+					    for ( uint32_t j = write_from; j < i - write_from; j++ )
+					{
+						g_terminal->backends.ops_list[backend]->putc_at ( top % height, write_from,
+						    line->cells.base[write_from].c );
+					}
 
 					/* Update the current substring state */
 					current_style = line->cells.base[i].style;
@@ -478,10 +481,13 @@ TERMINAL_MANAGER_RENDER ( _terminal_manager_render )
 			TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
 			    g_terminal->backends.ops_list[backend]->set_style ( current_style );
 
-			/* Write the rest of the line */
+			/* Write the rest of the line (from `write_from` until `width` */
 			TTY_FOR_EACH_BACKEND ( backend, g_terminal->backends.count )
-			    g_terminal->backends.ops_list[backend]->write_at ( top % height, write_from,
-			    &line->cells.base[write_from].c, width );
+			    for ( uint32_t j = write_from; j < width; j++ )
+			{
+				g_terminal->backends.ops_list[backend]->putc_at ( top % height, write_from,
+				    line->cells.base[write_from].c );
+			}
 
 			/* All line written */
 			line->dirty = false;
